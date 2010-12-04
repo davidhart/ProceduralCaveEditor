@@ -16,7 +16,7 @@ public:
 
 	inline const Vector2<T> operator- (const Vector2<T>& r) const
 	{
-		return Vector2<T>(x-r.y, y-r.y);
+		return Vector2<T>(x-r.x, y-r.y);
 	}
 
 	T x;

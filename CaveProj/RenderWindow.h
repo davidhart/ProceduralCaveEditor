@@ -5,6 +5,7 @@
 #include <Windows.h>
 #include <D3D10.h>
 #include "Vector.h"
+#include "Input.h"
 #include <string>
 
 class RenderWindow
@@ -22,7 +23,8 @@ public:
 	void Present();
 
 	inline ID3D10Device* GetDevice() { return _d3dDevice; }
-	inline const Vector2i& Size() const { return _size; }
+	inline const Vector2i& GetSize() const { return _size; }
+	const Input& GetInput() const { return _input; }
 
 private:
 	bool CreateWnd();
@@ -43,6 +45,7 @@ private:
 	ID3D10RenderTargetView* _renderTargetView;
 	ID3D10Texture2D* _depthStencil;
 	ID3D10DepthStencilView* _depthStencilView;
+	Input _input;
 
 	static const char* WINDOW_CLASS_NAME;
 };

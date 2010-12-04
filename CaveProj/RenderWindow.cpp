@@ -22,6 +22,8 @@ bool RenderWindow::IsOpen()
 
 void RenderWindow::DoEvents()
 {
+	_input.UpdateStep();
+
 	MSG msg;
 	while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
 	{
@@ -282,6 +284,40 @@ LRESULT CALLBACK RenderWindow::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LP
 			Cleanup();
 			_isOpen = false;
 		}
+		break;
+	case WM_MOUSEMOVE:
+		{
+			Vector2f mousePos (LOWORD(lparam), HIWORD(lparam));
+			_input.MouseMoveEvent(mousePos);
+		}
+		break;
+
+	case WM_LBUTTONDOWN:
+		_input.MouseDownEvent(Input::BUTTON_LEFT);
+		break;
+	case WM_MBUTTONDOWN:
+		_input.MouseDownEvent(Input::BUTTON_MID);
+		break;
+	case WM_RBUTTONDOWN:
+		_input.MouseDownEvent(Input::BUTTON_RIGHT);
+		break;
+	case WM_LBUTTONUP:
+		_input.MouseUpEvent(Input::BUTTON_LEFT);
+		break;
+	case WM_MBUTTONUP:
+		_input.MouseUpEvent(Input::BUTTON_MID);
+		break;
+	case WM_RBUTTONUP:
+		_input.MouseUpEvent(Input::BUTTON_RIGHT);
+		break;
+	case WM_KEYDOWN:
+		if (wparam >= 0 && wparam < 256)
+			_input.KeyDownEvent((Input::eKey)wparam);
+		break;
+
+	case WM_KEYUP:
+		if (wparam >= 0 && wparam < 256)
+			_input.KeyUpEvent((Input::eKey)wparam);
 		break;
 	}
 	return DefWindowProc(hwnd, msg, wparam, lparam);

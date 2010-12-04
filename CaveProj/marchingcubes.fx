@@ -1,8 +1,3 @@
-//float4x4 WorldViewProj : WorldViewProjection;
-float4x4 View : View;
-float4x4 World: World;
-float4x4 Proj: Projection;
-
 #define MAX_BLOBS 5
 
 struct Blob
@@ -12,8 +7,12 @@ struct Blob
 	float3 RotationSpeed;
 };
 
-cbuffer cbUserChanges
+cbuffer UserOptions
 {
+	float4x4 View : View;
+	float4x4 World: World;
+	float4x4 Proj: Projection;
+
 	float Threshold < string UIWidget = "Slider";
 					  float UIMin = 0.5f;
 					  float UIMax = 100.0f;
@@ -25,15 +24,16 @@ cbuffer cbUserChanges
 					int UIStep = 1; > = 2;
 					  
 	Blob blobs[MAX_BLOBS] =
-	{ { {0, 0, 0}, 0.5f, {0,0,0}, } ,
-	 { {0, 0, 0}, 0.5f, {0,0,0}, },
-	  { {0, 0, 0}, 0.5f, {0,0,0}, },
-	   { {0, 0, 0}, 0.5f, {0,0,0}, },
-	    { {0, 0, 0}, 0.5f, {0,0,0}  } };
+	{{{0, 0, 0}, 0.5f, {0,0,0}, },
+	{ {0, 0, 0}, 0.5f, {0,0,0}, },
+	{ {0, 0, 0}, 0.5f, {0,0,0}, },
+	{ {0, 0, 0}, 0.5f, {0,0,0}, },
+	{ {0, 0, 0}, 0.5f, {0,0,0}  }};
 	
 	float Time : TIME;
 	float AnimationSpeed;
-};
+}
+
 
 struct VS_INPUT
 {
@@ -448,14 +448,14 @@ void mainGS( point GS_INPUT input[1], inout TriangleStream<PS_INPUT> stream )
 	float4x4 WorldViewProj = mul(World, mul(View, Proj));
 	int cubeindex = 0;
 	float3 pos0 = input[0].Pos.xyz;
-	if (sampleField(0, pos0) > Threshold) cubeindex = cubeindex | 1;
-	if (sampleField(1, pos0) > Threshold) cubeindex = cubeindex | 2;
-	if (sampleField(2, pos0) > Threshold) cubeindex = cubeindex | 4;
-	if (sampleField(3, pos0) > Threshold) cubeindex = cubeindex | 8;
-	if (sampleField(4, pos0) > Threshold) cubeindex = cubeindex | 16;
-	if (sampleField(5, pos0) > Threshold) cubeindex = cubeindex | 32;
-	if (sampleField(6, pos0) > Threshold) cubeindex = cubeindex | 64;
-	if (sampleField(7, pos0) > Threshold) cubeindex = cubeindex | 128;
+	if (sampleField(0, pos0) < Threshold) cubeindex = cubeindex | 1;
+	if (sampleField(1, pos0) < Threshold) cubeindex = cubeindex | 2;
+	if (sampleField(2, pos0) < Threshold) cubeindex = cubeindex | 4;
+	if (sampleField(3, pos0) < Threshold) cubeindex = cubeindex | 8;
+	if (sampleField(4, pos0) < Threshold) cubeindex = cubeindex | 16;
+	if (sampleField(5, pos0) < Threshold) cubeindex = cubeindex | 32;
+	if (sampleField(6, pos0) < Threshold) cubeindex = cubeindex | 64;
+	if (sampleField(7, pos0) < Threshold) cubeindex = cubeindex | 128;
 	
 	float3 vertlist[12] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},
 	{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}}; // MUST initialise this because of X4850 error
@@ -537,7 +537,7 @@ DepthStencilState EnableDepth
 
 RasterizerState RasterizerSettings
 {
-	//FillMode = WIREFRAME;
+	FillMode = WIREFRAME;
     CullMode = BACK;
 };
 

@@ -29,6 +29,12 @@
     <ClCompile Include="Camera.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Input.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Timer.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h">
@@ -47,6 +53,12 @@
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Input.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Timer.h">
       <Filter>Source</Filter>
     </ClInclude>
   </ItemGroup>

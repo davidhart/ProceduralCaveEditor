@@ -1,6 +1,5 @@
 #include "Environment.h"
 #include "RenderWindow.h"
-#include <ctime>
 
 #include "Camera.h"
 
@@ -11,7 +10,9 @@ Environment::Environment(RenderWindow& renderWindow) :
 	_vertexLayout(NULL),
 	_vertexBuffer(NULL),
 	_view(NULL),
-	_time(NULL)
+	_time(NULL),
+	_camera(D3DXVECTOR3(0, 0, -10), 0, 0),
+	_elapsed(3.0f)
 {
 }
 
@@ -145,7 +146,7 @@ void Environment::Load()
 	world->SetMatrix((float*)&worldm);
 
 	D3DXMATRIX projm;
-	D3DXMatrixPerspectiveFovLH( &projm, ( float )D3DX_PI * 0.25f, _renderWindow.Size().x / (float)_renderWindow.Size().y, 0.1f, 100.0f );
+	D3DXMatrixPerspectiveFovLH( &projm, ( float )D3DX_PI * 0.25f, _renderWindow.GetSize().x / (float)_renderWindow.GetSize().y, 0.1f, 100.0f );
 	ID3D10EffectMatrixVariable* proj = _effect->GetVariableByName("Proj")->AsMatrix();
 	proj->SetMatrix((float*)&projm);
 
@@ -176,14 +177,10 @@ void Environment::Render()
 
 	d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);
 
-	Camera camera(D3DXVECTOR3(0, 0, -10), 0, 0);
-	D3DXMATRIX viewm = camera.GetViewMatrix();
+	D3DXMATRIX viewm = _camera.GetViewMatrix();
 	_view->SetMatrix((float*)&viewm);
 
-	static clock_t st = clock();
-	float t = (clock() - st)/(float)CLOCKS_PER_SEC;
-
-	_time->SetFloat(t);
+	_time->SetFloat(_elapsed);
 
 	D3D10_TECHNIQUE_DESC techDesc;
 	_technique->GetDesc( &techDesc );
@@ -196,5 +193,32 @@ void Environment::Render()
 
 void Environment::Update(float dt)
 {
+	//_elapsed += dt;
+	const Input& input = _renderWindow.GetInput();
 
+	if (input.IsKeyDown(Input::KEY_W))
+	{
+		_camera.MoveAdvance(5*dt);
+	}
+
+	if (input.IsKeyDown(Input::KEY_S))
+	{
+		_camera.MoveAdvance(-5*dt);
+	}
+
+	if (input.IsKeyDown(Input::KEY_A))
+	{
+		_camera.MoveStrafe(-5*dt);
+	}
+
+	if (input.IsKeyDown(Input::KEY_D))
+	{
+		_camera.MoveStrafe(5*dt);
+	}
+
+	if (input.IsButtonDown(Input::BUTTON_LEFT))
+	{
+		_camera.RotatePitch(input.GetMouseDistance().y*0.006f);
+		_camera.RotateYaw(input.GetMouseDistance().x*0.006f);
+	}
 }
