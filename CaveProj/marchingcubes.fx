@@ -4,7 +4,6 @@ struct Blob
 {
 	float3 Position;
 	float Radius;
-	float3 RotationSpeed;
 };
 
 cbuffer UserOptions
@@ -24,20 +23,19 @@ cbuffer UserOptions
 					int UIStep = 1; > = 2;
 					  
 	Blob blobs[MAX_BLOBS] =
-	{{{0, 0, 0}, 0.5f, {0,0,0}, },
-	{ {0, 0, 0}, 0.5f, {0,0,0}, },
-	{ {0, 0, 0}, 0.5f, {0,0,0}, },
-	{ {0, 0, 0}, 0.5f, {0,0,0}, },
-	{ {0, 0, 0}, 0.5f, {0,0,0}  }};
+	{{{0, 0, 0}, 0.5f},
+	 {{0, 0, 0}, 0.5f},
+	 {{0, 0, 0}, 0.5f},
+	 {{0, 0, 0}, 0.5f},
+	 {{0, 0, 0}, 0.5f}};
 	
-	float Time : TIME;
 	float AnimationSpeed;
 }
 
 
 struct VS_INPUT
 {
-    float3 Pos          : POSITION;              
+    float4 Pos          : POSITION;              
 };
 
 struct GS_INPUT
@@ -367,28 +365,8 @@ float3 cubePos(int i, float3 pos0)
 }
 
 float3 blobPos(int n)
-{
-	float t = Time*AnimationSpeed;
-		
-	float3x3 XRotation;
-	float xr = t*blobs[n].RotationSpeed.x;
-	XRotation[0] = float3(1, 0, 0);
-	XRotation[1] = float3(0, cos(xr), sin(xr));
-	XRotation[2] = float3(0, -sin(xr), cos(xr));
-		
-	float3x3 YRotation;
-	float yr = t*blobs[n].RotationSpeed.y;
-	YRotation[0] = float3(cos(yr), 0, -sin(yr));
-	YRotation[1] = float3(0, 1, 0);
-	YRotation[2] = float3(sin(yr), 0, cos(yr));
-		
-	float3x3 ZRotation;
-	float zr = t*blobs[n].RotationSpeed.z;
-	ZRotation[0] = float3(cos(zr), sin(zr), 0);
-	ZRotation[1] = float3(-sin(zr), cos(zr), 0);
-	ZRotation[2] = float3(0, 0, 1);
-	
-	return mul(mul(mul(blobs[n].Position, ZRotation), YRotation), XRotation);
+{	
+	return blobs[n].Position;
 }
 
 float3 GetNormal(float3 pos)
@@ -399,7 +377,7 @@ float3 GetNormal(float3 pos)
 		float3 bPos = blobPos(n);
 		float3 a = pos-bPos;
 		float f = a.x*a.x + a.y*a.y + a.z*a.z;
-		normal += 1/(f*f) * 2*(bPos - pos)*blobs[n].Radius;
+		normal += -1/(f*f) * 2*(bPos - pos)*blobs[n].Radius;
 	}
 	
 	return normalize(normal);
@@ -413,7 +391,7 @@ float sampleField(int i, float3 pos0)
 	
 	for (int n = 0; n < NumBlobs; ++n)
 	{		
-		density += blobs[n].Radius*exp(1/(length(pos-blobPos(n))+0.0001f));
+		density += blobs[n].Radius*1/(length(pos-blobPos(n))+0.0001f);
 	}
 
 	return density;
@@ -423,7 +401,6 @@ int edgeTableValue(int i)
 {
 	return Edges[i];
 }
-
 
 float3 vertexInterp(float isolevel, float3 v0, float l0, float3 v1, float l1)
 {
@@ -437,8 +414,7 @@ int triTableValue(int i, int j)
 
 GS_INPUT mainVS( VS_INPUT input )
 {
-    GS_INPUT output = { {0,0,0,0}};
-    output.Pos = float4(input.Pos,1);
+    GS_INPUT output = {input.Pos};
     return output;
 }
 
@@ -486,23 +462,23 @@ void mainGS( point GS_INPUT input[1], inout TriangleStream<PS_INPUT> stream )
 	  vertlist[11] = vertexInterp(Threshold, cubePos(3, pos0), sampleField(3, pos0), cubePos(7, pos0), sampleField(7, pos0));
 	
 	PS_INPUT output;
-	float4 pos; 
+	float4 pos = float4(0,0,0,1); 
 	
 	for (int i = 0; i < 16; i += 3)
 	{
 		if(triTableValue(cubeindex, i)>=0)
 		{
-			pos = float4(vertlist[triTableValue(cubeindex, i)], 1);
+			pos.xyz = vertlist[triTableValue(cubeindex, i)];
 			output.Pos = mul(pos, WorldViewProj);
 			output.Normal = GetNormal(pos);
 			stream.Append(output);
 			
-			pos = float4(vertlist[triTableValue(cubeindex, i+1)], 1);
+			pos.xyz = vertlist[triTableValue(cubeindex, i+1)];
 			output.Pos = mul(pos, WorldViewProj);
 			output.Normal = GetNormal(pos);
 			stream.Append(output);
 			
-			pos = float4(vertlist[triTableValue(cubeindex, i+2)], 1);
+			pos.xyz = vertlist[triTableValue(cubeindex, i+2)];
 			output.Pos = mul(pos, WorldViewProj);
 			output.Normal = GetNormal(pos);
 			stream.Append(output);
@@ -520,12 +496,12 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 {	
 	float3 lightDir = normalize(float3(0.2f, -1.0f, -0.2f));
 	
-	float diffuseAmt = dot(normalize(input.Normal), lightDir);
+	float diffuseAmt = max(dot(normalize(input.Normal), lightDir),0);
 	float4 diffuse = float4(float3(0.7f, 0.7f, 0.7f)*diffuseAmt, 1.0f);
 	
-	float4 ambient = float4(0.3f, 0.3f, 0.3f, 1.0f);
+	float4 ambient = float4(0.08f, 0.08f, 0.08f, 1.0f);
 	
-	return clamp(ambient+diffuse, 0, 1);
+	return ambient+diffuse;
 }
 
 DepthStencilState EnableDepth

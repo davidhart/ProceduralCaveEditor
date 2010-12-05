@@ -3,6 +3,16 @@
 
 #include "Camera.h"
 
+struct
+{
+	D3DXVECTOR4 Position;
+	float Radius;
+} blobsData[5] = {{ D3DXVECTOR4(-0.4f, -0.6f, 0.1f, 0.0f), 0.8f },
+{ D3DXVECTOR4(0.4f, 0.3f, 0.0f, 0.0f), 0.8f },
+{ D3DXVECTOR4(0.4f, 0.3f, -0.2f, 0.0f), 0.6f },
+{ D3DXVECTOR4(0.1f, 0.4f, 0.0f, 0.0f), 0.3f },
+{ D3DXVECTOR4(0.0f, 0.6f, 0.1f, 0.0f), 0.3f }};
+
 Environment::Environment(RenderWindow& renderWindow) :
 	_renderWindow(renderWindow),
 	_effect(NULL),
@@ -11,7 +21,7 @@ Environment::Environment(RenderWindow& renderWindow) :
 	_vertexBuffer(NULL),
 	_view(NULL),
 	_time(NULL),
-	_camera(D3DXVECTOR3(0, 0, -10), 0, 0),
+	_camera(D3DXVECTOR3((float*)&blobsData[0].Position), 0, 0),
 	_elapsed(3.0f)
 {
 }
@@ -87,32 +97,6 @@ void Environment::Load()
                                           PassDesc.IAInputSignatureSize, &_vertexLayout );
 
 	// Initialise shader variables
-	struct
-	{
-		D3DXVECTOR4 Position;
-		float Radius;
-		D3DXVECTOR4 RotationSpeed;
-	} blobsData[5];
-
-	blobsData[0].Position	   = D3DXVECTOR4(-0.4f, -0.6f, 0.1f, 0.0f);
-	blobsData[0].Radius		   = 0.3f;
-	blobsData[0].RotationSpeed = D3DXVECTOR4(-1.0f, -0.4f, 0.0f, 0.0f);
-
-	blobsData[1].Position	   = D3DXVECTOR4(0.4f, 0.3f, 0.0f, 0.0f);
-	blobsData[1].Radius		   = 0.2f;
-	blobsData[1].RotationSpeed = D3DXVECTOR4(0.2f, 0.0f, 1.0f, 0.0f);
-
-	blobsData[2].Position	   = D3DXVECTOR4(0.4f, 0.3f, -0.2f, 0.0f);
-	blobsData[2].Radius		   = 0.1f;
-	blobsData[2].RotationSpeed = D3DXVECTOR4(0.0f, -0.7f, 0.3f, 0.0f);
-
-	blobsData[3].Position	   = D3DXVECTOR4(0.1f, 0.4f, 0.0f, 0.0f);
-	blobsData[3].Radius		   = 0.05f;
-	blobsData[3].RotationSpeed = D3DXVECTOR4(0.4f, 0.0f, 0.2f, 0.0f);
-
-	blobsData[4].Position	   = D3DXVECTOR4(0.0f, 0.6f, 0.1f, 0.0f);
-	blobsData[4].Radius		   = 0.05f;
-	blobsData[4].RotationSpeed = D3DXVECTOR4(0.1f, 0.0f, 1.0f, 0.0f);
 
 	ID3D10EffectVariable* blobs = _effect->GetVariableByName("blobs");
 
@@ -126,7 +110,6 @@ void Environment::Load()
 		// TODO: Error check these variables too (wrap up shader class to do this?)
 		blobi->GetMemberByName("Position")->AsVector()->SetFloatVector((float*)&blobsData[i].Position);
 		blobi->GetMemberByName("Radius")->AsScalar()->SetFloat(blobsData[i].Radius);
-		blobi->GetMemberByName("RotationSpeed")->AsVector()->SetFloatVector((float*)&blobsData[i].RotationSpeed);
 	}
 
 	// TODO: Error check these variables too (wrap up shader class to do this?)
@@ -191,34 +174,69 @@ void Environment::Render()
     }
 }
 
+D3DXVECTOR3 blobPos(int n)
+{
+	return D3DXVECTOR3((float*)&blobsData[n].Position);
+}
+
+float sampleField(const D3DXVECTOR3& pos0)
+{
+	float density = 0;
+	
+	for (int n = 0; n < 5; ++n)
+	{		
+		density += blobsData[n].Radius*1/(D3DXVec3Length(&(pos0-blobPos(n)))+0.0001f);
+	}
+
+	return density;
+}
+
 void Environment::Update(float dt)
 {
 	//_elapsed += dt;
 	const Input& input = _renderWindow.GetInput();
 
+	bool newPos = false;
+
+	D3DXVECTOR3 oldCameraPos = _camera.Position();
+
 	if (input.IsKeyDown(Input::KEY_W))
 	{
-		_camera.MoveAdvance(5*dt);
+		_camera.MoveAdvance(2*dt);
+		newPos = true;
 	}
 
 	if (input.IsKeyDown(Input::KEY_S))
 	{
-		_camera.MoveAdvance(-5*dt);
+		_camera.MoveAdvance(-2*dt);
+		newPos = true;
 	}
 
 	if (input.IsKeyDown(Input::KEY_A))
 	{
-		_camera.MoveStrafe(-5*dt);
+		_camera.MoveStrafe(-2*dt);
+		newPos = true;
 	}
 
 	if (input.IsKeyDown(Input::KEY_D))
 	{
-		_camera.MoveStrafe(5*dt);
+		_camera.MoveStrafe(2*dt);
+		newPos = true;
 	}
 
 	if (input.IsButtonDown(Input::BUTTON_LEFT))
 	{
 		_camera.RotatePitch(input.GetMouseDistance().y*0.006f);
 		_camera.RotateYaw(input.GetMouseDistance().x*0.006f);
+	}
+
+	if (newPos)
+	{
+		D3DXVECTOR3 cameraPos = _camera.Position();
+
+		if (sampleField(cameraPos) < 3.6f)
+		{
+			_camera.Position(oldCameraPos);
+		}
 	}
 }
