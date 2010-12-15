@@ -8,7 +8,7 @@ const char* RenderWindow::WINDOW_CLASS_NAME = "DXWindow";
 
 RenderWindow::RenderWindow() : 
 	_hwnd(0),
-	_size(1024, 768),
+	_size(1280, 720),
 	_isOpen(false),
 	_windowTitle("RenderWindow")
 {
@@ -51,7 +51,7 @@ bool RenderWindow::Create()
 
 void RenderWindow::Clear()
 {
-	float ClearColor[4] = { 0.125f, 0.125f, 0.8f, 1.0f };
+	float ClearColor[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 	_d3dDevice->ClearRenderTargetView( _renderTargetView, ClearColor );
 
 	_d3dDevice->ClearDepthStencilView( _depthStencilView, D3D10_CLEAR_DEPTH, 1.0f, 0 );

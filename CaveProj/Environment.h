@@ -16,8 +16,20 @@ public:
 	void Unload();
 	void Render();
 	void Update(float dt);
+	void GenBlobs();
 
 private:
+	float sampleField(const D3DXVECTOR3& pos0);
+	D3DXVECTOR3 blobPos(int n);
+
+	struct Blob
+	{
+		D3DXVECTOR4 Position;
+		float Radius;
+	};
+
+	Blob _blobs[5];
+
 	ID3D10Effect* _effect;
 	ID3D10EffectTechnique* _technique;
 	ID3D10InputLayout* _vertexLayout;

@@ -501,7 +501,8 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 	
 	float4 ambient = float4(0.08f, 0.08f, 0.08f, 1.0f);
 	
-	return ambient+diffuse;
+	//return ambient+diffuse;
+	return float4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
 DepthStencilState EnableDepth

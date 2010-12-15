@@ -2,16 +2,7 @@
 #include "RenderWindow.h"
 
 #include "Camera.h"
-
-struct
-{
-	D3DXVECTOR4 Position;
-	float Radius;
-} blobsData[5] = {{ D3DXVECTOR4(-0.4f, -0.6f, 0.1f, 0.0f), 0.8f },
-{ D3DXVECTOR4(0.4f, 0.3f, 0.0f, 0.0f), 0.8f },
-{ D3DXVECTOR4(0.4f, 0.3f, -0.2f, 0.0f), 0.6f },
-{ D3DXVECTOR4(0.1f, 0.4f, 0.0f, 0.0f), 0.3f },
-{ D3DXVECTOR4(0.0f, 0.6f, 0.1f, 0.0f), 0.3f }};
+#include <cstdlib>
 
 Environment::Environment(RenderWindow& renderWindow) :
 	_renderWindow(renderWindow),
@@ -21,9 +12,39 @@ Environment::Environment(RenderWindow& renderWindow) :
 	_vertexBuffer(NULL),
 	_view(NULL),
 	_time(NULL),
-	_camera(D3DXVECTOR3((float*)&blobsData[0].Position), 0, 0),
+	_camera(D3DXVECTOR3(0,0,0), 0, 0),
 	_elapsed(3.0f)
 {
+}
+
+void Environment::GenBlobs()
+{
+	for (int i = 0; i < 5; ++i)
+	{
+		_blobs[i].Position = D3DXVECTOR4(rand() % 200 / 100.0f - 1.0f,
+			rand() % 200 / 100.0f - 1.0f,
+			rand() % 200 / 100.0f - 1.0f,
+			0.0f);
+
+		_blobs[i].Radius = rand() % 20 / 24.0f + 0.4f;
+	}
+
+	
+	ID3D10EffectVariable* blobs = _effect->GetVariableByName("blobs");
+
+	for (int i = 0; i < 5; ++i)
+	{
+		ID3D10EffectVariable* blobi = blobs->GetElement(i);
+
+		if (!blobi->IsValid())
+			MessageBox(0, "Could not fetch the requested shader variable", "Shader Variable Error", MB_OK);
+
+		// TODO: Error check these variables too (wrap up shader class to do this?)
+		blobi->GetMemberByName("Position")->AsVector()->SetFloatVector((float*)&_blobs[i].Position);
+		blobi->GetMemberByName("Radius")->AsScalar()->SetFloat(_blobs[i].Radius);
+	}
+
+	_camera.Position(D3DXVECTOR3((float*)&_blobs[0].Position));
 }
 
 void Environment::Load()
@@ -97,20 +118,7 @@ void Environment::Load()
                                           PassDesc.IAInputSignatureSize, &_vertexLayout );
 
 	// Initialise shader variables
-
-	ID3D10EffectVariable* blobs = _effect->GetVariableByName("blobs");
-
-	for (int i = 0; i < 5; ++i)
-	{
-		ID3D10EffectVariable* blobi = blobs->GetElement(i);
-
-		if (!blobi->IsValid())
-			MessageBox(0, "Could not fetch the requested shader variable", "Shader Variable Error", MB_OK);
-
-		// TODO: Error check these variables too (wrap up shader class to do this?)
-		blobi->GetMemberByName("Position")->AsVector()->SetFloatVector((float*)&blobsData[i].Position);
-		blobi->GetMemberByName("Radius")->AsScalar()->SetFloat(blobsData[i].Radius);
-	}
+	GenBlobs();
 
 	// TODO: Error check these variables too (wrap up shader class to do this?)
 	ID3D10EffectScalarVariable* blobCount = _effect->GetVariableByName("NumBlobs")->AsScalar();
@@ -174,18 +182,18 @@ void Environment::Render()
     }
 }
 
-D3DXVECTOR3 blobPos(int n)
+D3DXVECTOR3 Environment::blobPos(int n)
 {
-	return D3DXVECTOR3((float*)&blobsData[n].Position);
+	return D3DXVECTOR3((float*)&_blobs[n].Position);
 }
 
-float sampleField(const D3DXVECTOR3& pos0)
+float Environment::sampleField(const D3DXVECTOR3& pos0)
 {
 	float density = 0;
 	
 	for (int n = 0; n < 5; ++n)
 	{		
-		density += blobsData[n].Radius*1/(D3DXVec3Length(&(pos0-blobPos(n)))+0.0001f);
+		density += _blobs[n].Radius*1/(D3DXVec3Length(&(pos0-blobPos(n)))+0.0001f);
 	}
 
 	return density;
@@ -193,8 +201,12 @@ float sampleField(const D3DXVECTOR3& pos0)
 
 void Environment::Update(float dt)
 {
-	//_elapsed += dt;
 	const Input& input = _renderWindow.GetInput();
+
+	if (input.IsKeyJustPressed(Input::KEY_SPACE))
+	{
+		GenBlobs();
+	}
 
 	bool newPos = false;
 
