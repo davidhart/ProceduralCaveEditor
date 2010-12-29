@@ -51,7 +51,7 @@ struct PS_INPUT
 
 tbuffer EdgeTable
 {
-	const float3 vertDecals[8] < string UIWidget = "None"; > = 
+	static const float3 vertDecals[8] < string UIWidget = "None"; > = 
 	{
 		float3 (0.0f, 0.0f, 0.0f),
 		float3 (1.0f, 0.0f, 0.0f),
@@ -64,7 +64,7 @@ tbuffer EdgeTable
 	};
 
 	
-	const uint Edges[256] < string UIWidget = "None"; > =
+	static const uint Edges[256] < string UIWidget = "None"; > =
 	{
 		0x0  , 0x109, 0x203, 0x30a, 0x406, 0x50f, 0x605, 0x70c,
 		0x80c, 0x905, 0xa0f, 0xb06, 0xc0a, 0xd03, 0xe09, 0xf00,
@@ -100,7 +100,7 @@ tbuffer EdgeTable
 		0x70c, 0x605, 0x50f, 0x406, 0x30a, 0x203, 0x109, 0x0
 	};
 	
-	const int TriTable[256][16] < string UIWidget = "None"; > =
+	static const int TriTable[256][16] < string UIWidget = "None"; > =
 	{{-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
 	{0, 8, 3, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
 	{0, 1, 9, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1},
@@ -383,6 +383,67 @@ float3 GetNormal(float3 pos)
 	return normalize(normal);
 }
 
+static const int octaves = 5;
+static const float zoom = 0.3f;
+static const float persistance = 0.5f;
+static const float power = 2.7f;
+static const float scale = 0.28f;
+
+float random(int seed, float3 i)
+{
+   int s = int(seed + i.x * 54139 + i.y * 50021 + i.z * 54311);
+   s = s ^ s >> 11;
+   s = s ^ (s << 7 & 0x9d2c5680);
+   s = s ^ (s << 15 & 0xefc60000);
+   s = s ^ (s >> 18);
+   return frac(s/150377.0); 
+}
+
+float interp(float a, float b, float x)
+{
+   return lerp(a, b, smoothstep(0, 1, x));
+}
+
+float perlin3D(int seed, float3 i)
+{
+   float density = 0;
+   
+   for (int o = 0; o < octaves; ++o)
+   {
+      float frequency = pow(2, o);
+      float amplitude = pow(persistance, o);
+
+      float x = (i.x) * frequency / zoom;
+      float y = (i.y) * frequency / zoom;
+      float z = (i.z) * frequency / zoom;
+      float floorx = x - frac(x);
+      float floory = y - frac(y);
+      float floorz = z - frac(z);
+      
+      float na = random(seed, float3(floorx, floory, floorz));
+      float nb = random(seed, float3(floorx+1, floory, floorz));
+      float nc = random(seed, float3(floorx, floory+1, floorz));
+      float nd = random(seed, float3(floorx+1, floory+1, floorz));
+      
+      float ne = random(seed, float3(floorx, floory, floorz+1));
+      float nf = random(seed, float3(floorx+1, floory, floorz+1));
+      float ng = random(seed, float3(floorx, floory+1, floorz+1));
+      float nh = random(seed, float3(floorx+1, floory+1, floorz+1));
+      
+      float la = interp(na, nb, x - floorx);
+      float lb = interp(nc, nd, x - floorx);
+      float lc = interp(la, lb, y - floory);
+      
+      float ld = interp(ne, nf, x - floorx);
+      float le = interp(ng, nh, x - floorx);
+      float lf = interp(ld, le, y - floory);
+      
+      density += interp(lc, lf, z - floorz) * amplitude;
+   }
+   
+   return clamp(scale * pow(density, power),0,1);
+}
+
 float sampleField(int i, float3 pos0)
 {
 	float3 pos = cubePos(i, pos0);
@@ -393,6 +454,8 @@ float sampleField(int i, float3 pos0)
 	{		
 		density += blobs[n].Radius*1/(length(pos-blobPos(n))+0.0001f);
 	}
+
+	density += perlin3D(0, pos);
 
 	return density;
 }
