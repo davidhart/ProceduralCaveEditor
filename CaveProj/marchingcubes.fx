@@ -413,32 +413,28 @@ float perlin3D(int seed, float3 i)
       float frequency = pow(2, o);
       float amplitude = pow(persistance, o);
 
-      float x = (i.x) * frequency / zoom;
-      float y = (i.y) * frequency / zoom;
-      float z = (i.z) * frequency / zoom;
-      float floorx = x - frac(x);
-      float floory = y - frac(y);
-      float floorz = z - frac(z);
+	  float3 v = i * frequency / zoom;
+	  float3 floorv = floor(v);
       
-      float na = random(seed, float3(floorx, floory, floorz));
-      float nb = random(seed, float3(floorx+1, floory, floorz));
-      float nc = random(seed, float3(floorx, floory+1, floorz));
-      float nd = random(seed, float3(floorx+1, floory+1, floorz));
+      float na = random(seed, float3(floorv.x, floorv.y, floorv.z));
+      float nb = random(seed, float3(floorv.x+1, floorv.y, floorv.z));
+      float nc = random(seed, float3(floorv.x, floorv.y+1, floorv.z));
+      float nd = random(seed, float3(floorv.x+1, floorv.y+1, floorv.z));
       
-      float ne = random(seed, float3(floorx, floory, floorz+1));
-      float nf = random(seed, float3(floorx+1, floory, floorz+1));
-      float ng = random(seed, float3(floorx, floory+1, floorz+1));
-      float nh = random(seed, float3(floorx+1, floory+1, floorz+1));
+      float ne = random(seed, float3(floorv.x, floorv.y, floorv.z+1));
+      float nf = random(seed, float3(floorv.x+1, floorv.y, floorv.z+1));
+      float ng = random(seed, float3(floorv.x, floorv.y+1, floorv.z+1));
+      float nh = random(seed, float3(floorv.x+1, floorv.y+1, floorv.z+1));
       
-      float la = interp(na, nb, x - floorx);
-      float lb = interp(nc, nd, x - floorx);
-      float lc = interp(la, lb, y - floory);
+      float la = interp(na, nb, v.x - floorv.x);
+      float lb = interp(nc, nd, v.x - floorv.x);
+      float lc = interp(la, lb, v.y - floorv.y);
       
-      float ld = interp(ne, nf, x - floorx);
-      float le = interp(ng, nh, x - floorx);
-      float lf = interp(ld, le, y - floory);
+      float ld = interp(ne, nf, v.x - floorv.x);
+      float le = interp(ng, nh, v.x - floorv.x);
+      float lf = interp(ld, le, v.y - floorv.y);
       
-      density += interp(lc, lf, z - floorz) * amplitude;
+      density += interp(lc, lf, v.z - floorv.z) * amplitude;
    }
    
    return clamp(scale * pow(density, power),0,1);
@@ -455,7 +451,7 @@ float sampleField(int i, float3 pos0)
 		density += blobs[n].Radius*1/(length(pos-blobPos(n))+0.0001f);
 	}
 
-	density += perlin3D(0, pos);
+	density += (perlin3D(0, pos)-0.5f)*2.0f;
 
 	return density;
 }
