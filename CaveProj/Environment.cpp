@@ -4,16 +4,21 @@
 #include "Camera.h"
 #include <cstdlib>
 
+#include <iostream>
+
 Environment::Environment(RenderWindow& renderWindow) :
 	_renderWindow(renderWindow),
-	_effect(NULL),
-	_technique(NULL),
-	_vertexLayout(NULL),
-	_vertexBuffer(NULL),
-	_view(NULL),
-	_time(NULL),
+	_genModelEffect(NULL),
+	_renderSceneEffect(NULL),
+	_genModelTechnique(NULL),
+	_renderSceneTechnique(NULL),
+	_vertexLayoutGen(NULL),
+	_vertexLayoutScene(NULL),
+	_bufferPointGrid(NULL),
+	_bufferEnvironmentModel(NULL),
 	_camera(D3DXVECTOR3(0,0,0), 0, 0),
-	_elapsed(3.0f)
+	_view(NULL),
+	_numTriangles(0)
 {
 }
 
@@ -28,9 +33,14 @@ void Environment::GenBlobs()
 
 		_blobs[i].Radius = rand() % 20 / 24.0f + 0.4f;
 	}
+	std::cout << "Generated blobs" << std::endl;
+}
 
-	
-	ID3D10EffectVariable* blobs = _effect->GetVariableByName("blobs");
+void Environment::GenModel()
+{
+	ID3D10Device* d3dDevice = _renderWindow.GetDevice();
+
+	ID3D10EffectVariable* blobs = _genModelEffect->GetVariableByName("blobs");
 
 	for (int i = 0; i < 5; ++i)
 	{
@@ -44,7 +54,66 @@ void Environment::GenBlobs()
 		blobi->GetMemberByName("Radius")->AsScalar()->SetFloat(_blobs[i].Radius);
 	}
 
-	_camera.Position(D3DXVECTOR3((float*)&_blobs[0].Position));
+	
+	ID3D10Buffer* buffer;
+
+	int m_nBufferSize = 24;
+
+	D3D10_BUFFER_DESC bufferDesc =
+	{
+		m_nBufferSize,
+		D3D10_USAGE_DEFAULT,
+		D3D10_BIND_STREAM_OUTPUT | D3D10_BIND_VERTEX_BUFFER,
+		0,
+		0
+	};
+
+	d3dDevice->CreateBuffer(&bufferDesc, NULL, &buffer);
+
+	UINT offset[1] = {0};
+	d3dDevice->SOSetTargets( 1, &buffer, offset );
+
+	d3dDevice->IASetInputLayout(_vertexLayoutGen);
+
+	UINT stride = sizeof( D3DVECTOR );
+	d3dDevice->IASetVertexBuffers(0, 1, &_bufferPointGrid, &stride, offset);
+
+	d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);
+
+
+	D3D10_QUERY_DESC queryDesc = { D3D10_QUERY_SO_STATISTICS , 0 };
+
+	ID3D10Query* query;
+	d3dDevice->CreateQuery(&queryDesc, &query);
+
+	query->Begin();
+
+	D3D10_TECHNIQUE_DESC techDesc;
+	_genModelTechnique->GetDesc( &techDesc );
+    _genModelTechnique->GetPassByIndex( 0 )->Apply( 0 );
+    d3dDevice->Draw( 40*40*40, 0 );
+
+	query->End();
+	D3D10_QUERY_DATA_SO_STATISTICS soStats;
+	while (query->GetData(&soStats, sizeof(soStats), 0) == S_FALSE); // wait for query to be ready (could cause inf loop)
+
+	query->Release();
+
+	if (_bufferEnvironmentModel != NULL)
+		_bufferEnvironmentModel->Release();
+
+	bufferDesc.ByteWidth = (UINT)soStats.PrimitivesStorageNeeded * 3 * 28;
+	d3dDevice->CreateBuffer(&bufferDesc, NULL, &_bufferEnvironmentModel);
+	_numTriangles = (UINT)soStats.PrimitivesStorageNeeded;
+
+	std::cout << "Created Buffer for: " << soStats.PrimitivesStorageNeeded << " triangles" << std::endl;
+
+	d3dDevice->SOSetTargets( 1, &_bufferEnvironmentModel, offset );
+	d3dDevice->Draw( 40*40*40, 0 );
+
+	d3dDevice->SOSetTargets(0, NULL, NULL);
+
+	std::cout << "Model generated" << std::endl;
 }
 
 void Environment::Load()
@@ -69,6 +138,8 @@ void Environment::Load()
 		}
 	}
 
+	std::cout << "Created point array data" << std::endl;
+
     D3D10_BUFFER_DESC bd;
     bd.Usage = D3D10_USAGE_DEFAULT;
     bd.ByteWidth = sizeof(inputData);
@@ -78,10 +149,12 @@ void Environment::Load()
     D3D10_SUBRESOURCE_DATA InitData;
     InitData.pSysMem = inputData;
 
-	if (FAILED(d3dDevice->CreateBuffer( &bd, &InitData, &_vertexBuffer )))
+	if (FAILED(d3dDevice->CreateBuffer( &bd, &InitData, &_bufferPointGrid )))
 	{
 		MessageBox(0, "Error creating vertex buffer", "Vertex Buffer Error", MB_OK);
 	}
+
+	std::cout << "Created point array" << std::endl;
 
 	// Create shader and get render technique
 	ID3D10Blob* error;
@@ -95,64 +168,108 @@ void Environment::Load()
 								d3dDevice,
 								0,
 								0,
-								&_effect,
+								&_genModelEffect,
 								&error,
 								0)))
 	{
-		MessageBox(0, (char*)error->GetBufferPointer(), "Shader Compile Error", MB_OK);
+		MessageBox(0, (char*)error->GetBufferPointer(), "marchingcubes.fx: Shader Compile Error", MB_OK);
 	}
 
-	_technique = _effect->GetTechniqueByName("Render");
+	std::cout << "Created effect \"marchingcubes.fx\"" << std::endl;
 
-	// Create input layout for the first pass of render technique
-	D3D10_INPUT_ELEMENT_DESC layout[] =
-    {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D10_INPUT_PER_VERTEX_DATA, 0 },
-    };
-    UINT numElements = sizeof( layout ) / sizeof( layout[0] );
+	_genModelTechnique = _genModelEffect->GetTechniqueByName("Render");
+
+
+	if (FAILED(D3DX10CreateEffectFromFile("wireframe.fx",
+								0,
+								0,
+								"fx_4_0",
+								D3D10_SHADER_ENABLE_STRICTNESS | D3D10_SHADER_DEBUG,
+								0,
+								d3dDevice,
+								0,
+								0,
+								&_renderSceneEffect,
+								&error,
+								0)))
+	{
+		MessageBox(0, (char*)error->GetBufferPointer(), "wireframe.fx: Shader Compile Error", MB_OK);
+	}
+
+	std::cout << "Created effect \"wireframe.fx\"" << std::endl;
+
+	_renderSceneTechnique = _renderSceneEffect->GetTechniqueByName("Render");
+
 
 	D3D10_PASS_DESC PassDesc;
 
-	_technique->GetPassByIndex( 0 )->GetDesc( &PassDesc );
-	d3dDevice->CreateInputLayout( layout, numElements, PassDesc.pIAInputSignature,
-                                          PassDesc.IAInputSignatureSize, &_vertexLayout );
+	D3D10_INPUT_ELEMENT_DESC layoutGen[] =
+    {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D10_INPUT_PER_VERTEX_DATA, 0 },
+    };
+    UINT numElementsGen = sizeof( layoutGen ) / sizeof( layoutGen[0] );
+
+	_genModelTechnique->GetPassByIndex( 0 )->GetDesc( &PassDesc );
+	d3dDevice->CreateInputLayout( layoutGen, numElementsGen, PassDesc.pIAInputSignature,
+                                          PassDesc.IAInputSignatureSize, &_vertexLayoutGen );
+
+	_renderSceneTechnique->GetPassByIndex( 0 )->GetDesc(&PassDesc);
+
+	D3D10_INPUT_ELEMENT_DESC layoutScene[] =
+    {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D10_INPUT_PER_VERTEX_DATA, 0 },
+		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D10_INPUT_PER_VERTEX_DATA, 0 },
+    };
+    UINT numElementsScene = sizeof( layoutScene ) / sizeof( layoutScene[0] );
+	d3dDevice->CreateInputLayout( layoutScene, numElementsScene, PassDesc.pIAInputSignature,
+                                  PassDesc.IAInputSignatureSize, &_vertexLayoutScene );
+
 
 	// Initialise shader variables
-	GenBlobs();
-
-	// TODO: Error check these variables too (wrap up shader class to do this?)
-	ID3D10EffectScalarVariable* blobCount = _effect->GetVariableByName("NumBlobs")->AsScalar();
-	blobCount->SetInt(5);
-	ID3D10EffectScalarVariable* threshold = _effect->GetVariableByName("Threshold")->AsScalar();
-	threshold->SetFloat(3.6f);
-
-	_time = _effect->GetVariableByName("Time")->AsScalar();
-	_time->SetFloat(0.0f);
-
-	_effect->GetVariableByName("AnimationSpeed")->AsScalar()->SetFloat(0.8f);
 
 	D3DXMATRIX worldm;
 	D3DXMatrixIdentity(&worldm);
-	ID3D10EffectMatrixVariable* world = _effect->GetVariableByName("World")->AsMatrix();
+	ID3D10EffectMatrixVariable* world = _renderSceneEffect->GetVariableByName("World")->AsMatrix();
 	world->SetMatrix((float*)&worldm);
 
 	D3DXMATRIX projm;
 	D3DXMatrixPerspectiveFovLH( &projm, ( float )D3DX_PI * 0.25f, _renderWindow.GetSize().x / (float)_renderWindow.GetSize().y, 0.1f, 100.0f );
-	ID3D10EffectMatrixVariable* proj = _effect->GetVariableByName("Proj")->AsMatrix();
+	ID3D10EffectMatrixVariable* proj = _renderSceneEffect->GetVariableByName("Proj")->AsMatrix();
 	proj->SetMatrix((float*)&projm);
 
-	_view = _effect->GetVariableByName("View")->AsMatrix();
+	_view = _renderSceneEffect->GetVariableByName("View")->AsMatrix();
 
+	ID3D10EffectScalarVariable* blobCount = _genModelEffect->GetVariableByName("NumBlobs")->AsScalar();
+	blobCount->SetInt(5);
+	ID3D10EffectScalarVariable* threshold = _genModelEffect->GetVariableByName("Threshold")->AsScalar();
+	threshold->SetFloat(3.6f);
+
+	NewCave();
+}
+
+void Environment::NewCave()
+{
+	GenBlobs();
+	GenModel();
+	_camera.Position(D3DXVECTOR3((float*)&_blobs[0].Position));
 }
 
 void Environment::Unload()
 {
-	_technique = NULL;
-	_effect->Release();
-	_effect = NULL;
+	_genModelTechnique = NULL;
+	_renderSceneTechnique = NULL;
 
-	_vertexLayout->Release();
-	_vertexLayout = NULL;
+	_genModelEffect->Release();
+	_genModelEffect = NULL;
+
+	_renderSceneEffect->Release();
+	_renderSceneEffect = NULL;
+
+	_vertexLayoutGen->Release();
+	_vertexLayoutGen = NULL;
+
+	_vertexLayoutScene->Release();
+	_vertexLayoutScene = NULL;
 
 	_view = NULL;
 }
@@ -160,25 +277,23 @@ void Environment::Unload()
 void Environment::Render()
 {
 	ID3D10Device* d3dDevice = _renderWindow.GetDevice();
-	d3dDevice->IASetInputLayout(_vertexLayout);
+	d3dDevice->IASetInputLayout(_vertexLayoutScene);
 
-	UINT stride = sizeof( D3DVECTOR );
+	UINT stride = sizeof( D3DVECTOR ) * 2;
     UINT offset = 0;
-	d3dDevice->IASetVertexBuffers(0, 1, &_vertexBuffer, &stride, &offset);
+	d3dDevice->IASetVertexBuffers(0, 1, &_bufferEnvironmentModel, &stride, &offset);
 
-	d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);
+	d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	D3DXMATRIX viewm = _camera.GetViewMatrix();
 	_view->SetMatrix((float*)&viewm);
 
-	_time->SetFloat(_elapsed);
-
 	D3D10_TECHNIQUE_DESC techDesc;
-	_technique->GetDesc( &techDesc );
+	_renderSceneTechnique->GetDesc( &techDesc );
     for( UINT p = 0; p < techDesc.Passes; ++p )
     {
-        _technique->GetPassByIndex( p )->Apply( 0 );
-        d3dDevice->Draw( 40*40*40, 0 );
+        _renderSceneTechnique->GetPassByIndex( p )->Apply( 0 );
+		d3dDevice->Draw( _numTriangles*3, 0 );
     }
 }
 
@@ -205,7 +320,7 @@ void Environment::Update(float dt)
 
 	if (input.IsKeyJustPressed(Input::KEY_SPACE))
 	{
-		GenBlobs();
+		NewCave();
 	}
 
 	bool newPos = false;

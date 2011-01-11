@@ -8,19 +8,9 @@ struct Blob
 
 cbuffer UserOptions
 {
-	float4x4 View : View;
-	float4x4 World: World;
-	float4x4 Proj: Projection;
-
-	float Threshold < string UIWidget = "Slider";
-					  float UIMin = 0.5f;
-					  float UIMax = 100.0f;
-					  float UIStep = 0.5f; > = 5;
+	float Threshold;
 	
-	int NumBlobs < string UIWidget = "Slider";
-					int UIMin = 0;
-					int UIMax = MAX_BLOBS;
-					int UIStep = 1; > = 2;
+	int NumBlobs;
 					  
 	Blob blobs[MAX_BLOBS] =
 	{{{0, 0, 0}, 0.5f},
@@ -40,12 +30,12 @@ struct VS_INPUT
 
 struct GS_INPUT
 {
-    float4 Pos : SV_POSITION;
+    float4 Pos : POSITION;
 };
 
 struct PS_INPUT
 {
-	float4 Pos : SV_POSITION;
+	float3 Pos : POSITION;
 	float3 Normal : NORMAL;
 };
 
@@ -480,7 +470,6 @@ GS_INPUT mainVS( VS_INPUT input )
 [maxvertexcount(16)]
 void mainGS( point GS_INPUT input[1], inout TriangleStream<PS_INPUT> stream )
 {
-	float4x4 WorldViewProj = mul(World, mul(View, Proj));
 	int cubeindex = 0;
 	float3 pos0 = input[0].Pos.xyz;
 	if (sampleField(0, pos0) < Threshold) cubeindex = cubeindex | 1;
@@ -528,18 +517,18 @@ void mainGS( point GS_INPUT input[1], inout TriangleStream<PS_INPUT> stream )
 		if(triTableValue(cubeindex, i)>=0)
 		{
 			pos.xyz = vertlist[triTableValue(cubeindex, i)];
-			output.Pos = mul(pos, WorldViewProj);
-			output.Normal = GetNormal(pos);
+			output.Pos = pos.xyz;
+			output.Normal = GetNormal(pos.xyz);
 			stream.Append(output);
 			
 			pos.xyz = vertlist[triTableValue(cubeindex, i+1)];
-			output.Pos = mul(pos, WorldViewProj);
-			output.Normal = GetNormal(pos);
+			output.Pos = pos.xyz;
+			output.Normal = GetNormal(pos.xyz);
 			stream.Append(output);
 			
 			pos.xyz = vertlist[triTableValue(cubeindex, i+2)];
-			output.Pos = mul(pos, WorldViewProj);
-			output.Normal = GetNormal(pos);
+			output.Pos = pos.xyz;
+			output.Normal = GetNormal(pos.xyz);
 			stream.Append(output);
 			
 			stream.RestartStrip();
@@ -564,17 +553,12 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 	return float4(1.0f, 1.0f, 1.0f, 1.0f);
 }
 
-DepthStencilState EnableDepth
-{
-    DepthEnable = TRUE;
-    DepthWriteMask = ALL;
-    DepthFunc = LESS_EQUAL;
-};
+GeometryShader gs = ConstructGSWithSO( CompileShader( gs_4_0, mainGS() ), "POSITION.xyz; NORMAL.xyz;" );
 
-RasterizerState RasterizerSettings
+DepthStencilState DisableDepth
 {
-	FillMode = WIREFRAME;
-    CullMode = BACK;
+    DepthEnable = FALSE;
+    DepthWriteMask = ZERO;
 };
 
 technique10 Render
@@ -582,10 +566,9 @@ technique10 Render
 	pass p0
 	{
         SetVertexShader(CompileShader(vs_4_0, mainVS()));
-        SetGeometryShader(CompileShader(gs_4_0, mainGS()));
-        SetPixelShader(CompileShader(ps_4_0, mainPS()));
-		
-        SetDepthStencilState( EnableDepth, 0 );
-        SetRasterizerState(RasterizerSettings); 
+        SetGeometryShader(gs);
+        SetPixelShader(NULL);
+
+		SetDepthStencilState( DisableDepth, 0 );
 	}
 }

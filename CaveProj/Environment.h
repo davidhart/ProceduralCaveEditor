@@ -17,6 +17,8 @@ public:
 	void Render();
 	void Update(float dt);
 	void GenBlobs();
+	void GenModel();
+	void NewCave();
 
 private:
 	float sampleField(const D3DXVECTOR3& pos0);
@@ -30,14 +32,16 @@ private:
 
 	Blob _blobs[5];
 
-	ID3D10Effect* _effect;
-	ID3D10EffectTechnique* _technique;
-	ID3D10InputLayout* _vertexLayout;
-	ID3D10Buffer* _vertexBuffer;
-
+	ID3D10Effect* _genModelEffect;
+	ID3D10Effect* _renderSceneEffect;
+	ID3D10EffectTechnique* _genModelTechnique;
+	ID3D10EffectTechnique* _renderSceneTechnique;
+	ID3D10InputLayout* _vertexLayoutGen;
+	ID3D10InputLayout* _vertexLayoutScene;
+	ID3D10Buffer* _bufferPointGrid;
+	ID3D10Buffer* _bufferEnvironmentModel;
 	ID3D10EffectMatrixVariable* _view;
-	ID3D10EffectScalarVariable* _time;
-	float _elapsed;
+	UINT _numTriangles;
 
 	RenderWindow& _renderWindow;
 	Camera _camera;

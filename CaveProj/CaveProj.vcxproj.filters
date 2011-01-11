@@ -66,5 +66,8 @@
     <None Include="marchingcubes.fx">
       <Filter>Source</Filter>
     </None>
+    <None Include="wireframe.fx">
+      <Filter>Source</Filter>
+    </None>
   </ItemGroup>
 </Project>
