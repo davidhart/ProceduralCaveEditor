@@ -35,6 +35,12 @@
     <ClCompile Include="Timer.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="ShaderBuilder.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="MarchingCubesData.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h">
@@ -59,6 +65,12 @@
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="Timer.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="ShaderBuilder.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="MarchingCubesData.h">
       <Filter>Source</Filter>
     </ClInclude>
   </ItemGroup>

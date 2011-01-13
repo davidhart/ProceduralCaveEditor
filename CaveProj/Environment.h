@@ -41,6 +41,7 @@ private:
 	ID3D10Buffer* _bufferPointGrid;
 	ID3D10Buffer* _bufferEnvironmentModel;
 	ID3D10EffectMatrixVariable* _view;
+	ID3D10EffectVectorVariable* _lightPosition;
 	UINT _numTriangles;
 
 	RenderWindow& _renderWindow;

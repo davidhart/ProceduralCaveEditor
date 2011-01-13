@@ -2,9 +2,13 @@
 #include "RenderWindow.h"
 
 #include "Camera.h"
+#include "ShaderBuilder.h"
 #include <cstdlib>
 
 #include <iostream>
+#include <vector>
+
+#include "MarchingCubesData.h"
 
 Environment::Environment(RenderWindow& renderWindow) :
 	_renderWindow(renderWindow),
@@ -91,7 +95,7 @@ void Environment::GenModel()
 	D3D10_TECHNIQUE_DESC techDesc;
 	_genModelTechnique->GetDesc( &techDesc );
     _genModelTechnique->GetPassByIndex( 0 )->Apply( 0 );
-    d3dDevice->Draw( 40*40*40, 0 );
+    d3dDevice->Draw( 80*80*80, 0 );
 
 	query->End();
 	D3D10_QUERY_DATA_SO_STATISTICS soStats;
@@ -109,7 +113,7 @@ void Environment::GenModel()
 	std::cout << "Created Buffer for: " << soStats.PrimitivesStorageNeeded << " triangles" << std::endl;
 
 	d3dDevice->SOSetTargets( 1, &_bufferEnvironmentModel, offset );
-	d3dDevice->Draw( 40*40*40, 0 );
+	d3dDevice->Draw( 80*80*80, 0 );
 
 	d3dDevice->SOSetTargets(0, NULL, NULL);
 
@@ -120,20 +124,17 @@ void Environment::Load()
 {
 	ID3D10Device* d3dDevice = _renderWindow.GetDevice();
 	
-
 	// Create Vertex Buffer
-	const int size = 40*40*40;
-	D3DVECTOR inputData[size];
+	std::vector<D3DVECTOR> inputData;
+	inputData.reserve(80*80*80);
 
-	int index = 0; 
-	for (float x = -2.0f; x < 2.0f; x += 0.1f)
+	for (int x = -40; x < 40; ++x)
 	{
-		for (float y = -2.0f; y < 2.0f; y += 0.1f)
+		for (int y = -40; y < 40; ++y)
 		{
-			for (float z = -2.0f; z < 2.0f; z += 0.1f)
+			for (int z = -40; z < 40; ++z)
 			{
-				inputData[index] = D3DXVECTOR3(x, y, z);
-				++index;
+				inputData.push_back(D3DXVECTOR3(x*0.05f, y*0.05f, z*0.05f));
 			}
 		}
 	}
@@ -142,12 +143,12 @@ void Environment::Load()
 
     D3D10_BUFFER_DESC bd;
     bd.Usage = D3D10_USAGE_DEFAULT;
-    bd.ByteWidth = sizeof(inputData);
+    bd.ByteWidth = inputData.size()*sizeof(D3DVECTOR);
     bd.BindFlags = D3D10_BIND_VERTEX_BUFFER;
     bd.CPUAccessFlags = 0;
     bd.MiscFlags = 0;
     D3D10_SUBRESOURCE_DATA InitData;
-    InitData.pSysMem = inputData;
+    InitData.pSysMem = &inputData[0];
 
 	if (FAILED(d3dDevice->CreateBuffer( &bd, &InitData, &_bufferPointGrid )))
 	{
@@ -157,48 +158,13 @@ void Environment::Load()
 	std::cout << "Created point array" << std::endl;
 
 	// Create shader and get render technique
-	ID3D10Blob* error;
-
-	if (FAILED(D3DX10CreateEffectFromFile("marchingcubes.fx",
-								0,
-								0,
-								"fx_4_0",
-								D3D10_SHADER_ENABLE_STRICTNESS | D3D10_SHADER_DEBUG,
-								0,
-								d3dDevice,
-								0,
-								0,
-								&_genModelEffect,
-								&error,
-								0)))
-	{
-		MessageBox(0, (char*)error->GetBufferPointer(), "marchingcubes.fx: Shader Compile Error", MB_OK);
-	}
-
-	std::cout << "Created effect \"marchingcubes.fx\"" << std::endl;
-
-	_genModelTechnique = _genModelEffect->GetTechniqueByName("Render");
-
-
-	if (FAILED(D3DX10CreateEffectFromFile("wireframe.fx",
-								0,
-								0,
-								"fx_4_0",
-								D3D10_SHADER_ENABLE_STRICTNESS | D3D10_SHADER_DEBUG,
-								0,
-								d3dDevice,
-								0,
-								0,
-								&_renderSceneEffect,
-								&error,
-								0)))
-	{
-		MessageBox(0, (char*)error->GetBufferPointer(), "wireframe.fx: Shader Compile Error", MB_OK);
-	}
-
-	std::cout << "Created effect \"wireframe.fx\"" << std::endl;
+	_renderSceneEffect = ShaderBuilder::RequestEffect("wireframe", "fx_4_0", d3dDevice);
 
 	_renderSceneTechnique = _renderSceneEffect->GetTechniqueByName("Render");
+
+	_genModelEffect = ShaderBuilder::RequestEffect("marchingcubes", "fx_4_0", d3dDevice);
+
+	_genModelTechnique = _genModelEffect->GetTechniqueByName("Render");
 
 
 	D3D10_PASS_DESC PassDesc;
@@ -227,6 +193,12 @@ void Environment::Load()
 
 	// Initialise shader variables
 
+	ID3D10EffectScalarVariable* v = _genModelEffect->GetVariableByName("Edges")->AsScalar();
+	v->SetIntArray((int*)MarchingCubesData::Edges, 0, 256);
+
+	v = _genModelEffect->GetVariableByName("TriTable")->AsScalar();
+	v->SetIntArray((int*)MarchingCubesData::TriTable, 0, 256*16);
+
 	D3DXMATRIX worldm;
 	D3DXMatrixIdentity(&worldm);
 	ID3D10EffectMatrixVariable* world = _renderSceneEffect->GetVariableByName("World")->AsMatrix();
@@ -238,11 +210,14 @@ void Environment::Load()
 	proj->SetMatrix((float*)&projm);
 
 	_view = _renderSceneEffect->GetVariableByName("View")->AsMatrix();
+	_lightPosition = _renderSceneEffect->GetVariableByName("LightPosition")->AsVector();
 
 	ID3D10EffectScalarVariable* blobCount = _genModelEffect->GetVariableByName("NumBlobs")->AsScalar();
 	blobCount->SetInt(5);
 	ID3D10EffectScalarVariable* threshold = _genModelEffect->GetVariableByName("Threshold")->AsScalar();
 	threshold->SetFloat(3.6f);
+	ID3D10EffectScalarVariable* cubeSize = _genModelEffect->GetVariableByName("CubeSize")->AsScalar();
+	cubeSize->SetFloat(0.05f);
 
 	NewCave();
 }
@@ -287,6 +262,9 @@ void Environment::Render()
 
 	D3DXMATRIX viewm = _camera.GetViewMatrix();
 	_view->SetMatrix((float*)&viewm);
+
+	D3DXVECTOR4 lightpos = D3DXVECTOR4(_camera.Position(), 1.0f);
+	_lightPosition->SetFloatVector((float*)lightpos);
 
 	D3D10_TECHNIQUE_DESC techDesc;
 	_renderSceneTechnique->GetDesc( &techDesc );

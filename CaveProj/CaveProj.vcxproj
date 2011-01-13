@@ -69,7 +69,9 @@
     <ClCompile Include="Environment.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MarchingCubesData.cpp" />
     <ClCompile Include="RenderWindow.cpp" />
+    <ClCompile Include="ShaderBuilder.cpp" />
     <ClCompile Include="TestApp.cpp" />
     <ClCompile Include="Timer.cpp" />
   </ItemGroup>
@@ -78,7 +80,9 @@
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Environment.h" />
     <ClInclude Include="Input.h" />
+    <ClInclude Include="MarchingCubesData.h" />
     <ClInclude Include="RenderWindow.h" />
+    <ClInclude Include="ShaderBuilder.h" />
     <ClInclude Include="TestApp.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Vector.h" />
