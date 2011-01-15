@@ -43,10 +43,11 @@ PS_INPUT mainVS(VS_INPUT input)
 float4 mainPS(PS_INPUT input) : SV_TARGET
 {	
 	
-	float diffuseAmt = max(dot(normalize(input.Normal), normalize(input.LightDirection)),0);
+	float attenuation = length(input.LightDirection) + pow(length(input.LightDirection), 2.0f)*1.5f;
+	float diffuseAmt = max(dot(normalize(input.Normal), normalize(input.LightDirection)),0) * clamp(1.0f / attenuation,0.0f, 1.0f);
 	float4 diffuse = float4(float3(0.7f, 0.7f, 0.7f)*diffuseAmt, 1.0f);
 	
-	float4 ambient = float4(0.08f, 0.08f, 0.08f, 1.0f);
+	float4 ambient = float4(0.10f, 0.10f, 0.10f, 1.0f);
 	
 	return ambient+diffuse;
 }

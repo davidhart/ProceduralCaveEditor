@@ -22,7 +22,8 @@ Environment::Environment(RenderWindow& renderWindow) :
 	_bufferEnvironmentModel(NULL),
 	_camera(D3DXVECTOR3(0,0,0), 0, 0),
 	_view(NULL),
-	_numTriangles(0)
+	_numTriangles(0),
+	_resolution(0)
 {
 }
 
@@ -95,7 +96,7 @@ void Environment::GenModel()
 	D3D10_TECHNIQUE_DESC techDesc;
 	_genModelTechnique->GetDesc( &techDesc );
     _genModelTechnique->GetPassByIndex( 0 )->Apply( 0 );
-    d3dDevice->Draw( 80*80*80, 0 );
+    d3dDevice->Draw( _resolution*_resolution*_resolution, 0 );
 
 	query->End();
 	D3D10_QUERY_DATA_SO_STATISTICS soStats;
@@ -113,7 +114,7 @@ void Environment::GenModel()
 	std::cout << "Created Buffer for: " << soStats.PrimitivesStorageNeeded << " triangles" << std::endl;
 
 	d3dDevice->SOSetTargets( 1, &_bufferEnvironmentModel, offset );
-	d3dDevice->Draw( 80*80*80, 0 );
+	d3dDevice->Draw( _resolution*_resolution*_resolution, 0 );
 
 	d3dDevice->SOSetTargets(0, NULL, NULL);
 
@@ -122,19 +123,22 @@ void Environment::GenModel()
 
 void Environment::Load()
 {
+	_resolution = 160;
+	float cubeSize = 4.0f / _resolution;
+	int limit = _resolution / 2;
 	ID3D10Device* d3dDevice = _renderWindow.GetDevice();
 	
 	// Create Vertex Buffer
 	std::vector<D3DVECTOR> inputData;
-	inputData.reserve(80*80*80);
+	inputData.reserve(_resolution*_resolution*_resolution);
 
-	for (int x = -40; x < 40; ++x)
+	for (int x = -limit; x < limit; ++x)
 	{
-		for (int y = -40; y < 40; ++y)
+		for (int y = -limit; y < limit; ++y)
 		{
-			for (int z = -40; z < 40; ++z)
+			for (int z = -limit; z < limit; ++z)
 			{
-				inputData.push_back(D3DXVECTOR3(x*0.05f, y*0.05f, z*0.05f));
+				inputData.push_back(D3DXVECTOR3(x*cubeSize, y*cubeSize, z*cubeSize));
 			}
 		}
 	}
@@ -216,8 +220,8 @@ void Environment::Load()
 	blobCount->SetInt(5);
 	ID3D10EffectScalarVariable* threshold = _genModelEffect->GetVariableByName("Threshold")->AsScalar();
 	threshold->SetFloat(3.6f);
-	ID3D10EffectScalarVariable* cubeSize = _genModelEffect->GetVariableByName("CubeSize")->AsScalar();
-	cubeSize->SetFloat(0.05f);
+	ID3D10EffectScalarVariable* cubeSizeV = _genModelEffect->GetVariableByName("CubeSize")->AsScalar();
+	cubeSizeV->SetFloat(cubeSize);
 
 	NewCave();
 }

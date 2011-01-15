@@ -43,6 +43,7 @@ private:
 	ID3D10EffectMatrixVariable* _view;
 	ID3D10EffectVectorVariable* _lightPosition;
 	UINT _numTriangles;
+	int _resolution;
 
 	RenderWindow& _renderWindow;
 	Camera _camera;
