@@ -70,7 +70,7 @@ float3 blobPos(int n)
 	return blobs[n].Position;
 }
 
-static const int octaves = 5;
+static const int octaves = 4;
 static const float zoom = 0.3f;
 static const float persistance = 0.5f;
 static const float power = 2.7f;

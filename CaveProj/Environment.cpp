@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "MarchingCubesData.h"
+#include "Timer.h"
 
 Environment::Environment(RenderWindow& renderWindow) :
 	_renderWindow(renderWindow),
@@ -43,6 +44,8 @@ void Environment::GenBlobs()
 
 void Environment::GenModel()
 {
+	Timer t;
+	t.Start();
 	ID3D10Device* d3dDevice = _renderWindow.GetDevice();
 
 	ID3D10EffectVariable* blobs = _genModelEffect->GetVariableByName("blobs");
@@ -118,7 +121,8 @@ void Environment::GenModel()
 
 	d3dDevice->SOSetTargets(0, NULL, NULL);
 
-	std::cout << "Model generated" << std::endl;
+	t.Stop();
+	std::cout << "Model generated in " << t.GetTime() << "s" << std::endl;
 }
 
 void Environment::Load()
@@ -311,25 +315,25 @@ void Environment::Update(float dt)
 
 	if (input.IsKeyDown(Input::KEY_W))
 	{
-		_camera.MoveAdvance(2*dt);
+		_camera.MoveAdvance(dt);
 		newPos = true;
 	}
 
 	if (input.IsKeyDown(Input::KEY_S))
 	{
-		_camera.MoveAdvance(-2*dt);
+		_camera.MoveAdvance(-dt);
 		newPos = true;
 	}
 
 	if (input.IsKeyDown(Input::KEY_A))
 	{
-		_camera.MoveStrafe(-2*dt);
+		_camera.MoveStrafe(-dt);
 		newPos = true;
 	}
 
 	if (input.IsKeyDown(Input::KEY_D))
 	{
-		_camera.MoveStrafe(2*dt);
+		_camera.MoveStrafe(dt);
 		newPos = true;
 	}
 

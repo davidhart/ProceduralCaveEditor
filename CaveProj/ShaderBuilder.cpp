@@ -3,14 +3,16 @@
 #include <iostream>
 #include <D3DX10.h>
 
+//#define USE_PRECOMPILED_SHADERS
+
 const std::string ShaderBuilder::compiledEffectExtension = ".fxo";
 const std::string ShaderBuilder::effectSourceExtension = ".fx";
 
 ID3D10Effect* ShaderBuilder::RequestEffect(const std::string& effectname, const std::string& profile, ID3D10Device* d3dDevice)
 {
+
 	std::string objectFileName = (effectname + compiledEffectExtension).c_str();
 	std::string sourceFileName = (effectname + effectSourceExtension).c_str();
-
 
 	HANDLE objectFile = CreateFile(objectFileName.c_str(), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	HANDLE sourceFile = CreateFile(sourceFileName.c_str(), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -30,6 +32,8 @@ ID3D10Effect* ShaderBuilder::RequestEffect(const std::string& effectname, const 
 		CloseHandle(sourceFile);
 	}
 
+#ifndef USE_PRECOMPILED_SHADERS
+
 	if (sourceFile == INVALID_HANDLE_VALUE)
 	{
 		std::cout << "Effect \"" << effectname << "\" not found" << std::endl;
@@ -38,6 +42,8 @@ ID3D10Effect* ShaderBuilder::RequestEffect(const std::string& effectname, const 
 
 	if (objectFile != INVALID_HANDLE_VALUE && sourceFile != INVALID_HANDLE_VALUE && CompareFileTime(&sourceFileTime, &objectFileTime) <= 0)
 	{
+
+#endif
 		objectFile = CreateFile(objectFileName.c_str(), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 
 		if (objectFile == INVALID_HANDLE_VALUE)
@@ -80,6 +86,8 @@ ID3D10Effect* ShaderBuilder::RequestEffect(const std::string& effectname, const 
 
 			delete [] buffer;
 		}
+
+#ifndef USE_PRECOMPILED_SHADERS
 	}
 
 	if ((sourceFile != INVALID_HANDLE_VALUE))
@@ -164,5 +172,6 @@ ID3D10Effect* ShaderBuilder::RequestEffect(const std::string& effectname, const 
 		return effect;
 	}
 
+#endif
 	return NULL;
 }
