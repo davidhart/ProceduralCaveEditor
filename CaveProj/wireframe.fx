@@ -18,6 +18,7 @@ cbuffer ProjectionMatrix
 }
 
 Texture2D tex;
+Texture2D tex2;
 
 sampler TextureSampler = sampler_state
 {
@@ -60,11 +61,16 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 	
 	float4 ambient = float4(0.10f, 0.10f, 0.10f, 1.0f);
 
-	float4 tex1 = tex.Sample(TextureSampler, input.WSPos.xy*5.0f) * abs(dot(normalize(input.Normal), float3(0, 0, 1)));
-	float4 tex2 = tex.Sample(TextureSampler, input.WSPos.xz*5.0f) * abs(dot(normalize(input.Normal), float3(0, 1, 0)));
-	float4 tex3 = tex.Sample(TextureSampler, input.WSPos.zy*5.0f) * abs(dot(normalize(input.Normal), float3(1, 0, 0)));
+	float4 s1 = tex.Sample(TextureSampler, input.WSPos.xy*5.0f) * abs(normalize(input.Normal).z);
 
-	float4 diffuseCol = tex1+tex2+tex3;
+	float up = smoothstep(0.0f, 1.0f, max(normalize(input.Normal*float3(10.0f, 1.0f, 10.0f)).y, 0)*5.0f);
+	float v = abs(normalize(input.Normal).y);
+	float4 s2 = tex2.Sample(TextureSampler, input.WSPos.xz*6.0f) * up * v;
+	float4 s22 = tex.Sample(TextureSampler, input.WSPos.xz*5.0f) * (1-up) * v;
+
+	float4 s3 = tex.Sample(TextureSampler, input.WSPos.zy*5.0f) * abs(normalize(input.Normal).x);
+
+	float4 diffuseCol = s1+s2+s22+s3;
 	
 	return ambient+diffuse*diffuseCol;
 }

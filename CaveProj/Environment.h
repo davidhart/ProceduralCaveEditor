@@ -43,6 +43,7 @@ private:
 	ID3D10EffectMatrixVariable* _view;
 	ID3D10EffectVectorVariable* _lightPosition;
 	ID3D10ShaderResourceView* _texture;
+	ID3D10ShaderResourceView* _texture2;
 	UINT _numTriangles;
 	int _resolution;
 

@@ -25,7 +25,8 @@ Environment::Environment(RenderWindow& renderWindow) :
 	_view(NULL),
 	_numTriangles(0),
 	_resolution(0),
-	_texture(0)
+	_texture(0),
+	_texture2(0)
 {
 }
 
@@ -176,8 +177,13 @@ void Environment::Load()
 	{
 		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
 	}
+
+	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "rock2.jpg", &loadInfo, NULL, &_texture2, &hr)))
+	{
+		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
+	}
 	
-	std::cout << "Created texture" << std::endl;
+	std::cout << "Created textures" << std::endl;
 
 	// Create shader and get render technique
 	_renderSceneEffect = ShaderBuilder::RequestEffect("wireframe", "fx_4_0", d3dDevice);
@@ -243,6 +249,9 @@ void Environment::Load()
 
 	ID3D10EffectShaderResourceVariable* texturesampler = _renderSceneEffect->GetVariableByName("tex")->AsShaderResource();
 	texturesampler->SetResource(_texture);
+
+	texturesampler = _renderSceneEffect->GetVariableByName("tex2")->AsShaderResource();
+	texturesampler->SetResource(_texture2);
 	NewCave();
 }
 
@@ -269,6 +278,9 @@ void Environment::Unload()
 
 	_vertexLayoutScene->Release();
 	_vertexLayoutScene = NULL;
+
+	_texture->Release();
+	_texture = NULL;
 
 	_view = NULL;
 }
