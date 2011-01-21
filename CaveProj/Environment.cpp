@@ -24,7 +24,8 @@ Environment::Environment(RenderWindow& renderWindow) :
 	_camera(D3DXVECTOR3(0,0,0), 0, 0),
 	_view(NULL),
 	_numTriangles(0),
-	_resolution(0)
+	_resolution(0),
+	_texture(0)
 {
 }
 
@@ -165,6 +166,19 @@ void Environment::Load()
 
 	std::cout << "Created point array" << std::endl;
 
+	D3DX10_IMAGE_LOAD_INFO loadInfo;
+	ZeroMemory( &loadInfo, sizeof(D3DX10_IMAGE_LOAD_INFO) );
+	loadInfo.BindFlags = D3D10_BIND_SHADER_RESOURCE;
+	loadInfo.Format = DXGI_FORMAT_BC1_UNORM;
+
+	HRESULT hr;
+	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "rock.jpg", &loadInfo, NULL, &_texture, &hr)))
+	{
+		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
+	}
+	
+	std::cout << "Created texture" << std::endl;
+
 	// Create shader and get render technique
 	_renderSceneEffect = ShaderBuilder::RequestEffect("wireframe", "fx_4_0", d3dDevice);
 
@@ -227,6 +241,8 @@ void Environment::Load()
 	ID3D10EffectScalarVariable* cubeSizeV = _genModelEffect->GetVariableByName("CubeSize")->AsScalar();
 	cubeSizeV->SetFloat(cubeSize);
 
+	ID3D10EffectShaderResourceVariable* texturesampler = _renderSceneEffect->GetVariableByName("tex")->AsShaderResource();
+	texturesampler->SetResource(_texture);
 	NewCave();
 }
 
