@@ -26,7 +26,8 @@ Environment::Environment(RenderWindow& renderWindow) :
 	_numTriangles(0),
 	_resolution(0),
 	_texture(0),
-	_texture2(0)
+	_texture2(0),
+	_textureBump(0)
 {
 }
 
@@ -182,6 +183,11 @@ void Environment::Load()
 	{
 		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
 	}
+
+	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "rockbump.jpg", &loadInfo, NULL, &_textureBump, &hr)))
+	{
+		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
+	}
 	
 	std::cout << "Created textures" << std::endl;
 
@@ -252,6 +258,9 @@ void Environment::Load()
 
 	texturesampler = _renderSceneEffect->GetVariableByName("tex2")->AsShaderResource();
 	texturesampler->SetResource(_texture2);
+
+	texturesampler = _renderSceneEffect->GetVariableByName("texBump")->AsShaderResource();
+	texturesampler->SetResource(_textureBump);
 	NewCave();
 }
 
@@ -281,6 +290,12 @@ void Environment::Unload()
 
 	_texture->Release();
 	_texture = NULL;
+
+	_texture2->Release();
+	_texture2 = NULL;
+
+	_textureBump->Release();
+	_textureBump = NULL;
 
 	_view = NULL;
 }

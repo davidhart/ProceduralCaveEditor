@@ -19,6 +19,7 @@ cbuffer ProjectionMatrix
 
 Texture2D tex;
 Texture2D tex2;
+Texture2D texBump;
 
 sampler TextureSampler = sampler_state
 {
@@ -48,31 +49,46 @@ PS_INPUT mainVS(VS_INPUT input)
 	output.Pos = mul(float4(input.Pos, 1), WorldViewProj);
 	output.WSPos = input.Pos;
 	output.Normal = input.Normal;
-	output.LightDirection = LightPosition.xyz - input.Pos;
+	output.LightDirection = /*LightPosition.xyz*/ - input.Pos;
     return output;
 }
 
 float4 mainPS(PS_INPUT input) : SV_TARGET
 {	
 	
-	float attenuation = length(input.LightDirection) + pow(length(input.LightDirection), 2.0f)*1.5f;
-	float diffuseAmt = max(dot(normalize(input.Normal), normalize(input.LightDirection)),0) * clamp(1.0f / attenuation,0.0f, 1.0f);
-	float4 diffuse = float4(float3(0.7f, 0.7f, 0.7f)*diffuseAmt, 1.0f);
+	float3x3 NBT = float3x3 (input.Normal.zyx * float3(1,1,1),
+		input.Normal.xzy * float3(1,1,1),
+		input.Normal);
+
+	float3 lightDirection = input.LightDirection;
+
+	float3 iNormal = normalize(input.Normal);
+
+	float3 blendWeights = abs(normalize(iNormal));
+
+	float3 b1 = texBump.Sample(TextureSampler, input.WSPos.yx*3.0f).rgb-0.5f;
+	float3 b2 = texBump.Sample(TextureSampler, input.WSPos.zx*3.0f).rgb-0.5f;
+	float3 b3 = texBump.Sample(TextureSampler, input.WSPos.yz*3.0f).rgb-0.5f;
+
+	float3 bump1 = float3(b1.x, b1.y, 0) * blendWeights.z;
+	float3 bump2 = float3(b2.x, 0, b2.z) * blendWeights.y;
+	float3 bump3 = float3(0, b3.y, b3.z) * blendWeights.x;
+
+	float3 N = normalize(input.Normal + (bump1+bump2+bump3) * 1.5f);
+
+	float attenuation = length(lightDirection) + pow(length(lightDirection), 2.0f)*0.8f;
+	float diffuseAmt = max(dot(N, normalize(lightDirection)),0) * clamp(1.0f / attenuation,0.0f, 1.0f);
+	float4 diffuse = float4(float3(0.9f, 0.85f, 0.8f)*diffuseAmt, 1.0f);
 	
-	float4 ambient = float4(0.10f, 0.10f, 0.10f, 1.0f);
+	float4 ambient = float4(0.05f, 0.05f, 0.05f, 1.0f);
 
-	float4 s1 = tex.Sample(TextureSampler, input.WSPos.xy*5.0f) * abs(normalize(input.Normal).z);
+	float4 s1 = tex.Sample(TextureSampler, input.WSPos.xy*5.0f) * blendWeights.z;
+	float4 s2 = tex.Sample(TextureSampler, input.WSPos.xz*6.0f) * blendWeights.y;
+	float4 s3 = tex.Sample(TextureSampler, input.WSPos.zy*5.0f) * blendWeights.x;
 
-	float up = smoothstep(0.0f, 1.0f, max(normalize(input.Normal*float3(10.0f, 1.0f, 10.0f)).y, 0)*5.0f);
-	float v = abs(normalize(input.Normal).y);
-	float4 s2 = tex2.Sample(TextureSampler, input.WSPos.xz*6.0f) * up * v;
-	float4 s22 = tex.Sample(TextureSampler, input.WSPos.xz*5.0f) * (1-up) * v;
+	float4 diffuseCol = s1+s2+s2+s3;
 
-	float4 s3 = tex.Sample(TextureSampler, input.WSPos.zy*5.0f) * abs(normalize(input.Normal).x);
-
-	float4 diffuseCol = s1+s2+s22+s3;
-	
-	return ambient+diffuse*diffuseCol;
+	return (ambient+diffuse)*diffuseCol;
 }
 
 DepthStencilState EnableDepth
