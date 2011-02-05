@@ -23,11 +23,12 @@ Environment::Environment(RenderWindow& renderWindow) :
 	_bufferEnvironmentModel(NULL),
 	_camera(D3DXVECTOR3(0,0,0), 0, 0),
 	_view(NULL),
+	_viewDirection(NULL),
 	_numTriangles(0),
 	_resolution(0),
-	_texture(0),
-	_texture2(0),
-	_textureBump(0)
+	_texture(NULL),
+	_texture2(NULL),
+	_textureBump(NULL)
 {
 }
 
@@ -245,6 +246,7 @@ void Environment::Load()
 
 	_view = _renderSceneEffect->GetVariableByName("View")->AsMatrix();
 	_lightPosition = _renderSceneEffect->GetVariableByName("LightPosition")->AsVector();
+	_viewDirection = _renderSceneEffect->GetVariableByName("ViewDirection")->AsVector();
 
 	ID3D10EffectScalarVariable* blobCount = _genModelEffect->GetVariableByName("NumBlobs")->AsScalar();
 	blobCount->SetInt(5);
@@ -261,6 +263,10 @@ void Environment::Load()
 
 	texturesampler = _renderSceneEffect->GetVariableByName("texBump")->AsShaderResource();
 	texturesampler->SetResource(_textureBump);
+
+	D3DXVECTOR4 lightpos = D3DXVECTOR4(0.0f, 0.0f, 0.0f, 1.0f);
+	_lightPosition->SetFloatVector((float*)lightpos);
+
 	NewCave();
 }
 
@@ -314,8 +320,8 @@ void Environment::Render()
 	D3DXMATRIX viewm = _camera.GetViewMatrix();
 	_view->SetMatrix((float*)&viewm);
 
-	D3DXVECTOR4 lightpos = D3DXVECTOR4(_camera.Position(), 1.0f);
-	_lightPosition->SetFloatVector((float*)lightpos);
+	D3DXVECTOR4 viewDirection = D3DXVECTOR4(_camera.Look(), 1.0f);
+	_viewDirection->SetFloatVector((float*)viewDirection);
 
 	D3D10_TECHNIQUE_DESC techDesc;
 	_renderSceneTechnique->GetDesc( &techDesc );

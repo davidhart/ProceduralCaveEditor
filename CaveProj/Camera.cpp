@@ -15,7 +15,7 @@ Camera::~Camera()
 
 }
 
-void Camera::MoveAdvance(float distance)
+D3DXVECTOR3 Camera::Look() const
 {
 	D3DXVECTOR3 upVec=D3DXVECTOR3(0.0f,1.0f,0.0f);
 	D3DXVECTOR3 lookVec=D3DXVECTOR3(0.0f,0.0f,1.0f);
@@ -29,6 +29,13 @@ void Camera::MoveAdvance(float distance)
 	D3DXMATRIX pitchMatrix;
 	D3DXMatrixRotationAxis(&pitchMatrix, &rightVec, _pitch);
 	D3DXVec3TransformCoord(&lookVec, &lookVec, &pitchMatrix);
+
+	return lookVec;
+}
+
+void Camera::MoveAdvance(float distance)
+{
+	D3DXVECTOR3 lookVec = Look();
 
 	_position += distance * lookVec;
 }

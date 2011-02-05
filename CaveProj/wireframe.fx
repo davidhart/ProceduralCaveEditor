@@ -2,6 +2,7 @@
 cbuffer ViewMatrix
 {
 	float4x4 View : View;
+	float3 ViewDirection;
 }
 cbuffer Light
 {
@@ -49,7 +50,7 @@ PS_INPUT mainVS(VS_INPUT input)
 	output.Pos = mul(float4(input.Pos, 1), WorldViewProj);
 	output.WSPos = input.Pos;
 	output.Normal = input.Normal;
-	output.LightDirection = /*LightPosition.xyz*/ - input.Pos;
+	output.LightDirection = LightPosition.xyz - input.Pos;
     return output;
 }
 
@@ -76,9 +77,12 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 
 	float3 N = normalize(input.Normal + (bump1+bump2+bump3) * 1.5f);
 
-	float attenuation = length(lightDirection) + pow(length(lightDirection), 2.0f)*0.8f;
-	float diffuseAmt = max(dot(N, normalize(lightDirection)),0) * clamp(1.0f / attenuation,0.0f, 1.0f);
-	float4 diffuse = float4(float3(0.9f, 0.85f, 0.8f)*diffuseAmt, 1.0f);
+	float attenuation = clamp(1.0f/(length(lightDirection) + pow(length(lightDirection), 2.0f)*5.0f), 0.0f, 1.0f);
+	float diffuseAmt = max(dot(N, normalize(lightDirection)),0) * attenuation;
+	float4 diffuse = float4(float3(0.7f, 0.7f, 0.6f)*diffuseAmt, 1.0f);
+
+	float specAmt = pow(clamp(dot(reflect(ViewDirection, N), normalize(lightDirection)), 0.0f, 1.0f),22.0f) * attenuation*2.0f;
+	float4 spec = float4(float3(0.5f, 0.5f, 0.5f)*specAmt, 1.0f);
 	
 	float4 ambient = float4(0.05f, 0.05f, 0.05f, 1.0f);
 
@@ -88,7 +92,7 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 
 	float4 diffuseCol = s1+s2+s2+s3;
 
-	return (ambient+diffuse)*diffuseCol;
+	return (ambient+diffuse+spec)*diffuseCol;
 }
 
 DepthStencilState EnableDepth

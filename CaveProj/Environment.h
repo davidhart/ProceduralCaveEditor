@@ -42,6 +42,7 @@ private:
 	ID3D10Buffer* _bufferEnvironmentModel;
 	ID3D10EffectMatrixVariable* _view;
 	ID3D10EffectVectorVariable* _lightPosition;
+	ID3D10EffectVectorVariable* _viewDirection;
 	ID3D10ShaderResourceView* _texture;
 	ID3D10ShaderResourceView* _texture2;
 	ID3D10ShaderResourceView* _textureBump;

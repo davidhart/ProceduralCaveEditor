@@ -15,6 +15,9 @@ public:
 	void MoveAdvance(float distance);
 	void MoveStrafe(float distance);
 	void RotatePitch(float rotation);
+
+	D3DXVECTOR3 Look() const;
+
 	void RotateYaw(float rotation);
 
 	inline void Position(const D3DXVECTOR3& position) { _position = position; }
