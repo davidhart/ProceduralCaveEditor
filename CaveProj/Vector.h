@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iostream>
+
 template <typename T>
 class Vector2
 {
@@ -39,6 +41,11 @@ public:
 	Vector3(T x, T y, T z) : x(x), y(y), z(z) { }
 	Vector3() : x(0), y(0), z(0) { }
 
+	const Vector3<T> operator+(const Vector3<T>& r)
+	{
+		return Vector3<T>(x+r.x, y+r.y, z+r.z);
+	}
+
 	const Vector3<T>& operator+= (const Vector3<T>& r)
 	{
 		x += r.x;
@@ -60,6 +67,12 @@ inline const Vector3<float> operator* (const Vector3<float>& v, float s)
 inline const Vector3<float> operator* (float s, const Vector3<float>& v)
 {
 	return Vector3<float>(v.x * s, v.y * s, v.z * s);
+}
+
+template <typename T> inline std::ostream& operator<< (std::ostream& out, const Vector3<T>& v)
+{
+	out << "v(" << v.x << ", " << v.y << ", " << v.z << ")";
+	return out;
 }
 
 typedef Vector3<int> Vector3i;

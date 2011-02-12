@@ -75,14 +75,14 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 	float3 bump2 = float3(b2.x, 0, b2.z) * blendWeights.y;
 	float3 bump3 = float3(0, b3.y, b3.z) * blendWeights.x;
 
-	float3 N = normalize(input.Normal + (bump1+bump2+bump3) * 1.5f);
+	float3 N = normalize(input.Normal + (bump1+bump2+bump3) * 1.3f);
 
 	float attenuation = clamp(1.0f/(length(lightDirection) + pow(length(lightDirection), 2.0f)*5.0f), 0.0f, 1.0f);
 	float diffuseAmt = max(dot(N, normalize(lightDirection)),0) * attenuation;
-	float4 diffuse = float4(float3(0.7f, 0.7f, 0.6f)*diffuseAmt, 1.0f);
+	float4 diffuse = float4(float3(0.7f, 0.65f, 0.65f)*diffuseAmt, 1.0f);
 
 	float specAmt = pow(clamp(dot(reflect(ViewDirection, N), normalize(lightDirection)), 0.0f, 1.0f),22.0f) * attenuation*2.0f;
-	float4 spec = float4(float3(0.5f, 0.5f, 0.5f)*specAmt, 1.0f);
+	float4 spec = float4(float3(0.2f, 0.2f, 0.2f)*specAmt, 1.0f);
 	
 	float4 ambient = float4(0.05f, 0.05f, 0.05f, 1.0f);
 

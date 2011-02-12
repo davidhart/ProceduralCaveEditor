@@ -3,7 +3,9 @@
 #define _CAMERA_H_
 
 #include <D3DX10.h>
+#include "Vector.h"
 #include <string>
+#include "Ray.h"
 
 class Camera
 {
@@ -28,14 +30,22 @@ public:
 	inline void Yaw(float yaw) { _yaw = yaw; }
 	inline float Yaw() { return _yaw; }
 
-	D3DXMATRIX GetViewMatrix();
+	D3DXMATRIX GetViewMatrix() const;
+	const D3DXMATRIX& GetProjectionMatrix() const;
+
 	std::string GetDebugString();
+
+	Ray UnprojectCoord(const Vector2f& coord) const;
+
+	void ViewportSize(const Vector2i& size);
 
 private:
 
 	float _pitch;
 	float _yaw;
 	D3DXVECTOR3 _position;
+	D3DXMATRIX _projection;
+	Vector2i _viewportSize;
 
 };
 

@@ -11,6 +11,7 @@
 #include "MarchingCubesData.h"
 #include "Timer.h"
 
+
 Environment::Environment(RenderWindow& renderWindow) :
 	_renderWindow(renderWindow),
 	_genModelEffect(NULL),
@@ -28,7 +29,9 @@ Environment::Environment(RenderWindow& renderWindow) :
 	_resolution(0),
 	_texture(NULL),
 	_texture2(NULL),
-	_textureBump(NULL)
+	_textureBump(NULL),
+	_positionWidget(Vector3f(0,0,0)),
+	_prevTrace(Vector3f(0,0,0), Vector3f(0,0,0))
 {
 }
 
@@ -131,6 +134,8 @@ void Environment::GenModel()
 
 void Environment::Load()
 {
+	_camera.ViewportSize(_renderWindow.GetSize());
+
 	_resolution = 160;
 	float cubeSize = 4.0f / _resolution;
 	int limit = _resolution / 2;
@@ -193,7 +198,7 @@ void Environment::Load()
 	std::cout << "Created textures" << std::endl;
 
 	// Create shader and get render technique
-	_renderSceneEffect = ShaderBuilder::RequestEffect("wireframe", "fx_4_0", d3dDevice);
+	_renderSceneEffect = ShaderBuilder::RequestEffect("cavesurface", "fx_4_0", d3dDevice);
 
 	_renderSceneTechnique = _renderSceneEffect->GetTechniqueByName("Render");
 
@@ -225,7 +230,6 @@ void Environment::Load()
 	d3dDevice->CreateInputLayout( layoutScene, numElementsScene, PassDesc.pIAInputSignature,
                                   PassDesc.IAInputSignatureSize, &_vertexLayoutScene );
 
-
 	// Initialise shader variables
 
 	ID3D10EffectScalarVariable* v = _genModelEffect->GetVariableByName("Edges")->AsScalar();
@@ -239,10 +243,8 @@ void Environment::Load()
 	ID3D10EffectMatrixVariable* world = _renderSceneEffect->GetVariableByName("World")->AsMatrix();
 	world->SetMatrix((float*)&worldm);
 
-	D3DXMATRIX projm;
-	D3DXMatrixPerspectiveFovLH( &projm, ( float )D3DX_PI * 0.25f, _renderWindow.GetSize().x / (float)_renderWindow.GetSize().y, 0.1f, 100.0f );
 	ID3D10EffectMatrixVariable* proj = _renderSceneEffect->GetVariableByName("Proj")->AsMatrix();
-	proj->SetMatrix((float*)&projm);
+	proj->SetMatrix((float*)&_camera.GetProjectionMatrix());
 
 	_view = _renderSceneEffect->GetVariableByName("View")->AsMatrix();
 	_lightPosition = _renderSceneEffect->GetVariableByName("LightPosition")->AsVector();
@@ -268,6 +270,9 @@ void Environment::Load()
 	_lightPosition->SetFloatVector((float*)lightpos);
 
 	NewCave();
+
+	_positionWidget.Load(_renderWindow);
+	_debugDraw.Load(_renderWindow);
 }
 
 void Environment::NewCave()
@@ -304,6 +309,9 @@ void Environment::Unload()
 	_textureBump = NULL;
 
 	_view = NULL;
+
+	_positionWidget.Unload();
+	_debugDraw.Unload();
 }
 
 void Environment::Render()
@@ -330,6 +338,10 @@ void Environment::Render()
         _renderSceneTechnique->GetPassByIndex( p )->Apply( 0 );
 		d3dDevice->Draw( _numTriangles*3, 0 );
     }
+
+	_positionWidget.Draw(_camera, _renderWindow);
+
+	_debugDraw.DrawLine(_prevTrace._origin, _prevTrace._origin + _prevTrace._direction * 1.0f, _renderWindow, _camera);
 }
 
 D3DXVECTOR3 Environment::blobPos(int n)
@@ -364,25 +376,25 @@ void Environment::Update(float dt)
 
 	if (input.IsKeyDown(Input::KEY_W))
 	{
-		_camera.MoveAdvance(dt);
+		_camera.MoveAdvance(dt*0.3f);
 		newPos = true;
 	}
 
 	if (input.IsKeyDown(Input::KEY_S))
 	{
-		_camera.MoveAdvance(-dt);
+		_camera.MoveAdvance(-dt*0.3f);
 		newPos = true;
 	}
 
 	if (input.IsKeyDown(Input::KEY_A))
 	{
-		_camera.MoveStrafe(-dt);
+		_camera.MoveStrafe(-dt*0.3f);
 		newPos = true;
 	}
 
 	if (input.IsKeyDown(Input::KEY_D))
 	{
-		_camera.MoveStrafe(dt);
+		_camera.MoveStrafe(dt*0.3f);
 		newPos = true;
 	}
 
@@ -390,6 +402,13 @@ void Environment::Update(float dt)
 	{
 		_camera.RotatePitch(input.GetMouseDistance().y*0.006f);
 		_camera.RotateYaw(input.GetMouseDistance().x*0.006f);
+	}
+
+	if (input.IsButtonJustPressed(Input::BUTTON_RIGHT))
+	{
+		_prevTrace = _camera.UnprojectCoord(input.GetCursorPosition());
+
+		std::cout << _prevTrace._origin << ", " << _prevTrace._direction << std::endl;
 	}
 
 	if (newPos)
