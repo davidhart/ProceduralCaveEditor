@@ -8,6 +8,7 @@
 
 class RenderWindow;
 class Camera;
+class Input;
 
 class PositionWidget
 {
@@ -16,6 +17,10 @@ public:
 	void Load(RenderWindow& renderWindow);
 	void Unload();
 	void Draw(const Camera& camera, RenderWindow& renderWindow);
+	void Update(const Camera& camera, const Input& input);
+	void Reset();
+
+	inline const Vector3f& GetPosition() const { return _position; }
 
 private:
 	struct Vertex
@@ -24,10 +29,20 @@ private:
 		D3DXCOLOR col;
 	};
 
+	enum eGrabState
+	{
+		GRAB_NONE,
+		GRAB_X,
+		GRAB_Y,
+		GRAB_Z,
+	};
+
 	static const Vertex LineVerts[6];
 	static const Vertex PolyVerts[54];
 
 	Vector3f _position;
+	Vector3f _grabPoint;
+	eGrabState _grabState;
 	ID3D10Effect* _renderEffect;
 	ID3D10EffectTechnique* _renderTechnique;
 	ID3D10InputLayout* _vertexLayout;

@@ -3,16 +3,12 @@
 
 #include "Camera.h"
 #include "ShaderBuilder.h"
-#include "AABB.h"
-#include "Plane.h"
-#include <cstdlib>
-
-#include <iostream>
-#include <vector>
-
 #include "MarchingCubesData.h"
 #include "Timer.h"
 
+#include <cstdlib>
+#include <iostream>
+#include <vector>
 
 Environment::Environment(RenderWindow& renderWindow) :
 	_renderWindow(renderWindow),
@@ -33,7 +29,7 @@ Environment::Environment(RenderWindow& renderWindow) :
 	_texture2(NULL),
 	_textureBump(NULL),
 	_positionWidget(Vector3f(0,0,0)),
-	_prevTrace(Vector3f(0,0,0), Vector3f(0,0,0))
+	_hideEditor(false)
 {
 }
 
@@ -268,13 +264,9 @@ void Environment::Load()
 	texturesampler = _renderSceneEffect->GetVariableByName("texBump")->AsShaderResource();
 	texturesampler->SetResource(_textureBump);
 
-	D3DXVECTOR4 lightpos = D3DXVECTOR4(0.0f, 0.0f, 0.0f, 1.0f);
-	_lightPosition->SetFloatVector((float*)lightpos);
-
 	NewCave();
 
 	_positionWidget.Load(_renderWindow);
-	_debugDraw.Load(_renderWindow);
 }
 
 void Environment::NewCave()
@@ -313,7 +305,6 @@ void Environment::Unload()
 	_view = NULL;
 
 	_positionWidget.Unload();
-	_debugDraw.Unload();
 }
 
 void Environment::Render()
@@ -333,6 +324,10 @@ void Environment::Render()
 	D3DXVECTOR4 viewDirection = D3DXVECTOR4(_camera.Look(), 1.0f);
 	_viewDirection->SetFloatVector((float*)viewDirection);
 
+	const Vector3f& lightpvec = _positionWidget.GetPosition();
+	D3DXVECTOR4 lightpos = D3DXVECTOR4(lightpvec.x, lightpvec.y, lightpvec.z, 1.0f);
+	_lightPosition->SetFloatVector((float*)lightpos);
+
 	D3D10_TECHNIQUE_DESC techDesc;
 	_renderSceneTechnique->GetDesc( &techDesc );
     for( UINT p = 0; p < techDesc.Passes; ++p )
@@ -341,9 +336,8 @@ void Environment::Render()
 		d3dDevice->Draw( _numTriangles*3, 0 );
     }
 
-	_positionWidget.Draw(_camera, _renderWindow);
-
-	_debugDraw.DrawLine(_prevTrace._origin, _prevTrace._origin + _prevTrace._direction * 1.0f, _renderWindow, _camera);
+	if (!_hideEditor)
+		_positionWidget.Draw(_camera, _renderWindow);
 }
 
 D3DXVECTOR3 Environment::blobPos(int n)
@@ -400,28 +394,18 @@ void Environment::Update(float dt)
 		newPos = true;
 	}
 
+	if (input.IsKeyJustPressed(Input::KEY_H))
+	{
+		_hideEditor = !_hideEditor;
+
+		if (_hideEditor)
+			_positionWidget.Reset();
+	}
+
 	if (input.IsButtonDown(Input::BUTTON_LEFT))
 	{
 		_camera.RotatePitch(input.GetMouseDistance().y*0.006f);
 		_camera.RotateYaw(input.GetMouseDistance().x*0.006f);
-	}
-
-	if (input.IsButtonJustPressed(Input::BUTTON_RIGHT))
-	{
-		_prevTrace = _camera.UnprojectCoord(input.GetCursorPosition());
-
-		std::cout << _prevTrace._origin << ", " << _prevTrace._direction << std::endl;
-
-		Vector3f intersectionPt;
-
-		AABB box(Vector3f(0.08f, -0.005f, -0.005f), Vector3f(0.1f, 0.005f, 0.005f));
-
-		float t = _prevTrace.Intersects(box);
-
-		if (t > 0)
-		{
-			_prevTrace._direction *= t;
-		}
 	}
 
 	if (newPos)
@@ -433,4 +417,7 @@ void Environment::Update(float dt)
 			_camera.Position(oldCameraPos);
 		}
 	}
+	
+	if (!_hideEditor)
+		_positionWidget.Update(_camera, input);
 }

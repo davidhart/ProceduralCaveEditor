@@ -82,7 +82,7 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 	float4 diffuse = float4(float3(0.7f, 0.65f, 0.65f)*diffuseAmt, 1.0f);
 
 	float specAmt = pow(clamp(dot(reflect(ViewDirection, N), normalize(lightDirection)), 0.0f, 1.0f),22.0f) * attenuation*2.0f;
-	float4 spec = float4(float3(0.2f, 0.2f, 0.2f)*specAmt, 1.0f);
+	float4 spec = float4(float3(0.15f, 0.15f, 0.15f)*specAmt, 1.0f);
 	
 	float4 ambient = float4(0.05f, 0.05f, 0.05f, 1.0f);
 

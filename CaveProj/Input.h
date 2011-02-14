@@ -15,10 +15,17 @@ public:
 	enum eKey
 	{
 		KEY_SPACE = 0x20,
-		KEY_W = 0x57,
+
 		KEY_A = 0x41,
-		KEY_S = 0x53,
 		KEY_D = 0x44,
+		KEY_E = 0x45,
+		KEY_F = 0x46,
+		KEY_G = 0x47,
+		KEY_H = 0x48,
+
+		KEY_S = 0x53,
+		
+		KEY_W = 0x57,
 	};
 
 	friend class RenderWindow;
@@ -28,6 +35,7 @@ public:
 
 	inline bool IsButtonDown(eButton button) const { return m_currentMouseState.Buttons[button]; }
 	inline bool IsButtonJustPressed(eButton button) const { return m_currentMouseState.Buttons[button] && !m_prevMouseState.Buttons[button]; }
+	inline bool IsButtonJustReleased(eButton button) const  { return !m_currentMouseState.Buttons[button] && m_prevMouseState.Buttons[button]; }
 
 	inline bool IsKeyDown(eKey key) const { return m_currentKeyState[key]; }
 	inline bool IsKeyJustPressed(eKey key) const { return m_currentKeyState[key] && !m_prevKeyState[key]; }

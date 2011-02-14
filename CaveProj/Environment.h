@@ -6,8 +6,6 @@
 #include <D3DX10.h>
 #include "Camera.h"
 #include "PositionWidget.h"
-#include "DebugDrawer.h"
-#include "Ray.h"
 
 class RenderWindow;
 
@@ -52,10 +50,7 @@ private:
 	UINT _numTriangles;
 	int _resolution;
 	PositionWidget _positionWidget;
-
-	DebugDrawer _debugDraw;
-
-	Ray _prevTrace;
+	bool _hideEditor;
 
 	RenderWindow& _renderWindow;
 	Camera _camera;
