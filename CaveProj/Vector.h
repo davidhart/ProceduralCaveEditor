@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <cmath>
 
 template <typename T>
 class Vector2
@@ -41,7 +42,7 @@ public:
 	Vector3(T x, T y, T z) : x(x), y(y), z(z) { }
 	Vector3() : x(0), y(0), z(0) { }
 
-	const Vector3<T> operator+(const Vector3<T>& r)
+	const Vector3<T> operator+(const Vector3<T>& r) const
 	{
 		return Vector3<T>(x+r.x, y+r.y, z+r.z);
 	}
@@ -54,19 +55,51 @@ public:
 		return *this;
 	}
 
+	const Vector3<T> operator- (const Vector3<T>& r) const
+	{
+		return Vector3<T>(x - r.x, y - r.y, z - r.z);
+	}
+
+	const Vector3<T>& operator-= (const Vector3<T>& r)
+	{
+		x -= r.x;
+		y -= r.y;
+		z -= r.z;
+		return *this;
+	}
+
+	inline const Vector3<T> operator* (T s) const
+	{
+		return Vector3<T>(x * s, y * s, z * s);
+	}
+
+	inline const Vector3<T>& operator*= (T s)
+	{
+		x *= s;
+		y *= s;
+		z *= s;
+		return *this;
+	}
+
+	inline T Dot(const Vector3<T>&rhs) const
+	{
+		return x*rhs.x + y*rhs.y + z*rhs.z;
+	}
+
+	inline T Length() const
+	{
+		return sqrt(x*x + y*y + z*z);
+	}
+
 	T x;
 	T y;
 	T z;
 };
 
-inline const Vector3<float> operator* (const Vector3<float>& v, float s)
-{
-	return Vector3<float>(v.x * s, v.y * s, v.z * s);
-}
 
-inline const Vector3<float> operator* (float s, const Vector3<float>& v)
+template <typename T> inline const Vector3<T> operator* (T s, const Vector3<T>& v)
 {
-	return Vector3<float>(v.x * s, v.y * s, v.z * s);
+	return Vector3<T>(v.x * s, v.y * s, v.z * s);
 }
 
 template <typename T> inline std::ostream& operator<< (std::ostream& out, const Vector3<T>& v)

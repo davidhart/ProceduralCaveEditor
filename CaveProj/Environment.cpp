@@ -3,6 +3,8 @@
 
 #include "Camera.h"
 #include "ShaderBuilder.h"
+#include "AABB.h"
+#include "Plane.h"
 #include <cstdlib>
 
 #include <iostream>
@@ -409,6 +411,17 @@ void Environment::Update(float dt)
 		_prevTrace = _camera.UnprojectCoord(input.GetCursorPosition());
 
 		std::cout << _prevTrace._origin << ", " << _prevTrace._direction << std::endl;
+
+		Vector3f intersectionPt;
+
+		AABB box(Vector3f(0.08f, -0.005f, -0.005f), Vector3f(0.1f, 0.005f, 0.005f));
+
+		float t = _prevTrace.Intersects(box);
+
+		if (t > 0)
+		{
+			_prevTrace._direction *= t;
+		}
 	}
 
 	if (newPos)

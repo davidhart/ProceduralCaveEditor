@@ -50,6 +50,12 @@
     <ClCompile Include="DebugDrawer.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Plane.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="AABB.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h">
@@ -89,6 +95,15 @@
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="DebugDrawer.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Plane.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="AABB.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Util.h">
       <Filter>Source</Filter>
     </ClInclude>
   </ItemGroup>
