@@ -248,37 +248,28 @@ void PositionWidget::Update(const Camera& camera, const Input& input)
 	else
 	{
 		Ray r = camera.UnprojectCoord(input.GetCursorPosition());
-		Plane p(_position+_grabPoint, Vector3f(0, 0, 0));
+		Ray axis (_position + _grabPoint, Vector3f(0, 0, 0));
 
 		switch (_grabState)
 		{
 		case GRAB_X:
-			p._normal = Vector3f(0, 0, 1);
+			axis._direction = Vector3f(1, 0, 0);
 			break;
 		case GRAB_Y:
-			p._normal = Vector3f(0, 0, 1);
+			axis._direction = Vector3f(0, 1, 0);
 			break;
 		case GRAB_Z:
-			p._normal = Vector3f(0, 1, 0);
+			axis._direction = Vector3f(0, 0, 1);
 			break;
 		}
-		float t = r.Intersects(p, true);
-		if (t > 0)
-		{
-			Vector3f newPos = r._origin + r._direction * t;
 
-			switch (_grabState)
-			{
-			case GRAB_X:
-				_position.x = newPos.x - _grabPoint.x;
-				break;
-			case GRAB_Y:
-				_position.y = newPos.y - _grabPoint.y;
-				break;
-			case GRAB_Z:
-				_position.z = newPos.z - _grabPoint.z;
-				break;
-			}
+
+		float t;
+		if (axis.ClosestPoint(r, t))
+		{
+			Vector3f newPos = axis._origin + axis._direction * t;
+
+			_position = newPos - _grabPoint;
 		}
 
 		if (input.IsButtonJustReleased(Input::BUTTON_RIGHT))

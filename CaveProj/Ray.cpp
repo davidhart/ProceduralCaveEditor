@@ -2,6 +2,7 @@
 #include "Plane.h"
 #include "AABB.h"
 #include "Util.h"
+#include "Math.h"
 
 Ray::Ray(const Vector3f& origin, const Vector3f& direction) :
 	_origin(origin),
@@ -124,4 +125,32 @@ float Ray::Intersects(const AABB& aabb) const
 	}
 
 	return distance;
+}
+
+bool Ray::ClosestPoint(const Ray& ray, float& point) const
+{
+	// Find closest point on ray 1 to ray 2
+	// pa = p1 + t1 * d1
+	// pa: closest point
+	// returns t1
+
+	// Distance between two rays
+	Vector3f d12 = _origin - ray._origin; 
+	
+	float d12d2 = d12.Dot(ray._direction);
+	float d2d1 = ray._direction.Dot(_direction);
+	float d12d1 = d12.Dot(_direction);
+	float d2d2 = ray._direction.Dot(ray._direction);
+	float d1d1 = _direction.Dot(_direction);
+
+	float denom = d1d1 * d2d2 - d2d1 * d2d1;
+
+	if (abs(denom) < Math::EPSILON)
+		return false;
+
+	float numer = d12d2 * d2d1 - d12d1 * d2d2;
+
+	point = numer/denom;
+
+	return true;
 }

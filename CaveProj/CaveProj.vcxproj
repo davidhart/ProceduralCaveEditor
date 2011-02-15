@@ -72,6 +72,7 @@
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MarchingCubesData.cpp" />
+    <ClCompile Include="Math.cpp" />
     <ClCompile Include="Plane.cpp" />
     <ClCompile Include="PositionWidget.cpp" />
     <ClCompile Include="Ray.cpp" />
@@ -88,6 +89,7 @@
     <ClInclude Include="Environment.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="MarchingCubesData.h" />
+    <ClInclude Include="Math.h" />
     <ClInclude Include="Plane.h" />
     <ClInclude Include="PositionWidget.h" />
     <ClInclude Include="Ray.h" />
