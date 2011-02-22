@@ -15,13 +15,13 @@ cbuffer ProjectionMatrix
 struct VS_INPUT
 {
     float3 Pos          : POSITION;
-	float4 Color		: COLOR;
+	float4 Color		: COLOR0;
 };
 
 struct PS_INPUT
 {
 	float4 Pos : SV_Position;
-	float4 Color : COLOR;
+	float4 Color : COLOR0;
 };
 
 PS_INPUT mainVS(VS_INPUT input)

@@ -15,7 +15,7 @@ int Application::Run()
 	while (true)
 	{
 
-		_renderWindow.DoEvents();
+		_renderWindow.DoEvents(*this);
 
 		if (!_renderWindow.IsOpen())
 			break;

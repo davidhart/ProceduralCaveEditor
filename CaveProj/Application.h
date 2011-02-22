@@ -13,6 +13,7 @@ public:
 	virtual void UnloadGraphics() = 0;
 	virtual void Render() = 0;
 	virtual void Update(float dt) = 0;
+	virtual bool HandleMessage(MSG msg) { return false; };
 
 protected:
 	RenderWindow _renderWindow;

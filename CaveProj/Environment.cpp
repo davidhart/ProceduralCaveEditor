@@ -134,7 +134,7 @@ void Environment::Load()
 {
 	_camera.ViewportSize(_renderWindow.GetSize());
 
-	_resolution = 160;
+	_resolution = 100;
 	float cubeSize = 4.0f / _resolution;
 	int limit = _resolution / 2;
 	ID3D10Device* d3dDevice = _renderWindow.GetDevice();

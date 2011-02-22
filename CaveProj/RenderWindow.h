@@ -8,6 +8,8 @@
 #include "Input.h"
 #include <string>
 
+class Application;
+
 class RenderWindow
 {
 public:
@@ -15,7 +17,7 @@ public:
 
 	void Close();
 	bool IsOpen();
-	void DoEvents();
+	void DoEvents(Application& application);
 
 	bool Create();
 

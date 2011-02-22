@@ -194,6 +194,8 @@ void PositionWidget::Draw(const Camera& camera, RenderWindow& renderWindow)
 
 	_proj->SetMatrix((float*)&camera.GetProjectionMatrix());
 
+	d3dDevice->IASetInputLayout(_vertexLayout);
+
 	_renderTechnique->GetPassByIndex(0)->Apply( 0 );
 
 	UINT stride = sizeof( Vertex );

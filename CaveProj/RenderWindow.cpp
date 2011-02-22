@@ -1,7 +1,7 @@
 #include "RenderWindow.h"
+#include "Application.h"
 
 #include <D3DX10.h>
-
 #include <iostream>
 
 const char* RenderWindow::WINDOW_CLASS_NAME = "DXWindow";
@@ -20,15 +20,18 @@ bool RenderWindow::IsOpen()
 	return _isOpen;
 }
 
-void RenderWindow::DoEvents()
+void RenderWindow::DoEvents(Application& application)
 {
 	_input.UpdateStep();
 
 	MSG msg;
 	while (PeekMessage(&msg, 0, 0, 0, PM_REMOVE))
 	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
+		if (!application.HandleMessage(msg))
+		{
+			TranslateMessage(&msg);
+			DispatchMessage(&msg);
+		}
 	}
 }
 

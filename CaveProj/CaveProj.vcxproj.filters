@@ -59,6 +59,9 @@
     <ClCompile Include="Math.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="GwenDX10Renderer.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h">
@@ -112,6 +115,9 @@
     <ClInclude Include="Math.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="GwenDX10Renderer.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="marchingcubes.fx">
@@ -121,6 +127,9 @@
       <Filter>Source</Filter>
     </None>
     <None Include="unlit_vertcol.fx">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="render2D.fx">
       <Filter>Source</Filter>
     </None>
   </ItemGroup>
