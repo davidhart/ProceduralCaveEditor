@@ -8,11 +8,12 @@
 #include "PositionWidget.h"
 
 class RenderWindow;
+class TestApp;
 
 class Environment
 {
 public:
-	Environment(RenderWindow& renderWindow);
+	Environment(TestApp& testApp, RenderWindow& renderWindow);
 	void Load();
 	void Unload();
 	void Render();
@@ -54,6 +55,7 @@ private:
 
 	RenderWindow& _renderWindow;
 	Camera _camera;
+	TestApp& _app;
 };
 
 #endif

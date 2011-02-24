@@ -5,12 +5,14 @@
 #include "ShaderBuilder.h"
 #include "MarchingCubesData.h"
 #include "Timer.h"
+#include "TestApp.h"
 
 #include <cstdlib>
 #include <iostream>
 #include <vector>
 
-Environment::Environment(RenderWindow& renderWindow) :
+Environment::Environment(TestApp& testApp, RenderWindow& renderWindow) :
+	_app(testApp),
 	_renderWindow(renderWindow),
 	_genModelEffect(NULL),
 	_renderSceneEffect(NULL),
@@ -402,7 +404,7 @@ void Environment::Update(float dt)
 			_positionWidget.Reset();
 	}
 
-	if (input.IsButtonDown(Input::BUTTON_LEFT))
+	if (input.IsButtonDown(Input::BUTTON_MID) && _app.IsMouseInUI())
 	{
 		_camera.RotatePitch(input.GetMouseDistance().y*0.006f);
 		_camera.RotateYaw(input.GetMouseDistance().x*0.006f);
@@ -418,6 +420,6 @@ void Environment::Update(float dt)
 		}
 	}
 	
-	if (!_hideEditor)
+	if (!_hideEditor && _app.IsMouseInUI())
 		_positionWidget.Update(_camera, input);
 }
