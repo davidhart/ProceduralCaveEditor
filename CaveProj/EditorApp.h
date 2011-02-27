@@ -1,9 +1,9 @@
 #pragma once
-#ifndef _TESTAPP_H_
-#define _TESTAPP_H_
+#ifndef _EDITORAPP_H_
+#define _EDITORAPP_H_
 
 #include "Application.h"
-#include "Environment.h"
+#include "Editor.h"
 #include "GwenDX10Renderer.h"
 
 #include "Gwen/Gwen.h"
@@ -14,10 +14,10 @@
 #include "Gwen/Controls/Canvas.h"
 #include "Gwen/Controls/DockBase.h"
 
-class TestApp : public Application
+class EditorApp : public Application
 {
 public:
-	TestApp();
+	EditorApp();
 	void LoadGraphics();
 	void UnloadGraphics();
 	void Render();
@@ -30,8 +30,7 @@ public:
 	void CreateLightingPage();
 
 private:
-	Environment _environment;
-
+	Editor _editor;
 	Gwen::Skin::TexturedBase _skin;
 	Gwen::Renderer::DirectX10* _renderer;
 	Gwen::Controls::Canvas* _canvas;

@@ -2,8 +2,7 @@
 #include "Gwen/Texture.h"
 #include "Gwen/Font.h"
 
-#define COLOR_RGBA(a,r,g,b) \
-    ((DWORD)((((a)&0xff)<<24)|(((b)&0xff)<<16)|(((g)&0xff)<<8)|((r)&0xff)))
+#include "Util.h"
 
 namespace Gwen
 {
@@ -81,7 +80,7 @@ namespace Gwen
 
 		void DirectX10::SetDrawColor(Color color)
 		{
-			m_Color = COLOR_RGBA(color.a, color.r, color.g, color.b);
+			m_Color = COLOR_ARGB(color.a, color.r, color.g, color.b);
 		}
 
 		void DirectX10::DrawLine(int x, int y, int a, int b)

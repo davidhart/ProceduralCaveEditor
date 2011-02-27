@@ -6,6 +6,7 @@
 #include <D3D10.h>
 #include <D3DX10.h>
 
+class Ray;
 class RenderWindow;
 class Camera;
 class Input;
@@ -13,28 +14,34 @@ class Input;
 class PositionWidget
 {
 public:
-	PositionWidget(const Vector3f& position);
-	void Load(RenderWindow& renderWindow);
-	void Unload();
-	void Draw(const Camera& camera, RenderWindow& renderWindow);
-	void Update(const Camera& camera, const Input& input);
-	void Reset();
-
-	inline const Vector3f& GetPosition() const { return _position; }
-
-private:
-	struct Vertex
-	{
-		D3DXVECTOR3 pos;
-		D3DXCOLOR col;
-	};
-
 	enum eGrabState
 	{
 		GRAB_NONE,
 		GRAB_X,
 		GRAB_Y,
 		GRAB_Z,
+	};
+
+	PositionWidget(const Vector3f& position);
+	void Load(RenderWindow& renderWindow);
+	void Unload();
+	void Draw(const Camera& camera, RenderWindow& renderWindow);
+	void Reset();
+
+	inline void SetPosition(const Vector3f& position) { _position = position; }
+	inline const Vector3f& GetPosition() const { return _position; }
+
+	eGrabState TestIntersection(const Ray& ray, float& intersection);
+	void StartDrag(const Ray& ray, float intersectionPoint, eGrabState grab);
+	void HandleDrag(const Camera& camera, const Vector2f& mousePosition);
+	void EndDrag();
+	inline bool IsInDrag() { return _grabState != GRAB_NONE; }
+
+private:
+	struct Vertex
+	{
+		D3DXVECTOR3 pos;
+		D3DXCOLOR col;
 	};
 
 	static const Vertex LineVerts[6];

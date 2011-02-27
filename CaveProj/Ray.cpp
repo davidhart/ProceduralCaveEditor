@@ -127,6 +127,27 @@ float Ray::Intersects(const AABB& aabb) const
 	return distance;
 }
 
+float Ray::Intersects(const Vector3f& spherePosition, float radius) const
+{
+	float a = _direction.Dot(_direction);
+	float b = 2 * _direction.Dot(_origin - spherePosition);
+	float c = _origin.Dot(_origin) +
+			  spherePosition.Dot(spherePosition) -
+			  2 * _origin.Dot(spherePosition) - radius * radius;
+
+	float discriminant = pow(b, 2) - 4 * a * c;
+
+	if (discriminant >= 0)
+	{
+		float t = Util::Min((-b + sqrt(discriminant)) / (2 * a), (-b - sqrt(discriminant)) / (2 * a)); 
+
+		if (t >= 0)
+			return t;
+	}
+
+	return -1;
+}
+
 bool Ray::ClosestPoint(const Ray& ray, float& point) const
 {
 	// Find closest point on ray 1 to ray 2

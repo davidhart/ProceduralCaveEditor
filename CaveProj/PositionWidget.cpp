@@ -210,75 +210,77 @@ void PositionWidget::Draw(const Camera& camera, RenderWindow& renderWindow)
 	d3dDevice->Draw( _numLines*2, 0 );
 }
 
-void PositionWidget::Update(const Camera& camera, const Input& input)
+PositionWidget::eGrabState PositionWidget::TestIntersection(const Ray& ray, float& intersection)
 {
-	if (_grabState == GRAB_NONE)
+	AABB xArrowBounds(Vector3f(0.08f, -0.005f, -0.005f)+_position, Vector3f(0.1f, 0.005f, 0.005f)+_position);
+	AABB yArrowBounds(Vector3f(-0.005f, 0.08f, -0.005f)+_position, Vector3f(0.005f, 0.1f, 0.005f)+_position);
+	AABB zArrowBounds(Vector3f(-0.005f, -0.005f, 0.08f)+_position, Vector3f(0.005f, 0.005f, 0.1f)+_position);
+
+	eGrabState grab = GRAB_NONE;
+
+	float closestI = -1;
+	float t = ray.Intersects(xArrowBounds);
+	if (t > 0)
 	{
-		if (input.IsButtonJustPressed(Input::BUTTON_RIGHT))
-		{
-			Ray r = camera.UnprojectCoord(input.GetCursorPosition());
-
-			Vector3f intersectionPt;
-
-			AABB xArrowBounds(Vector3f(0.08f, -0.005f, -0.005f)+_position, Vector3f(0.1f, 0.005f, 0.005f)+_position);
-			AABB yArrowBounds(Vector3f(-0.005f, 0.08f, -0.005f)+_position, Vector3f(0.005f, 0.1f, 0.005f)+_position);
-			AABB zArrowBounds(Vector3f(-0.005f, -0.005f, 0.08f)+_position, Vector3f(0.005f, 0.005f, 0.1f)+_position);
-
-			float closestI = -1;
-			float t = r.Intersects(xArrowBounds);
-			if (t > 0)
-			{
-				_grabState = GRAB_X;
-				closestI = t;
-			}
-			t = r.Intersects(yArrowBounds);
-			if (t > 0 && (t < closestI || closestI < 0))
-			{
-				_grabState = GRAB_Y;
-				closestI = t;
-			}
-			t = r.Intersects(zArrowBounds);
-			if (t > 0 && (t < closestI || closestI < 0))
-			{
-				_grabState = GRAB_Z;
-				closestI = t;
-			}
-
-			_grabPoint = (r._origin + r._direction * closestI) - _position;
-		}
+		grab = GRAB_X;
+		closestI = t;
 	}
-	else
+	t = ray.Intersects(yArrowBounds);
+	if (t > 0 && (t < closestI || closestI < 0))
 	{
-		Ray r = camera.UnprojectCoord(input.GetCursorPosition());
-		Ray axis (_position + _grabPoint, Vector3f(0, 0, 0));
-
-		switch (_grabState)
-		{
-		case GRAB_X:
-			axis._direction = Vector3f(1, 0, 0);
-			break;
-		case GRAB_Y:
-			axis._direction = Vector3f(0, 1, 0);
-			break;
-		case GRAB_Z:
-			axis._direction = Vector3f(0, 0, 1);
-			break;
-		}
-
-
-		float t;
-		if (axis.ClosestPoint(r, t))
-		{
-			Vector3f newPos = axis._origin + axis._direction * t;
-
-			_position = newPos - _grabPoint;
-		}
-
-		if (input.IsButtonJustReleased(Input::BUTTON_RIGHT))
-		{
-			_grabState = GRAB_NONE;
-		}
+		grab = GRAB_Y;
+		closestI = t;
 	}
+	t = ray.Intersects(zArrowBounds);
+	if (t > 0 && (t < closestI || closestI < 0))
+	{
+		grab = GRAB_Z;
+		closestI = t;
+	}
+
+	if (grab != GRAB_NONE)
+	{
+		intersection = closestI;
+	}
+	return grab;
+}
+void PositionWidget::StartDrag(const Ray& ray, float intersectionPoint, PositionWidget::eGrabState grab)
+{
+	_grabPoint = (ray._origin + ray._direction * intersectionPoint) - _position;
+	_grabState = grab;
+}
+
+void PositionWidget::HandleDrag(const Camera& camera, const Vector2f& mousePosition)
+{
+	Ray r = camera.UnprojectCoord(mousePosition);
+	Ray axis (_position + _grabPoint, Vector3f(0, 0, 0));
+
+	switch (_grabState)
+	{
+	case GRAB_X:
+		axis._direction = Vector3f(1, 0, 0);
+		break;
+	case GRAB_Y:
+		axis._direction = Vector3f(0, 1, 0);
+		break;
+	case GRAB_Z:
+		axis._direction = Vector3f(0, 0, 1);
+		break;
+	}
+
+
+	float t;
+	if (axis.ClosestPoint(r, t))
+	{
+		Vector3f newPos = axis._origin + axis._direction * t;
+
+		_position = newPos - _grabPoint;
+	}
+}
+
+void PositionWidget::EndDrag()
+{
+	_grabState = GRAB_NONE;
 }
 
 void PositionWidget::Reset()

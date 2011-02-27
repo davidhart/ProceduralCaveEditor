@@ -1,9 +1,9 @@
-#include "camera.h"
+#include "Camera.h"
 #include <d3dx9.h>
 
 #include <sstream>
 
-Camera::Camera(const D3DXVECTOR3& position, float pitch, float yaw) : 
+Camera::Camera(const Vector3f& position, float pitch, float yaw) : 
 	_position (position),
 	_pitch(pitch),
 	_yaw(yaw)
@@ -22,38 +22,38 @@ Camera::~Camera()
 
 }
 
-D3DXVECTOR3 Camera::Look() const
+Vector3f Camera::Look() const
 {
-	D3DXVECTOR3 upVec=D3DXVECTOR3(0.0f,1.0f,0.0f);
-	D3DXVECTOR3 lookVec=D3DXVECTOR3(0.0f,0.0f,1.0f);
-	D3DXVECTOR3 rightVec=D3DXVECTOR3(1.0f,0.0f,0.0f);
+	Vector3f upVec (0.0f,1.0f,0.0f);
+	Vector3f lookVec (0.0f,0.0f,1.0f);
+	Vector3f rightVec (1.0f,0.0f,0.0f);
 
 	D3DXMATRIX yawMatrix;
-	D3DXMatrixRotationAxis(&yawMatrix, &upVec, _yaw);
-	D3DXVec3TransformCoord(&lookVec, &lookVec, &yawMatrix); 
-	D3DXVec3TransformCoord(&rightVec, &rightVec, &yawMatrix); 
+	D3DXMatrixRotationAxis(&yawMatrix, (D3DXVECTOR3*)&upVec, _yaw);
+	D3DXVec3TransformCoord((D3DXVECTOR3*)&lookVec, (D3DXVECTOR3*)&lookVec, &yawMatrix); 
+	D3DXVec3TransformCoord((D3DXVECTOR3*)&rightVec, (D3DXVECTOR3*)&rightVec, &yawMatrix); 
 
 	D3DXMATRIX pitchMatrix;
-	D3DXMatrixRotationAxis(&pitchMatrix, &rightVec, _pitch);
-	D3DXVec3TransformCoord(&lookVec, &lookVec, &pitchMatrix);
+	D3DXMatrixRotationAxis(&pitchMatrix, (D3DXVECTOR3*)&rightVec, _pitch);
+	D3DXVec3TransformCoord((D3DXVECTOR3*)&lookVec, (D3DXVECTOR3*)&lookVec, &pitchMatrix);
 
 	return lookVec;
 }
 
 void Camera::MoveAdvance(float distance)
 {
-	D3DXVECTOR3 lookVec = Look();
+	Vector3f lookVec = Look();
 
 	_position += distance * lookVec;
 }
 void Camera::MoveStrafe(float distance)
 {
-	D3DXVECTOR3 upVec=D3DXVECTOR3(0.0f,1.0f,0.0f);
-	D3DXVECTOR3 rightVec=D3DXVECTOR3(1.0f,0.0f,0.0f);
+	Vector3f upVec (0.0f,1.0f,0.0f);
+	Vector3f rightVec (1.0f,0.0f,0.0f);
 
 	D3DXMATRIX yawMatrix;
-	D3DXMatrixRotationAxis(&yawMatrix, &upVec, _yaw);
-	D3DXVec3TransformCoord(&rightVec, &rightVec, &yawMatrix); 
+	D3DXMatrixRotationAxis(&yawMatrix, (D3DXVECTOR3*)&upVec, _yaw);
+	D3DXVec3TransformCoord((D3DXVECTOR3*)&rightVec, (D3DXVECTOR3*)&rightVec, &yawMatrix); 
 
 	_position += distance * rightVec;
 }
@@ -78,24 +78,24 @@ void Camera::RotateYaw(float rotation)
 
 D3DXMATRIX Camera::GetViewMatrix() const
 {
-	D3DXVECTOR3 upVec= D3DXVECTOR3(0.0f,1.0f,0.0f);
-	D3DXVECTOR3 lookVec= D3DXVECTOR3(0.0f,0.0f,1.0f);
-	D3DXVECTOR3 rightVec= D3DXVECTOR3(1.0f,0.0f,0.0f);
+	Vector3f upVec (0.0f,1.0f,0.0f);
+	Vector3f lookVec (0.0f,0.0f,1.0f);
+	Vector3f rightVec (1.0f,0.0f,0.0f);
 	
 	D3DXMATRIX yawMatrix;
-	D3DXMatrixRotationAxis(&yawMatrix, &upVec, _yaw);
+	D3DXMatrixRotationAxis(&yawMatrix, (D3DXVECTOR3*)&upVec, _yaw);
 
-	D3DXVec3TransformCoord(&lookVec, &lookVec, &yawMatrix); 
-	D3DXVec3TransformCoord(&rightVec, &rightVec, &yawMatrix); 
+	D3DXVec3TransformCoord((D3DXVECTOR3*)&lookVec, (D3DXVECTOR3*)&lookVec, &yawMatrix); 
+	D3DXVec3TransformCoord((D3DXVECTOR3*)&rightVec, (D3DXVECTOR3*)&rightVec, &yawMatrix); 
 
 	D3DXMATRIX pitchMatrix;
-	D3DXMatrixRotationAxis(&pitchMatrix, &rightVec, _pitch);
-	D3DXVec3TransformCoord(&lookVec, &lookVec, &pitchMatrix);
-	D3DXVec3TransformCoord(&upVec, &upVec, &pitchMatrix); 
+	D3DXMatrixRotationAxis(&pitchMatrix, (D3DXVECTOR3*)&rightVec, _pitch);
+	D3DXVec3TransformCoord((D3DXVECTOR3*)&lookVec, (D3DXVECTOR3*)&lookVec, &pitchMatrix);
+	D3DXVec3TransformCoord((D3DXVECTOR3*)&upVec, (D3DXVECTOR3*)&upVec, &pitchMatrix); 
 	
 	D3DXMATRIX matView;
-	D3DXVECTOR3 lookAt = _position + lookVec;
-	D3DXMatrixLookAtLH(&matView, &_position, &lookAt, &upVec);
+	Vector3f lookAt = _position + lookVec;
+	D3DXMatrixLookAtLH(&matView, (D3DXVECTOR3*)&_position, (D3DXVECTOR3*)&lookAt, (D3DXVECTOR3*)&upVec);
 
 	return matView;
 }

@@ -13,6 +13,7 @@ public:
 	Ray(const Vector3f& origin, const Vector3f& direction);
 	float Intersects(const Plane& plane, bool twoSided = false) const;
 	float Intersects(const AABB& aabb) const;
+	float Intersects(const Vector3f& spherePosition, float radius) const;
 	bool ClosestPoint(const Ray& ray, float& point) const;
 
 	Vector3f _origin;

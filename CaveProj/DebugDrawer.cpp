@@ -13,7 +13,7 @@ void DebugDrawer::Load(RenderWindow& renderWindow)
 	_renderTechnique = _renderEffect->GetTechniqueByName("Render");
 
 	D3D10_PASS_DESC PassDesc;
-	_renderTechnique->GetPassByIndex( 0 )->GetDesc(&PassDesc);
+	_renderTechnique->GetPassByIndex(0)->GetDesc(&PassDesc);
 
 	D3D10_INPUT_ELEMENT_DESC layoutRender[] =
     {
@@ -66,7 +66,6 @@ void DebugDrawer::DrawLine(const Vector3f& start, const Vector3f& end, RenderWin
 	ID3D10Buffer* buffer;
 	d3dDevice->CreateBuffer(&bd, &InitData, &buffer);
 
-
 	D3DXMATRIX worldm;
 	D3DXMatrixIdentity(&worldm);
 	_world->SetMatrix((float*)&worldm);
@@ -76,11 +75,12 @@ void DebugDrawer::DrawLine(const Vector3f& start, const Vector3f& end, RenderWin
 
 	_proj->SetMatrix((float*)&camera.GetProjectionMatrix());
 	
-	_renderTechnique->GetPassByIndex(0)->Apply( 0 );
+	_renderTechnique->GetPassByIndex(0)->Apply(0);
 
-	UINT stride = sizeof( Vertex );
+	UINT stride = sizeof(Vertex);
     UINT offset = 0;
 
+	d3dDevice->IASetInputLayout(_vertexLayout);
 	d3dDevice->IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
 	d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
 	d3dDevice->Draw( 2, 0 );

@@ -5,15 +5,13 @@
 #include "ShaderBuilder.h"
 #include "MarchingCubesData.h"
 #include "Timer.h"
-#include "TestApp.h"
+#include "Util.h"
 
 #include <cstdlib>
 #include <iostream>
 #include <vector>
 
-Environment::Environment(TestApp& testApp, RenderWindow& renderWindow) :
-	_app(testApp),
-	_renderWindow(renderWindow),
+Environment::Environment() :
 	_genModelEffect(NULL),
 	_renderSceneEffect(NULL),
 	_genModelTechnique(NULL),
@@ -22,7 +20,6 @@ Environment::Environment(TestApp& testApp, RenderWindow& renderWindow) :
 	_vertexLayoutScene(NULL),
 	_bufferPointGrid(NULL),
 	_bufferEnvironmentModel(NULL),
-	_camera(D3DXVECTOR3(0,0,0), 0, 0),
 	_view(NULL),
 	_viewDirection(NULL),
 	_numTriangles(0),
@@ -30,8 +27,7 @@ Environment::Environment(TestApp& testApp, RenderWindow& renderWindow) :
 	_texture(NULL),
 	_texture2(NULL),
 	_textureBump(NULL),
-	_positionWidget(Vector3f(0,0,0)),
-	_hideEditor(false)
+	_lightsChanged(false)
 {
 }
 
@@ -49,11 +45,10 @@ void Environment::GenBlobs()
 	std::cout << "Generated blobs" << std::endl;
 }
 
-void Environment::GenModel()
+void Environment::GenModel(ID3D10Device* d3dDevice)
 {
 	Timer t;
 	t.Start();
-	ID3D10Device* d3dDevice = _renderWindow.GetDevice();
 
 	ID3D10EffectVariable* blobs = _genModelEffect->GetVariableByName("blobs");
 
@@ -132,14 +127,11 @@ void Environment::GenModel()
 	std::cout << "Model generated in " << t.GetTime() << "s" << std::endl;
 }
 
-void Environment::Load()
+void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 {
-	_camera.ViewportSize(_renderWindow.GetSize());
-
 	_resolution = 100;
 	float cubeSize = 4.0f / _resolution;
 	int limit = _resolution / 2;
-	ID3D10Device* d3dDevice = _renderWindow.GetDevice();
 	
 	// Create Vertex Buffer
 	std::vector<D3DVECTOR> inputData;
@@ -244,10 +236,9 @@ void Environment::Load()
 	world->SetMatrix((float*)&worldm);
 
 	ID3D10EffectMatrixVariable* proj = _renderSceneEffect->GetVariableByName("Proj")->AsMatrix();
-	proj->SetMatrix((float*)&_camera.GetProjectionMatrix());
+	proj->SetMatrix((float*)&camera.GetProjectionMatrix());
 
 	_view = _renderSceneEffect->GetVariableByName("View")->AsMatrix();
-	_lightPosition = _renderSceneEffect->GetVariableByName("LightPosition")->AsVector();
 	_viewDirection = _renderSceneEffect->GetVariableByName("ViewDirection")->AsVector();
 
 	ID3D10EffectScalarVariable* blobCount = _genModelEffect->GetVariableByName("NumBlobs")->AsScalar();
@@ -266,16 +257,14 @@ void Environment::Load()
 	texturesampler = _renderSceneEffect->GetVariableByName("texBump")->AsShaderResource();
 	texturesampler->SetResource(_textureBump);
 
-	NewCave();
-
-	_positionWidget.Load(_renderWindow);
+	NewCave(d3dDevice);
+	AddLight();
 }
 
-void Environment::NewCave()
+void Environment::NewCave(ID3D10Device* d3dDevice)
 {
 	GenBlobs();
-	GenModel();
-	_camera.Position(D3DXVECTOR3((float*)&_blobs[0].Position));
+	GenModel(d3dDevice);
 }
 
 void Environment::Unload()
@@ -305,13 +294,14 @@ void Environment::Unload()
 	_textureBump = NULL;
 
 	_view = NULL;
-
-	_positionWidget.Unload();
 }
 
-void Environment::Render()
+void Environment::Draw(ID3D10Device* d3dDevice, Camera& camera)
 {
-	ID3D10Device* d3dDevice = _renderWindow.GetDevice();
+	if (_lightsChanged)
+	{
+		UpdateLights();
+	}
 	d3dDevice->IASetInputLayout(_vertexLayoutScene);
 
 	UINT stride = sizeof( D3DVECTOR ) * 2;
@@ -320,15 +310,11 @@ void Environment::Render()
 
 	d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-	D3DXMATRIX viewm = _camera.GetViewMatrix();
+	D3DXMATRIX viewm = camera.GetViewMatrix();
 	_view->SetMatrix((float*)&viewm);
 
-	D3DXVECTOR4 viewDirection = D3DXVECTOR4(_camera.Look(), 1.0f);
+	D3DXVECTOR4 viewDirection = D3DXVECTOR4(*(D3DXVECTOR3*)&camera.Look(), 1.0f);
 	_viewDirection->SetFloatVector((float*)viewDirection);
-
-	const Vector3f& lightpvec = _positionWidget.GetPosition();
-	D3DXVECTOR4 lightpos = D3DXVECTOR4(lightpvec.x, lightpvec.y, lightpvec.z, 1.0f);
-	_lightPosition->SetFloatVector((float*)lightpos);
 
 	D3D10_TECHNIQUE_DESC techDesc;
 	_renderSceneTechnique->GetDesc( &techDesc );
@@ -337,9 +323,6 @@ void Environment::Render()
         _renderSceneTechnique->GetPassByIndex( p )->Apply( 0 );
 		d3dDevice->Draw( _numTriangles*3, 0 );
     }
-
-	if (!_hideEditor)
-		_positionWidget.Draw(_camera, _renderWindow);
 }
 
 D3DXVECTOR3 Environment::blobPos(int n)
@@ -359,67 +342,78 @@ float Environment::sampleField(const D3DXVECTOR3& pos0)
 	return density;
 }
 
+Environment::Light::Light() : 
+	_position(0, 0, 0),
+	_color(0xFFFFFFFF)
+{
+}
+
 void Environment::Update(float dt)
 {
-	const Input& input = _renderWindow.GetInput();
+}
 
-	if (input.IsKeyJustPressed(Input::KEY_SPACE))
+int Environment::NumLights() const
+{
+	return (int)_lights.size();
+}
+
+Vector3f Environment::GetLightPosition(int light) const
+{
+	return _lights[light]._position;
+}
+
+void Environment::SetLightPosition(int light, const Vector3f& position)
+{
+	_lights[light]._position = position;
+	_lightsChanged = true;
+}
+
+DWORD Environment::GetLightColor(int light) const
+{
+	return _lights[light]._color;
+}
+
+void Environment::SetLightColor(int light, DWORD color)
+{
+	_lights[light]._color = color;
+	_lightsChanged = true;
+}
+
+int Environment::AddLight()
+{
+	if (NumLights() < 8)
 	{
-		NewCave();
+		_lights.push_back(Light());
+		_lightsChanged = true;
+		return NumLights() -1;
 	}
+	return -1;
+}
 
-	bool newPos = false;
+void Environment::UpdateLights()
+{
+	ID3D10EffectVariable* lights = _renderSceneEffect->GetVariableByName("lights");
 
-	D3DXVECTOR3 oldCameraPos = _camera.Position();
-
-	if (input.IsKeyDown(Input::KEY_W))
+	int i;
+	for (i = 0; i < NumLights(); ++i)
 	{
-		_camera.MoveAdvance(dt*0.3f);
-		newPos = true;
-	}
+		ID3D10EffectVariable* lighti = lights->GetElement(i);
 
-	if (input.IsKeyDown(Input::KEY_S))
-	{
-		_camera.MoveAdvance(-dt*0.3f);
-		newPos = true;
-	}
-
-	if (input.IsKeyDown(Input::KEY_A))
-	{
-		_camera.MoveStrafe(-dt*0.3f);
-		newPos = true;
-	}
-
-	if (input.IsKeyDown(Input::KEY_D))
-	{
-		_camera.MoveStrafe(dt*0.3f);
-		newPos = true;
-	}
-
-	if (input.IsKeyJustPressed(Input::KEY_H))
-	{
-		_hideEditor = !_hideEditor;
-
-		if (_hideEditor)
-			_positionWidget.Reset();
-	}
-
-	if (input.IsButtonDown(Input::BUTTON_MID) && _app.IsMouseInUI())
-	{
-		_camera.RotatePitch(input.GetMouseDistance().y*0.006f);
-		_camera.RotateYaw(input.GetMouseDistance().x*0.006f);
-	}
-
-	if (newPos)
-	{
-		D3DXVECTOR3 cameraPos = _camera.Position();
-
-		if (sampleField(cameraPos) < 3.6f)
+		if (!lighti->IsValid())
 		{
-			_camera.Position(oldCameraPos);
+			std::cout << "Invalid shader var" << std::endl;
 		}
+
+		lighti->GetMemberByName("Position")->AsVector()->SetFloatVector((float*)&_lights[i]._position);
+
+		D3DXCOLOR col(_lights[i]._color);
+		lighti->GetMemberByName("Color")->AsVector()->SetFloatVector(&col.r);
 	}
-	
-	if (!_hideEditor && _app.IsMouseInUI())
-		_positionWidget.Update(_camera, input);
+
+	for (; i < 8; ++i)
+	{
+		ID3D10EffectVariable* lighti = lights->GetElement(i);
+		D3DXCOLOR col(0,0,0,0);
+		lighti->GetMemberByName("Color")->AsVector()->SetFloatVector(&col.r);
+	}
 }

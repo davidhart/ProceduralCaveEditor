@@ -1,4 +1,4 @@
-#include "TestApp.h"
+#include "EditorApp.h"
 
 #include <Gwen/Controls/WindowControl.h>
 #include <Gwen/Controls/DockedTabControl.h>
@@ -9,12 +9,11 @@
 #include <Gwen/Controls/ComboBox.h>
 #include <Gwen/Controls/HSVColorPicker.h>
 
-TestApp::TestApp() : 
-	_environment(*this, _renderWindow)
+EditorApp::EditorApp()
 {
 }
 
-void TestApp::LoadGraphics()
+void EditorApp::LoadGraphics()
 {
 	_renderer = new Gwen::Renderer::DirectX10(_renderWindow.GetDevice());
 	_skin.SetRender(_renderer);
@@ -54,11 +53,10 @@ void TestApp::LoadGraphics()
 	_dockBase->GetRight()->GetTabControl()->AddPage(L"Objects", b5);
 
 	_inputHelper.Initialize(_canvas);
-
-	_environment.Load();
+	_editor.Load(_renderWindow);
 }
 
-void TestApp::CreateShapePage()
+void EditorApp::CreateShapePage()
 {
 	Gwen::Controls::ScrollControl* s = new Gwen::Controls::ScrollControl(_canvas);
 	_dockBase->GetRight()->GetTabControl()->AddPage(L"Shape", s);
@@ -199,7 +197,7 @@ void TestApp::CreateShapePage()
 	scaleZLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
 }
 
-void TestApp::CreateNoisePage()
+void EditorApp::CreateNoisePage()
 {
 	Gwen::Controls::ScrollControl* s = new Gwen::Controls::ScrollControl(_canvas);
 	_dockBase->GetRight()->GetTabControl()->AddPage(L"Noise", s);
@@ -262,7 +260,7 @@ void TestApp::CreateNoisePage()
 	scaleZLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
 }
 
-void TestApp::CreateLightingPage()
+void EditorApp::CreateLightingPage()
 {
 	Gwen::Controls::ScrollControl* s = new Gwen::Controls::ScrollControl(_canvas);
 	_dockBase->GetRight()->GetTabControl()->AddPage(L"Lighting", s);
@@ -375,30 +373,30 @@ void TestApp::CreateLightingPage()
 	targetZLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
 }
 
-void TestApp::UnloadGraphics()
+void EditorApp::UnloadGraphics()
 {
-	_environment.Unload();
+	_editor.Unload();
 }
 
-void TestApp::Render()
+void EditorApp::Render()
 {
-	_environment.Render();
+	_editor.Draw(_renderWindow);
 	_canvas->RenderCanvas();
 }
 
-void TestApp::Update(float dt)
+void EditorApp::Update(float dt)
 {
-	_environment.Update(dt);
+	_editor.Update(dt, _renderWindow.GetInput());
 }
 
-bool TestApp::HandleMessage(MSG msg)
+bool EditorApp::HandleMessage(MSG msg)
 {
 	_inputHelper.ProcessMessage(msg);
 
 	return false;
 }
 
-bool TestApp::IsMouseInUI()
+bool EditorApp::IsMouseInUI()
 {
 	return true;
 	return _dockBase->IsHovered();

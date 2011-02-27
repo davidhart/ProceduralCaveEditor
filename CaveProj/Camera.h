@@ -11,19 +11,19 @@ class Camera
 {
 public:
 
-	Camera(const D3DXVECTOR3& position, float pitch, float yaw);
+	Camera(const Vector3f& position, float pitch, float yaw);
 	~Camera();
 
 	void MoveAdvance(float distance);
 	void MoveStrafe(float distance);
 	void RotatePitch(float rotation);
 
-	D3DXVECTOR3 Look() const;
+	Vector3f Look() const;
 
 	void RotateYaw(float rotation);
 
-	inline void Position(const D3DXVECTOR3& position) { _position = position; }
-	inline const D3DXVECTOR3& Position() const { return _position; }
+	inline void Position(const Vector3f& position) { _position = position; }
+	inline const Vector3f& Position() const { return _position; }
 
 	inline void Pitch(float pitch) { _pitch = pitch; }
 	inline float Pitch() { return _pitch; }
@@ -43,7 +43,7 @@ private:
 
 	float _pitch;
 	float _yaw;
-	D3DXVECTOR3 _position;
+	Vector3f _position;
 	D3DXMATRIX _projection;
 	Vector2i _viewportSize;
 

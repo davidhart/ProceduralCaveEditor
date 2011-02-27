@@ -68,8 +68,11 @@
   <ItemGroup>
     <ClCompile Include="AABB.cpp" />
     <ClCompile Include="Application.cpp" />
+    <ClCompile Include="BillboardSpriteDrawer.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="DebugDrawer.cpp" />
+    <ClCompile Include="Editor.cpp" />
+    <ClCompile Include="EditorApp.cpp" />
     <ClCompile Include="Environment.cpp" />
     <ClCompile Include="GwenDX10Renderer.cpp" />
     <ClCompile Include="Input.cpp" />
@@ -81,14 +84,16 @@
     <ClCompile Include="Ray.cpp" />
     <ClCompile Include="RenderWindow.cpp" />
     <ClCompile Include="ShaderBuilder.cpp" />
-    <ClCompile Include="TestApp.cpp" />
     <ClCompile Include="Timer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AABB.h" />
     <ClInclude Include="Application.h" />
+    <ClInclude Include="BillboardSpriteDrawer.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="DebugDrawer.h" />
+    <ClInclude Include="Editor.h" />
+    <ClInclude Include="EditorApp.h" />
     <ClInclude Include="Environment.h" />
     <ClInclude Include="GwenDX10Renderer.h" />
     <ClInclude Include="Input.h" />
@@ -99,12 +104,12 @@
     <ClInclude Include="Ray.h" />
     <ClInclude Include="RenderWindow.h" />
     <ClInclude Include="ShaderBuilder.h" />
-    <ClInclude Include="TestApp.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="Util.h" />
     <ClInclude Include="Vector.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="billboard_sprite.fx" />
     <None Include="cavesurface.fx" />
     <None Include="marchingcubes.fx" />
     <None Include="render2D.fx" />

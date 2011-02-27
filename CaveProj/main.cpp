@@ -1,7 +1,7 @@
-#include "TestApp.h"
+#include "EditorApp.h"
 
 int main (int argc, char** argv)
 {
-	TestApp app;
+	EditorApp app;
 	return app.Run();
 }

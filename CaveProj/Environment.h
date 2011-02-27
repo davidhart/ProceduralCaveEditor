@@ -4,23 +4,31 @@
 
 #include <D3D10.h>
 #include <D3DX10.h>
-#include "Camera.h"
-#include "PositionWidget.h"
+#include <vector>
+#include "Vector.h"
 
+class Camera;
 class RenderWindow;
-class TestApp;
 
 class Environment
 {
 public:
-	Environment(TestApp& testApp, RenderWindow& renderWindow);
-	void Load();
+	Environment();
+	void Load(ID3D10Device* d3dDevice, Camera& camera);
 	void Unload();
-	void Render();
+	void Draw(ID3D10Device* d3dDevice, Camera& camera);
 	void Update(float dt);
 	void GenBlobs();
-	void GenModel();
-	void NewCave();
+	void GenModel(ID3D10Device* d3dDevice);
+	void NewCave(ID3D10Device* d3dDevice);
+
+	int NumLights() const;
+	Vector3f GetLightPosition(int light) const;
+	void SetLightPosition(int light, const Vector3f& position);
+	DWORD GetLightColor(int light) const;
+	void SetLightColor(int light, DWORD color);
+	int AddLight();
+	void RemoveLight(int light);
 
 private:
 	float sampleField(const D3DXVECTOR3& pos0);
@@ -43,19 +51,25 @@ private:
 	ID3D10Buffer* _bufferPointGrid;
 	ID3D10Buffer* _bufferEnvironmentModel;
 	ID3D10EffectMatrixVariable* _view;
-	ID3D10EffectVectorVariable* _lightPosition;
 	ID3D10EffectVectorVariable* _viewDirection;
 	ID3D10ShaderResourceView* _texture;
 	ID3D10ShaderResourceView* _texture2;
 	ID3D10ShaderResourceView* _textureBump;
 	UINT _numTriangles;
 	int _resolution;
-	PositionWidget _positionWidget;
-	bool _hideEditor;
 
-	RenderWindow& _renderWindow;
-	Camera _camera;
-	TestApp& _app;
+	void UpdateLights();
+
+	struct Light
+	{
+		Light();
+		Vector3f _position;
+		DWORD _color;
+	};
+
+	std::vector<Light> _lights;
+	bool _lightsChanged;
+
 };
 
 #endif
