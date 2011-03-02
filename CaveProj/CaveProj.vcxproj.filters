@@ -64,6 +64,9 @@
     <ClCompile Include="Editor.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="EditorUI.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h">
@@ -124,6 +127,9 @@
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="Editor.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="EditorUI.h">
       <Filter>Source</Filter>
     </ClInclude>
   </ItemGroup>

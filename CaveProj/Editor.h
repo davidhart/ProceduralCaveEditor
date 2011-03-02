@@ -7,6 +7,7 @@
 #include "BillboardSpriteDrawer.h"
 #include "RenderWindow.h"
 #include "Environment.h"
+#include "EditorUI.h"
 #include "PositionWidget.h"
 
 class Environment;
@@ -15,11 +16,18 @@ class Editor
 {
 public:
 	Editor();
-	void Draw(RenderWindow& renderWindow);
 
 	void Load(RenderWindow& renderWindow);
 	void Unload();
+
+	void Draw(RenderWindow& renderWindow);
 	void Update(float dt, const Input& input);
+
+	void HandleMessage(MSG msg);
+
+	void SelectLight(int light);
+	inline int SelectedLight() { return _selectedLight; }
+	void DeselectLight();
 
 private:
 	ID3D10ShaderResourceView* _lightIcon;
@@ -28,6 +36,7 @@ private:
 	Environment _environment;
 	PositionWidget _positionWidget;
 	int _selectedLight;
+	EditorUI _editorUI;
 
 };
 

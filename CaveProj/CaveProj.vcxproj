@@ -73,6 +73,7 @@
     <ClCompile Include="DebugDrawer.cpp" />
     <ClCompile Include="Editor.cpp" />
     <ClCompile Include="EditorApp.cpp" />
+    <ClCompile Include="EditorUI.cpp" />
     <ClCompile Include="Environment.cpp" />
     <ClCompile Include="GwenDX10Renderer.cpp" />
     <ClCompile Include="Input.cpp" />
@@ -94,6 +95,7 @@
     <ClInclude Include="DebugDrawer.h" />
     <ClInclude Include="Editor.h" />
     <ClInclude Include="EditorApp.h" />
+    <ClInclude Include="EditorUI.h" />
     <ClInclude Include="Environment.h" />
     <ClInclude Include="GwenDX10Renderer.h" />
     <ClInclude Include="Input.h" />

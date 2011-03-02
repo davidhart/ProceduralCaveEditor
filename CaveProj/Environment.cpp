@@ -390,6 +390,15 @@ int Environment::AddLight()
 	return -1;
 }
 
+void Environment::RemoveLight(int light)
+{
+	if (light < 0 || light > NumLights())
+		return;
+
+	_lights.erase(_lights.begin()+light);
+	_lightsChanged = true;
+}
+
 void Environment::UpdateLights()
 {
 	ID3D10EffectVariable* lights = _renderSceneEffect->GetVariableByName("lights");

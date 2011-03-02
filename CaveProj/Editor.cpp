@@ -10,6 +10,8 @@ Editor::Editor() :
 	_selectedLight(-1),
 	_positionWidget(Vector3f(0, 0, 0))
 {
+	_editorUI.SetEnvironment(&_environment);
+	_editorUI.SetEditor(this);
 }
 
 void Editor::Load(RenderWindow& renderWindow)
@@ -33,6 +35,8 @@ void Editor::Load(RenderWindow& renderWindow)
 	_environment.SetLightColor(1, COLOR_ARGB(255, 100, 255, 100));
 	_environment.SetLightPosition(1, Vector3f(0, -0.3f, 0));
 	_positionWidget.Load(renderWindow);
+
+	_editorUI.Load(renderWindow);
 }
 
 void Editor::Unload()
@@ -42,6 +46,8 @@ void Editor::Unload()
 	_positionWidget.Unload();
 	_lightIcon->Release();
 	_lightIcon = NULL;
+
+	_editorUI.Unload();
 }
 
 void Editor::Draw(RenderWindow& renderWindow)
@@ -65,6 +71,8 @@ void Editor::Draw(RenderWindow& renderWindow)
 			_positionWidget.Draw(_camera, renderWindow);
 		}
 	}
+
+	_editorUI.Draw();
 }
 
 void Editor::Update(float dt, const Input& input)
@@ -128,10 +136,9 @@ void Editor::Update(float dt, const Input& input)
 		}
 		else
 		{
-			_selectedLight = nearestLight;
-
-			if (_selectedLight >= 0)
+			if (nearestLight >= 0)
 			{
+				_selectedLight = nearestLight;
 				_positionWidget.SetPosition(_environment.GetLightPosition(_selectedLight));
 			}
 		}
@@ -147,4 +154,22 @@ void Editor::Update(float dt, const Input& input)
 	{
 		_positionWidget.EndDrag();
 	}
+}
+
+void Editor::HandleMessage(MSG msg)
+{
+	_editorUI.HandleMessage(msg);
+}
+
+void Editor::SelectLight(int light)
+{
+	_selectedLight = light;
+	_positionWidget.EndDrag();
+	_positionWidget.SetPosition(_environment.GetLightPosition(light));
+}
+
+void Editor::DeselectLight()
+{
+	_positionWidget.EndDrag();
+	_selectedLight = -1;
 }
