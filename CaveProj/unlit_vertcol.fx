@@ -45,6 +45,13 @@ DepthStencilState EnableDepth
     DepthFunc = LESS_EQUAL;
 };
 
+DepthStencilState DisableDepth
+{
+    DepthEnable = FALSE;
+    DepthWriteMask = 0;
+};
+
+
 RasterizerState RasterizerSettings
 {
     CullMode = BACK;
@@ -58,7 +65,7 @@ technique10 Render
         SetGeometryShader(NULL);
         SetPixelShader(CompileShader(ps_4_0, mainPS()));
 		
-        SetDepthStencilState(EnableDepth, 0);
+        SetDepthStencilState(DisableDepth, 0);
         SetRasterizerState(RasterizerSettings); 
 	}
 }

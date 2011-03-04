@@ -7,7 +7,6 @@
 #include <Gwen/Controls/PanelListPanel.h>
 #include <Gwen/Controls/DockBase.h>
 #include <Gwen/Controls/MenuStrip.h>
-#include <Gwen/Controls/TextBox.h>
 #include <Gwen/Controls/ComboBox.h>
 #include <Gwen/Controls/HSVColorPicker.h>
 #include <sstream>
@@ -17,7 +16,10 @@ EditorUI::EditorUI() :
 	_canvas(NULL),
 	_dockBase(NULL),
 	_editor(NULL),
-	_environment(NULL)
+	_environment(NULL),
+	_lightXPosition(NULL),
+	_lightYPosition(NULL),
+	_lightZPosition(NULL)
 {
 }
 
@@ -304,18 +306,20 @@ void EditorUI::CreateLightingPage()
 	//Gwen::Controls::HSVColorPicker* lightColor = new Gwen::Controls::HSVColorPicker(s);
 	//lightColor->SetBounds(-4, 138, 176, 150);
 
-	Gwen::Controls::TextBoxNumeric* sizeBox = new Gwen::Controls::TextBoxNumeric(s);
-	sizeBox->SetBounds(60, 286, 112, 20);
-	sizeBox->SetText("0");
+	_lightSize = new Gwen::Controls::TextBoxNumeric(s);
+	_lightSize->SetBounds(60, 286, 112, 20);
+	_lightSize->SetText("0");
+	_lightSize->onTextChanged.Add(this, &EditorUI::onLightPropertiesChange);
 	
 	Gwen::Controls::Label* sizeLabel = new Gwen::Controls::Label(s);
 	sizeLabel->SetBounds(0, 286, 54, 20);
 	sizeLabel->SetText("Size:");
 	sizeLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
 
-	Gwen::Controls::TextBoxNumeric* falloffBox = new Gwen::Controls::TextBoxNumeric(s);
-	falloffBox->SetBounds(60, 312, 112, 20);
-	falloffBox->SetText("0");
+	_lightFalloff = new Gwen::Controls::TextBoxNumeric(s);
+	_lightFalloff->SetBounds(60, 312, 112, 20);
+	_lightFalloff->SetText("0");
+	_lightFalloff->onTextChanged.Add(this, &EditorUI::onLightPropertiesChange);
 	
 	Gwen::Controls::Label* falloffLabel = new Gwen::Controls::Label(s);
 	falloffLabel->SetBounds(0, 312, 54, 20);
@@ -328,27 +332,30 @@ void EditorUI::CreateLightingPage()
 	positionLabel->SetText("Position");
 	positionLabel->SetAlignment(Gwen::Pos::Left | Gwen::Pos::CenterV);
 
-	Gwen::Controls::TextBoxNumeric* positionXBox = new Gwen::Controls::TextBoxNumeric(s);
-	positionXBox->SetBounds(60, 370, 112, 20);
-	positionXBox->SetText("0");
+	_lightXPosition = new Gwen::Controls::TextBoxNumeric(s);
+	_lightXPosition->SetBounds(60, 370, 112, 20);
+	_lightXPosition->SetText("0");
+	_lightXPosition->onTextChanged.Add(this, &EditorUI::onLightPropertiesChange);
 
 	Gwen::Controls::Label* positionXLabel = new Gwen::Controls::Label(s);
 	positionXLabel->SetBounds(0, 370, 54, 20);
 	positionXLabel->SetText("x:");
 	positionXLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
 
-	Gwen::Controls::TextBoxNumeric* positionYBox = new Gwen::Controls::TextBoxNumeric(s);
-	positionYBox->SetBounds(60, 396, 112, 20);
-	positionYBox->SetText("0");
+	_lightYPosition = new Gwen::Controls::TextBoxNumeric(s);
+	_lightYPosition->SetBounds(60, 396, 112, 20);
+	_lightYPosition->SetText("0");
+	_lightYPosition->onTextChanged.Add(this, &EditorUI::onLightPropertiesChange);
 
 	Gwen::Controls::Label* positionYLabel = new Gwen::Controls::Label(s);
 	positionYLabel->SetBounds(0, 396, 54, 20);
 	positionYLabel->SetText("y:");
 	positionYLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
 
-	Gwen::Controls::TextBoxNumeric* positionZBox = new Gwen::Controls::TextBoxNumeric(s);
-	positionZBox->SetBounds(60, 422, 112, 20);
-	positionZBox->SetText("0");
+	_lightZPosition = new Gwen::Controls::TextBoxNumeric(s);
+	_lightZPosition->SetBounds(60, 422, 112, 20);
+	_lightZPosition->SetText("0");
+	_lightZPosition->onTextChanged.Add(this, &EditorUI::onLightPropertiesChange);
 
 	Gwen::Controls::Label* positionZLabel = new Gwen::Controls::Label(s);
 	positionZLabel->SetBounds(0, 422, 54, 20);
@@ -419,7 +426,7 @@ void EditorUI::onAddLight(Gwen::Controls::Base* from)
 
 	PopulateLightList();
 
-	_lightRows.back()->SetSelected(true);
+	SelectLight(lightid);
 }
 
 void EditorUI::onRemoveLight(Gwen::Controls::Base* from)
@@ -445,4 +452,53 @@ void EditorUI::onLightSelected(Gwen::Controls::Base* from)
 		return; // error, selected row wasn't in rows?
 
 	_editor->SelectLight(i);
+}
+
+void EditorUI::onLightPropertiesChange(Gwen::Controls::Base* from)
+{
+	Vector3f p;
+
+	p.x = _lightXPosition->GetFloatFromText();
+	p.y = _lightYPosition->GetFloatFromText();
+	p.z = _lightZPosition->GetFloatFromText();
+
+	_environment->SetLightPosition(_editor->SelectedLight(), p);
+	_environment->SetLightFalloff(_editor->SelectedLight(), _lightFalloff->GetFloatFromText());
+	_environment->SetLightSize(_editor->SelectedLight(), _lightSize->GetFloatFromText());
+	
+}
+
+void EditorUI::SelectLight(int light)
+{
+	for (unsigned int i = 0; i < _lightRows.size(); ++i)
+	{
+		_lightRows[light]->SetSelected(false);
+	}
+
+	_lightRows[light]->SetSelected(true);
+
+	UpdateLightProperties(light);
+}
+
+void EditorUI::UpdateLightProperties(int light)
+{
+	std::stringstream sX;
+	sX << _environment->GetLightPosition(light).x;
+	_lightXPosition->SetText(sX.str(), false);
+
+	std::stringstream sY;
+	sY << _environment->GetLightPosition(light).y;
+	_lightYPosition->SetText(sY.str(), false);
+
+	std::stringstream sZ;
+	sZ << _environment->GetLightPosition(light).z;
+	_lightZPosition->SetText(sZ.str(), false);
+
+	std::stringstream sF;
+	sF << _environment->GetLightFalloff(light);
+	_lightFalloff->SetText(sF.str(), false);
+
+	std::stringstream sS;
+	sS << _environment->GetLightSize(light);
+	_lightSize->SetText(sS.str(), false);
 }

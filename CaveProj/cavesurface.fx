@@ -18,6 +18,8 @@ struct Light
 {
 	float3 Position;
 	float4 Color;
+	float Size;
+	float Falloff;
 };
 
 cbuffer cbLight
@@ -26,8 +28,7 @@ cbuffer cbLight
 };
 
 Texture2D tex;
-Texture2D tex2;
-Texture2D texBump;
+Texture2D texDisplacement;
 
 sampler TextureSampler = sampler_state
 {
@@ -67,39 +68,55 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 		input.Normal);
 
 	float3 iNormal = normalize(input.Normal);
+	float3 blendWeights = abs(iNormal);
 
-	float3 blendWeights = abs(normalize(iNormal));
+	float stepSize = 1/256.0f;
+	float heightMapScale = 2;
 
-	float3 b1 = texBump.Sample(TextureSampler, input.WSPos.yx*3.0f).rgb-0.5f;
-	float3 b2 = texBump.Sample(TextureSampler, input.WSPos.zx*3.0f).rgb-0.5f;
-	float3 b3 = texBump.Sample(TextureSampler, input.WSPos.yz*3.0f).rgb-0.5f;
+	float3 textureCoord = input.WSPos * 5.0f;
 
-	float3 bump1 = float3(b1.x, b1.y, 0) * blendWeights.z;
-	float3 bump2 = float3(b2.x, 0, b2.z) * blendWeights.y;
-	float3 bump3 = float3(0, b3.y, b3.z) * blendWeights.x;
+	float3 nx = float3(1,
+						  texDisplacement.Sample(TextureSampler, textureCoord.zy+float2(0, stepSize)).r*heightMapScale-
+						  texDisplacement.Sample(TextureSampler, textureCoord.zy-float2(0, stepSize)).r*heightMapScale,
+						  texDisplacement.Sample(TextureSampler, textureCoord.zy+float2(stepSize, 0)).r*heightMapScale-
+						  texDisplacement.Sample(TextureSampler, textureCoord.zy-float2(stepSize, 0)).r*heightMapScale);
 
-	float3 N = normalize(input.Normal + (bump1+bump2+bump3) * 1.3f);
+	float3 ny = float3(texDisplacement.Sample(TextureSampler, textureCoord.xz+float2(0, stepSize)).r*heightMapScale-
+						  texDisplacement.Sample(TextureSampler, textureCoord.xz-float2(0, stepSize)).r*heightMapScale,
+						  1,
+						  texDisplacement.Sample(TextureSampler, textureCoord.xz+float2(stepSize, 0)).r*heightMapScale-
+						  texDisplacement.Sample(TextureSampler, textureCoord.xz-float2(stepSize, 0)).r*heightMapScale);
+
+	float3 nz = float3(texDisplacement.Sample(TextureSampler, textureCoord.xy+float2(0, stepSize)).r*heightMapScale-
+						  texDisplacement.Sample(TextureSampler, textureCoord.xy-float2(0, stepSize)).r*heightMapScale,
+						  texDisplacement.Sample(TextureSampler, textureCoord.xy+float2(stepSize, 0)).r*heightMapScale-
+						  texDisplacement.Sample(TextureSampler, textureCoord.xy-float2(stepSize, 0)).r*heightMapScale,
+						  1);
+
+	float3 N = normalize ((nz * iNormal.z + 
+						ny * iNormal.y + 
+						nx * iNormal.x));
 
 	float3 spec = float3(0,0,0);
 	float3 diffuse = float3(0,0,0);
 	
-	float4 ambient = float4(0.05f, 0.05f, 0.05f, 1.0f);
+	float4 ambient = float4(0.08f, 0.08f, 0.08f, 1.0f);
 
 	[unroll] for (int i = 0; i < 8; ++i)
 	{
 		float3 lightDirection = lights[i].Position - input.WSPos;
-		float attenuation = clamp(1.0f/(length(lightDirection) + pow(length(lightDirection), 2.0f)*5.0f), 0.0f, 1.0f);
-		diffuse += max(dot(N, normalize(lightDirection)),0) * attenuation * lights[i].Color;
-		spec += pow(clamp(dot(reflect(ViewDirection, N), normalize(lightDirection)), 0.0f, 1.0f),22.0f) * attenuation*2.0f * lights[i].Color * 0.2f;
+		float attenuation = clamp(lights[i].Size/(length(lightDirection) + pow(length(lightDirection), 2.0f)*lights[i].Falloff), 0.0f, 1.0f);
+		diffuse += max(dot(N, normalize(lightDirection)),0) * attenuation * lights[i].Color.rgb;
+		spec += pow(clamp(dot(reflect(ViewDirection, N), normalize(lightDirection)), 0.0f, 1.0f),22.0f) * attenuation*2.0f * lights[i].Color.rgb * 0.2f;
 	}
 
-	float4 s1 = tex.Sample(TextureSampler, input.WSPos.xy*5.0f) * blendWeights.z;
-	float4 s2 = tex.Sample(TextureSampler, input.WSPos.xz*6.0f) * blendWeights.y;
-	float4 s3 = tex.Sample(TextureSampler, input.WSPos.zy*5.0f) * blendWeights.x;
+	float4 s1 = tex.Sample(TextureSampler, textureCoord.xy) * blendWeights.z;
+	float4 s2 = tex.Sample(TextureSampler, textureCoord.xz) * blendWeights.y;
+	float4 s3 = tex.Sample(TextureSampler, textureCoord.zy) * blendWeights.x;
 
-	float4 diffuseCol = s1+s2+s2+s3;
+	float4 diffuseCol = s1+s2+s3;
 
-	return float4((ambient+diffuse+spec)*diffuseCol.rgb, diffuseCol.a);
+	return float4((ambient+diffuse+spec*0.3f)*diffuseCol.rgb, diffuseCol.a);
 }
 
 DepthStencilState EnableDepth

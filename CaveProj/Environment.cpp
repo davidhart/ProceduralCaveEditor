@@ -25,8 +25,7 @@ Environment::Environment() :
 	_numTriangles(0),
 	_resolution(0),
 	_texture(NULL),
-	_texture2(NULL),
-	_textureBump(NULL),
+	_textureDisplacement(NULL),
 	_lightsChanged(false)
 {
 }
@@ -177,12 +176,7 @@ void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
 	}
 
-	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "rock2.jpg", &loadInfo, NULL, &_texture2, &hr)))
-	{
-		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
-	}
-
-	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "rockbump.jpg", &loadInfo, NULL, &_textureBump, &hr)))
+	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "rockdisplacement.jpg", &loadInfo, NULL, &_textureDisplacement, &hr)))
 	{
 		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
 	}
@@ -251,11 +245,8 @@ void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 	ID3D10EffectShaderResourceVariable* texturesampler = _renderSceneEffect->GetVariableByName("tex")->AsShaderResource();
 	texturesampler->SetResource(_texture);
 
-	texturesampler = _renderSceneEffect->GetVariableByName("tex2")->AsShaderResource();
-	texturesampler->SetResource(_texture2);
-
-	texturesampler = _renderSceneEffect->GetVariableByName("texBump")->AsShaderResource();
-	texturesampler->SetResource(_textureBump);
+	texturesampler = _renderSceneEffect->GetVariableByName("texDisplacement")->AsShaderResource();
+	texturesampler->SetResource(_textureDisplacement);
 
 	NewCave(d3dDevice);
 	AddLight();
@@ -287,11 +278,8 @@ void Environment::Unload()
 	_texture->Release();
 	_texture = NULL;
 
-	_texture2->Release();
-	_texture2 = NULL;
-
-	_textureBump->Release();
-	_textureBump = NULL;
+	_textureDisplacement->Release();
+	_textureDisplacement = NULL;
 
 	_view = NULL;
 }
@@ -344,7 +332,9 @@ float Environment::sampleField(const D3DXVECTOR3& pos0)
 
 Environment::Light::Light() : 
 	_position(0, 0, 0),
-	_color(0xFFFFFFFF)
+	_color(0xFFFFFFFF),
+	_size(0.1f),
+	_falloff(5.0f)
 {
 }
 
@@ -376,6 +366,28 @@ DWORD Environment::GetLightColor(int light) const
 void Environment::SetLightColor(int light, DWORD color)
 {
 	_lights[light]._color = color;
+	_lightsChanged = true;
+}
+
+float Environment::GetLightFalloff(int light)
+{
+	return _lights[light]._falloff;
+}
+
+void Environment::SetLightFalloff(int light, float falloff)
+{
+	_lights[light]._falloff = falloff;
+	_lightsChanged = true;
+}
+
+float Environment::GetLightSize(int light)
+{
+	return _lights[light]._size;
+}
+
+void Environment::SetLightSize(int light, float size)
+{
+	_lights[light]._size = size;
 	_lightsChanged = true;
 }
 
@@ -417,6 +429,10 @@ void Environment::UpdateLights()
 
 		D3DXCOLOR col(_lights[i]._color);
 		lighti->GetMemberByName("Color")->AsVector()->SetFloatVector(&col.r);
+	
+		lighti->GetMemberByName("Size")->AsScalar()->SetFloat(_lights[i]._size);
+	
+		lighti->GetMemberByName("Falloff")->AsScalar()->SetFloat(_lights[i]._falloff);
 	}
 
 	for (; i < 8; ++i)

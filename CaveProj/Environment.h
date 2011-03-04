@@ -27,6 +27,10 @@ public:
 	void SetLightPosition(int light, const Vector3f& position);
 	DWORD GetLightColor(int light) const;
 	void SetLightColor(int light, DWORD color);
+	float GetLightFalloff(int light);
+	void SetLightFalloff(int light, float falloff);
+	float GetLightSize(int light);
+	void SetLightSize(int light, float size);
 	int AddLight();
 	void RemoveLight(int light);
 
@@ -53,8 +57,7 @@ private:
 	ID3D10EffectMatrixVariable* _view;
 	ID3D10EffectVectorVariable* _viewDirection;
 	ID3D10ShaderResourceView* _texture;
-	ID3D10ShaderResourceView* _texture2;
-	ID3D10ShaderResourceView* _textureBump;
+	ID3D10ShaderResourceView* _textureDisplacement;
 	UINT _numTriangles;
 	int _resolution;
 
@@ -65,6 +68,8 @@ private:
 		Light();
 		Vector3f _position;
 		DWORD _color;
+		float _size;
+		float _falloff;
 	};
 
 	std::vector<Light> _lights;

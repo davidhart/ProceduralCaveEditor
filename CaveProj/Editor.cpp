@@ -32,7 +32,7 @@ void Editor::Load(RenderWindow& renderWindow)
 	}
 
 	_environment.AddLight();
-	_environment.SetLightColor(1, COLOR_ARGB(255, 100, 255, 100));
+	_environment.SetLightColor(1, COLOR_ARGB(255, 100, 200, 100));
 	_environment.SetLightPosition(1, Vector3f(0, -0.3f, 0));
 	_positionWidget.Load(renderWindow);
 
@@ -68,6 +68,7 @@ void Editor::Draw(RenderWindow& renderWindow)
 
 		if (_selectedLight >= 0)
 		{
+			_positionWidget.SetPosition(_environment.GetLightPosition(_selectedLight));
 			_positionWidget.Draw(_camera, renderWindow);
 		}
 	}
@@ -139,7 +140,7 @@ void Editor::Update(float dt, const Input& input)
 			if (nearestLight >= 0)
 			{
 				_selectedLight = nearestLight;
-				_positionWidget.SetPosition(_environment.GetLightPosition(_selectedLight));
+				_editorUI.SelectLight(_selectedLight);
 			}
 		}
 	}
@@ -148,6 +149,7 @@ void Editor::Update(float dt, const Input& input)
 	{
 		_positionWidget.HandleDrag(_camera, input.GetCursorPosition());
 		_environment.SetLightPosition(_selectedLight, _positionWidget.GetPosition());
+		_editorUI.UpdateLightProperties(_selectedLight);
 	}
 
 	if (input.IsButtonJustReleased(Input::BUTTON_LEFT))
@@ -166,6 +168,7 @@ void Editor::SelectLight(int light)
 	_selectedLight = light;
 	_positionWidget.EndDrag();
 	_positionWidget.SetPosition(_environment.GetLightPosition(light));
+
 }
 
 void Editor::DeselectLight()
