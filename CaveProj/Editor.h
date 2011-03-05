@@ -37,6 +37,7 @@ private:
 	PositionWidget _positionWidget;
 	int _selectedLight;
 	EditorUI _editorUI;
+	bool _rebuild;
 
 };
 

@@ -24,6 +24,15 @@ cbuffer UserOptions
 	float AnimationSpeed;
 }
 
+Texture3D NoiseTexture;
+
+sampler NoiseSampler = sampler_state
+{
+  AddressU = Wrap;
+  AddressV = Wrap;
+  AddressW = Wrap;
+  Filter = MIN_MAG_MIP_POINT;
+};
 
 struct VS_INPUT
 {
@@ -95,7 +104,7 @@ float perlin3D(int seed, float3 i)
 {
    float density = 0;
    
-   for (int o = 0; o < octaves; ++o)
+   [unroll] for (int o = 0; o < 4; ++o)
    {
       float frequency = pow(2, o);
       float amplitude = pow(persistance, o);
@@ -103,15 +112,15 @@ float perlin3D(int seed, float3 i)
 	  float3 v = i * frequency / zoom;
 	  float3 floorv = floor(v);
       
-      float na = random(seed, float3(floorv.x, floorv.y, floorv.z));
-      float nb = random(seed, float3(floorv.x+1, floorv.y, floorv.z));
-      float nc = random(seed, float3(floorv.x, floorv.y+1, floorv.z));
-      float nd = random(seed, float3(floorv.x+1, floorv.y+1, floorv.z));
+	  float na = NoiseTexture.SampleLevel(NoiseSampler, float3(floorv.x, floorv.y, floorv.z) / 64.0, 0).r;
+      float nb = NoiseTexture.SampleLevel(NoiseSampler,  float3(floorv.x+1, floorv.y, floorv.z) / 64.0, 0).r;
+      float nc = NoiseTexture.SampleLevel(NoiseSampler, float3(floorv.x, floorv.y+1, floorv.z) / 64.0, 0).r;
+      float nd = NoiseTexture.SampleLevel(NoiseSampler, float3(floorv.x+1, floorv.y+1, floorv.z)/ 64.0, 0).r;
       
-      float ne = random(seed, float3(floorv.x, floorv.y, floorv.z+1));
-      float nf = random(seed, float3(floorv.x+1, floorv.y, floorv.z+1));
-      float ng = random(seed, float3(floorv.x, floorv.y+1, floorv.z+1));
-      float nh = random(seed, float3(floorv.x+1, floorv.y+1, floorv.z+1));
+      float ne = NoiseTexture.SampleLevel(NoiseSampler, float3(floorv.x, floorv.y, floorv.z+1)/ 64.0, 0).r;
+      float nf = NoiseTexture.SampleLevel(NoiseSampler,  float3(floorv.x+1, floorv.y, floorv.z+1)/ 64.0, 0).r;
+      float ng = NoiseTexture.SampleLevel(NoiseSampler, float3(floorv.x, floorv.y+1, floorv.z+1)/ 64.0, 0).r;
+      float nh = NoiseTexture.SampleLevel(NoiseSampler, float3(floorv.x+1, floorv.y+1, floorv.z+1)/ 64.0, 0).r;
       
       float la = interp(na, nb, v.x - floorv.x);
       float lb = interp(nc, nd, v.x - floorv.x);
@@ -190,31 +199,38 @@ void mainGS( point GS_INPUT input[1], inout TriangleStream<PS_INPUT> stream )
 	float3 vertlist[12] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},
 	{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}}; // MUST initialise this because of X4850 error
 	
-	if ((edgeTableValue(cubeindex) & 1) != 0)
-	  vertlist[0] =	vertexInterp(Threshold, cubePos(0, pos0), sampleField(0, pos0), cubePos(1, pos0), sampleField(1, pos0));
-	if ((edgeTableValue(cubeindex) & 2) != 0)
-	  vertlist[1] = vertexInterp(Threshold, cubePos(1, pos0), sampleField(1, pos0), cubePos(2, pos0), sampleField(2, pos0));
-	if ((edgeTableValue(cubeindex) & 4) != 0)
-	  vertlist[2] = vertexInterp(Threshold, cubePos(2, pos0), sampleField(2, pos0), cubePos(3, pos0), sampleField(3, pos0));
-	if ((edgeTableValue(cubeindex) & 8) != 0)
-	  vertlist[3] = vertexInterp(Threshold, cubePos(3, pos0), sampleField(3, pos0), cubePos(0, pos0), sampleField(0, pos0));
-	if ((edgeTableValue(cubeindex) & 16) != 0)
-	  vertlist[4] = vertexInterp(Threshold, cubePos(4, pos0), sampleField(4, pos0), cubePos(5, pos0), sampleField(5, pos0));
-	if ((edgeTableValue(cubeindex) & 32) != 0)
-	  vertlist[5] = vertexInterp(Threshold, cubePos(5, pos0), sampleField(5, pos0), cubePos(6, pos0), sampleField(6, pos0));
-	if ((edgeTableValue(cubeindex) & 64) != 0)
-	  vertlist[6] = vertexInterp(Threshold, cubePos(6, pos0), sampleField(6, pos0), cubePos(7, pos0), sampleField(7, pos0));
-	if ((edgeTableValue(cubeindex) & 128) != 0)
-	  vertlist[7] = vertexInterp(Threshold, cubePos(7, pos0), sampleField(7, pos0), cubePos(4, pos0), sampleField(4, pos0));
-	if ((edgeTableValue(cubeindex) & 256) != 0)
-	  vertlist[8] = vertexInterp(Threshold, cubePos(0, pos0), sampleField(0, pos0), cubePos(4, pos0), sampleField(4, pos0));
-	if ((edgeTableValue(cubeindex) & 512) != 0)
-	  vertlist[9] = vertexInterp(Threshold, cubePos(1, pos0), sampleField(1, pos0), cubePos(5, pos0), sampleField(5, pos0));
-	if ((edgeTableValue(cubeindex) & 1024) != 0)
-	  vertlist[10] = vertexInterp(Threshold, cubePos(2, pos0), sampleField(2, pos0), cubePos(6, pos0), sampleField(6, pos0));
-	if ((edgeTableValue(cubeindex) & 2048) != 0)
-	  vertlist[11] = vertexInterp(Threshold, cubePos(3, pos0), sampleField(3, pos0), cubePos(7, pos0), sampleField(7, pos0));
+	float3 normlist[12];
+
+	//if ((edgeTableValue(cubeindex) & 1) != 0)
+		vertlist[0] = vertexInterp(Threshold, cubePos(0, pos0), sampleField(0, pos0), cubePos(1, pos0), sampleField(1, pos0));
+	//if ((edgeTableValue(cubeindex) & 2) != 0)
+		vertlist[1] = vertexInterp(Threshold, cubePos(1, pos0), sampleField(1, pos0), cubePos(2, pos0), sampleField(2, pos0));
+	//if ((edgeTableValue(cubeindex) & 4) != 0)
+		vertlist[2] = vertexInterp(Threshold, cubePos(2, pos0), sampleField(2, pos0), cubePos(3, pos0), sampleField(3, pos0));
+	//if ((edgeTableValue(cubeindex) & 8) != 0)
+		vertlist[3] = vertexInterp(Threshold, cubePos(3, pos0), sampleField(3, pos0), cubePos(0, pos0), sampleField(0, pos0));
+	//if ((edgeTableValue(cubeindex) & 16) != 0)
+		vertlist[4] = vertexInterp(Threshold, cubePos(4, pos0), sampleField(4, pos0), cubePos(5, pos0), sampleField(5, pos0));
+	//if ((edgeTableValue(cubeindex) & 32) != 0)
+		vertlist[5] = vertexInterp(Threshold, cubePos(5, pos0), sampleField(5, pos0), cubePos(6, pos0), sampleField(6, pos0));
+	//if ((edgeTableValue(cubeindex) & 64) != 0)
+		vertlist[6] = vertexInterp(Threshold, cubePos(6, pos0), sampleField(6, pos0), cubePos(7, pos0), sampleField(7, pos0));
+	//if ((edgeTableValue(cubeindex) & 128) != 0)
+		vertlist[7] = vertexInterp(Threshold, cubePos(7, pos0), sampleField(7, pos0), cubePos(4, pos0), sampleField(4, pos0));
+	//if ((edgeTableValue(cubeindex) & 256) != 0)
+		vertlist[8] = vertexInterp(Threshold, cubePos(0, pos0), sampleField(0, pos0), cubePos(4, pos0), sampleField(4, pos0));
+	//if ((edgeTableValue(cubeindex) & 512) != 0)
+		vertlist[9] = vertexInterp(Threshold, cubePos(1, pos0), sampleField(1, pos0), cubePos(5, pos0), sampleField(5, pos0));
+	//if ((edgeTableValue(cubeindex) & 1024) != 0)
+		vertlist[10] = vertexInterp(Threshold, cubePos(2, pos0), sampleField(2, pos0), cubePos(6, pos0), sampleField(6, pos0));
+	//if ((edgeTableValue(cubeindex) & 2048) != 0)
+		vertlist[11] = vertexInterp(Threshold, cubePos(3, pos0), sampleField(3, pos0), cubePos(7, pos0), sampleField(7, pos0));
 	
+	[unroll(12)] for (int n = 0; n < 12; ++n)
+	{
+		normlist[n] = GetNormal(vertlist[n]);
+	}
+
 	PS_INPUT output;
 	float3 pos = float3(0,0,0); 
 	
@@ -224,9 +240,9 @@ void mainGS( point GS_INPUT input[1], inout TriangleStream<PS_INPUT> stream )
 		{
 			[unroll] for (int v = 0; v < 3; ++v)
 			{
-				pos = vertlist[triTableValue(cubeindex, i+v)];
-				output.Pos = pos;
-				output.Normal = GetNormal(pos);
+				int verti = triTableValue(cubeindex, i+v);
+				output.Pos = vertlist[verti];
+				output.Normal = normlist[verti];
 				stream.Append(output);
 			}
 			

@@ -58,6 +58,7 @@ private:
 	ID3D10EffectVectorVariable* _viewDirection;
 	ID3D10ShaderResourceView* _texture;
 	ID3D10ShaderResourceView* _textureDisplacement;
+	ID3D10ShaderResourceView* _textureNoise3D;
 	UINT _numTriangles;
 	int _resolution;
 

@@ -26,7 +26,8 @@ Environment::Environment() :
 	_resolution(0),
 	_texture(NULL),
 	_textureDisplacement(NULL),
-	_lightsChanged(false)
+	_lightsChanged(false),
+	_textureNoise3D(NULL)
 {
 }
 
@@ -180,6 +181,11 @@ void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 	{
 		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
 	}
+
+	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "Random3D.dds", &loadInfo, NULL, &_textureNoise3D, &hr)))
+	{
+		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
+	}
 	
 	std::cout << "Created textures" << std::endl;
 
@@ -192,6 +198,8 @@ void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 
 	_genModelTechnique = _genModelEffect->GetTechniqueByName("Render");
 
+
+	_genModelEffect->GetVariableByName("NoiseTexture")->AsShaderResource()->SetResource(_textureNoise3D);
 
 	D3D10_PASS_DESC PassDesc;
 
@@ -280,6 +288,9 @@ void Environment::Unload()
 
 	_textureDisplacement->Release();
 	_textureDisplacement = NULL;
+
+	_textureNoise3D->Release();
+	_textureNoise3D = NULL;
 
 	_view = NULL;
 }
