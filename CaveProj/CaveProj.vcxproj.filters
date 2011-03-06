@@ -67,6 +67,9 @@
     <ClCompile Include="EditorUI.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="EnvironmentChunk.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h">
@@ -130,6 +133,9 @@
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="EditorUI.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="EnvironmentChunk.h">
       <Filter>Source</Filter>
     </ClInclude>
   </ItemGroup>

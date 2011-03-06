@@ -75,6 +75,7 @@
     <ClCompile Include="EditorApp.cpp" />
     <ClCompile Include="EditorUI.cpp" />
     <ClCompile Include="Environment.cpp" />
+    <ClCompile Include="EnvironmentChunk.cpp" />
     <ClCompile Include="GwenDX10Renderer.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
@@ -97,6 +98,7 @@
     <ClInclude Include="EditorApp.h" />
     <ClInclude Include="EditorUI.h" />
     <ClInclude Include="Environment.h" />
+    <ClInclude Include="EnvironmentChunk.h" />
     <ClInclude Include="GwenDX10Renderer.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="MarchingCubesData.h" />

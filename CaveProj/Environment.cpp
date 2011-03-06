@@ -101,7 +101,7 @@ void Environment::GenModel(ID3D10Device* d3dDevice)
 	D3D10_TECHNIQUE_DESC techDesc;
 	_genModelTechnique->GetDesc( &techDesc );
     _genModelTechnique->GetPassByIndex( 0 )->Apply( 0 );
-    d3dDevice->Draw( _resolution*_resolution*_resolution, 0 );
+	d3dDevice->DrawInstanced(1, _resolution*_resolution*_resolution, 0, 0);
 
 	query->End();
 	D3D10_QUERY_DATA_SO_STATISTICS soStats;
@@ -119,7 +119,7 @@ void Environment::GenModel(ID3D10Device* d3dDevice)
 	std::cout << "Created Buffer for: " << soStats.PrimitivesStorageNeeded << " triangles" << std::endl;
 
 	d3dDevice->SOSetTargets( 1, &_bufferEnvironmentModel, offset );
-	d3dDevice->Draw( _resolution*_resolution*_resolution, 0 );
+	d3dDevice->DrawInstanced(1, _resolution*_resolution*_resolution, 0, 0);
 
 	d3dDevice->SOSetTargets(0, NULL, NULL);
 
@@ -129,24 +129,13 @@ void Environment::GenModel(ID3D10Device* d3dDevice)
 
 void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 {
-	_resolution = 100;
+	_resolution = 80;
 	float cubeSize = 4.0f / _resolution;
 	int limit = _resolution / 2;
 	
 	// Create Vertex Buffer
 	std::vector<D3DVECTOR> inputData;
-	inputData.reserve(_resolution*_resolution*_resolution);
-
-	for (int x = -limit; x < limit; ++x)
-	{
-		for (int y = -limit; y < limit; ++y)
-		{
-			for (int z = -limit; z < limit; ++z)
-			{
-				inputData.push_back(D3DXVECTOR3(x*cubeSize, y*cubeSize, z*cubeSize));
-			}
-		}
-	}
+	inputData.push_back(D3DXVECTOR3(0, 0, 0));
 
 	std::cout << "Created point array data" << std::endl;
 
@@ -228,6 +217,8 @@ void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 
 	ID3D10EffectScalarVariable* v = _genModelEffect->GetVariableByName("Edges")->AsScalar();
 	v->SetIntArray((int*)MarchingCubesData::Edges, 0, 256);
+
+	_genModelEffect->GetVariableByName("Size")->AsScalar()->SetInt(_resolution);
 
 	v = _genModelEffect->GetVariableByName("TriTable")->AsScalar();
 	v->SetIntArray((int*)MarchingCubesData::TriTable, 0, 256*16);

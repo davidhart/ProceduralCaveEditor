@@ -81,6 +81,19 @@ public:
 		return *this;
 	}
 
+	inline const Vector3<T> operator/ (T s) const
+	{
+		return Vector3<T>(x / s, y / s, z / s);
+	}
+
+	inline const Vector3<T>& operator/= (T s)
+	{
+		x /= s;
+		y /= s;
+		z /= s;
+		return *this;
+	}
+
 	inline T Dot(const Vector3<T>&rhs) const
 	{
 		return x*rhs.x + y*rhs.y + z*rhs.z;
@@ -100,6 +113,11 @@ public:
 template <typename T> inline const Vector3<T> operator* (T s, const Vector3<T>& v)
 {
 	return Vector3<T>(v.x * s, v.y * s, v.z * s);
+}
+
+template <typename T> inline const Vector3<T> operator/ (T s, const Vector3<T>& v)
+{
+	return Vector3<T>(s / v.x, s / v.y, s / v.z);
 }
 
 template <typename T> inline std::ostream& operator<< (std::ostream& out, const Vector3<T>& v)

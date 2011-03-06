@@ -13,6 +13,7 @@ cbuffer UserOptions
 	int NumBlobs;
 
 	float CubeSize;
+	int Size;
 					  
 	Blob blobs[MAX_BLOBS] =
 	{{{0, 0, 0}, 0.5f},
@@ -31,17 +32,18 @@ sampler NoiseSampler = sampler_state
   AddressU = Wrap;
   AddressV = Wrap;
   AddressW = Wrap;
-  Filter = MIN_MAG_MIP_POINT;
+  Filter = MIN_MAG_MIP_LINEAR;
 };
 
 struct VS_INPUT
 {
-    float4 Pos          : POSITION;              
+    float4 Pos          : POSITION;
+	uint instanceID  : SV_InstanceID;              
 };
 
 struct GS_INPUT
 {
-    float4 Pos : POSITION;
+    float3 Pos : POSITION;
 };
 
 struct PS_INPUT
@@ -85,21 +87,6 @@ static const float persistance = 0.5f;
 static const float power = 2.7f;
 static const float scale = 0.28f;
 
-float random(int seed, float3 i)
-{
-   int s = int(seed + i.x * 54139 + i.y * 50021 + i.z * 54311);
-   s = s ^ s >> 11;
-   s = s ^ (s << 7 & 0x9d2c5680);
-   s = s ^ (s << 15 & 0xefc60000);
-   s = s ^ (s >> 18);
-   return frac(s/150377.0); 
-}
-
-float interp(float a, float b, float x)
-{
-   return lerp(a, b, smoothstep(0, 1, x));
-}
-
 float perlin3D(int seed, float3 i)
 {
    float density = 0;
@@ -110,27 +97,10 @@ float perlin3D(int seed, float3 i)
       float amplitude = pow(persistance, o);
 
 	  float3 v = i * frequency / zoom;
-	  float3 floorv = floor(v);
+
+	  float d = NoiseTexture.SampleLevel(NoiseSampler, v / 64.0, 0).r;
       
-	  float na = NoiseTexture.SampleLevel(NoiseSampler, float3(floorv.x, floorv.y, floorv.z) / 64.0, 0).r;
-      float nb = NoiseTexture.SampleLevel(NoiseSampler,  float3(floorv.x+1, floorv.y, floorv.z) / 64.0, 0).r;
-      float nc = NoiseTexture.SampleLevel(NoiseSampler, float3(floorv.x, floorv.y+1, floorv.z) / 64.0, 0).r;
-      float nd = NoiseTexture.SampleLevel(NoiseSampler, float3(floorv.x+1, floorv.y+1, floorv.z)/ 64.0, 0).r;
-      
-      float ne = NoiseTexture.SampleLevel(NoiseSampler, float3(floorv.x, floorv.y, floorv.z+1)/ 64.0, 0).r;
-      float nf = NoiseTexture.SampleLevel(NoiseSampler,  float3(floorv.x+1, floorv.y, floorv.z+1)/ 64.0, 0).r;
-      float ng = NoiseTexture.SampleLevel(NoiseSampler, float3(floorv.x, floorv.y+1, floorv.z+1)/ 64.0, 0).r;
-      float nh = NoiseTexture.SampleLevel(NoiseSampler, float3(floorv.x+1, floorv.y+1, floorv.z+1)/ 64.0, 0).r;
-      
-      float la = interp(na, nb, v.x - floorv.x);
-      float lb = interp(nc, nd, v.x - floorv.x);
-      float lc = interp(la, lb, v.y - floorv.y);
-      
-      float ld = interp(ne, nf, v.x - floorv.x);
-      float le = interp(ng, nh, v.x - floorv.x);
-      float lf = interp(ld, le, v.y - floorv.y);
-      
-      density += interp(lc, lf, v.z - floorv.z) * amplitude;
+      density += d * amplitude;
    }
    
    return clamp(scale * pow(density, power),0,1);
@@ -178,7 +148,9 @@ int triTableValue(int i, int j)
 
 GS_INPUT mainVS( VS_INPUT input )
 {
-    GS_INPUT output = {input.Pos};
+    GS_INPUT output = {input.Pos + float3((input.instanceID % (Size * Size)) % Size, 
+									(input.instanceID / Size) % Size,
+									input.instanceID / (Size * Size))*CubeSize - float3(Size,Size,Size)*CubeSize / 2};
     return output;
 }
 
@@ -195,6 +167,9 @@ void mainGS( point GS_INPUT input[1], inout TriangleStream<PS_INPUT> stream )
 	if (sampleField(5, pos0) < Threshold) cubeindex = cubeindex | 32;
 	if (sampleField(6, pos0) < Threshold) cubeindex = cubeindex | 64;
 	if (sampleField(7, pos0) < Threshold) cubeindex = cubeindex | 128;
+
+	if (cubeindex != 0)
+	{
 	
 	float3 vertlist[12] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},
 	{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}}; // MUST initialise this because of X4850 error
@@ -252,6 +227,7 @@ void mainGS( point GS_INPUT input[1], inout TriangleStream<PS_INPUT> stream )
 		{
 			break;
 		}
+	}
 	}
 }
 
