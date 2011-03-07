@@ -19,7 +19,6 @@ Environment::Environment() :
 	_vertexLayoutGen(NULL),
 	_vertexLayoutScene(NULL),
 	_bufferPointGrid(NULL),
-	_bufferEnvironmentModel(NULL),
 	_view(NULL),
 	_viewDirection(NULL),
 	_numTriangles(0),
@@ -47,9 +46,6 @@ void Environment::GenBlobs()
 
 void Environment::GenModel(ID3D10Device* d3dDevice)
 {
-	Timer t;
-	t.Start();
-
 	ID3D10EffectVariable* blobs = _genModelEffect->GetVariableByName("blobs");
 
 	for (int i = 0; i < 5; ++i)
@@ -64,75 +60,38 @@ void Environment::GenModel(ID3D10Device* d3dDevice)
 		blobi->GetMemberByName("Radius")->AsScalar()->SetFloat(_blobs[i].Radius);
 	}
 
-	
-	ID3D10Buffer* buffer;
-
-	int m_nBufferSize = 24;
-
-	D3D10_BUFFER_DESC bufferDesc =
-	{
-		m_nBufferSize,
-		D3D10_USAGE_DEFAULT,
-		D3D10_BIND_STREAM_OUTPUT | D3D10_BIND_VERTEX_BUFFER,
-		0,
-		0
-	};
-
-	d3dDevice->CreateBuffer(&bufferDesc, NULL, &buffer);
-
-	UINT offset[1] = {0};
-	d3dDevice->SOSetTargets( 1, &buffer, offset );
-
 	d3dDevice->IASetInputLayout(_vertexLayoutGen);
 
-	UINT stride = sizeof( D3DVECTOR );
+	UINT offset[1] = {0};
+	UINT stride = sizeof(D3DVECTOR);
 	d3dDevice->IASetVertexBuffers(0, 1, &_bufferPointGrid, &stride, offset);
-
 	d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);
 
+	Timer t;
 
-	D3D10_QUERY_DESC queryDesc = { D3D10_QUERY_SO_STATISTICS , 0 };
+	float Budget = 0.02f;
+	// generate models
 
-	ID3D10Query* query;
-	d3dDevice->CreateQuery(&queryDesc, &query);
+	for (std::vector<EnvironmentChunk*>::iterator i = _environmentToGenerate.begin(); 
+		i != _environmentToGenerate.end();)
+	{
+		EnvironmentChunk* generated = *i;
+		t.Start();
+		generated->Generate(d3dDevice, _genModelEffect, _genModelTechnique);
+		t.Stop();
+		Budget -= t.GetTime();
+		
+		i = _environmentToGenerate.erase(i);
 
-	query->Begin();
+		_environmentToDraw.push_back(generated);
 
-	D3D10_TECHNIQUE_DESC techDesc;
-	_genModelTechnique->GetDesc( &techDesc );
-    _genModelTechnique->GetPassByIndex( 0 )->Apply( 0 );
-	d3dDevice->DrawInstanced(1, _resolution*_resolution*_resolution, 0, 0);
-
-	query->End();
-	D3D10_QUERY_DATA_SO_STATISTICS soStats;
-	while (query->GetData(&soStats, sizeof(soStats), 0) == S_FALSE); // wait for query to be ready (could cause inf loop)
-
-	query->Release();
-
-	if (_bufferEnvironmentModel != NULL)
-		_bufferEnvironmentModel->Release();
-
-	bufferDesc.ByteWidth = (UINT)soStats.PrimitivesStorageNeeded * 3 * 28;
-	d3dDevice->CreateBuffer(&bufferDesc, NULL, &_bufferEnvironmentModel);
-	_numTriangles = (UINT)soStats.PrimitivesStorageNeeded;
-
-	std::cout << "Created Buffer for: " << soStats.PrimitivesStorageNeeded << " triangles" << std::endl;
-
-	d3dDevice->SOSetTargets( 1, &_bufferEnvironmentModel, offset );
-	d3dDevice->DrawInstanced(1, _resolution*_resolution*_resolution, 0, 0);
-
-	d3dDevice->SOSetTargets(0, NULL, NULL);
-
-	t.Stop();
-	std::cout << "Model generated in " << t.GetTime() << "s" << std::endl;
+		if (Budget <= 0)
+			break;
+	}
 }
 
 void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
-{
-	_resolution = 80;
-	float cubeSize = 4.0f / _resolution;
-	int limit = _resolution / 2;
-	
+{	
 	// Create Vertex Buffer
 	std::vector<D3DVECTOR> inputData;
 	inputData.push_back(D3DXVECTOR3(0, 0, 0));
@@ -218,8 +177,6 @@ void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 	ID3D10EffectScalarVariable* v = _genModelEffect->GetVariableByName("Edges")->AsScalar();
 	v->SetIntArray((int*)MarchingCubesData::Edges, 0, 256);
 
-	_genModelEffect->GetVariableByName("Size")->AsScalar()->SetInt(_resolution);
-
 	v = _genModelEffect->GetVariableByName("TriTable")->AsScalar();
 	v->SetIntArray((int*)MarchingCubesData::TriTable, 0, 256*16);
 
@@ -238,8 +195,6 @@ void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 	blobCount->SetInt(5);
 	ID3D10EffectScalarVariable* threshold = _genModelEffect->GetVariableByName("Threshold")->AsScalar();
 	threshold->SetFloat(3.6f);
-	ID3D10EffectScalarVariable* cubeSizeV = _genModelEffect->GetVariableByName("CubeSize")->AsScalar();
-	cubeSizeV->SetFloat(cubeSize);
 
 	ID3D10EffectShaderResourceVariable* texturesampler = _renderSceneEffect->GetVariableByName("tex")->AsShaderResource();
 	texturesampler->SetResource(_texture);
@@ -247,14 +202,19 @@ void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 	texturesampler = _renderSceneEffect->GetVariableByName("texDisplacement")->AsShaderResource();
 	texturesampler->SetResource(_textureDisplacement);
 
+	for (float x = -2; x < 2; x += 1)
+		for (float y = -2; y < 2; y += 1)
+			for (float z = -2; z < 2; z += 1)
+				_environmentToGenerate.push_back(new EnvironmentChunk(Vector3f(x, y, z), 1, 20));
+
 	NewCave(d3dDevice);
+
 	AddLight();
 }
 
 void Environment::NewCave(ID3D10Device* d3dDevice)
 {
 	GenBlobs();
-	GenModel(d3dDevice);
 }
 
 void Environment::Unload()
@@ -283,20 +243,28 @@ void Environment::Unload()
 	_textureNoise3D->Release();
 	_textureNoise3D = NULL;
 
+	for(unsigned int i = 0; i < _environmentToDraw.size(); ++i)
+		delete _environmentToDraw[i];
+
+	for(unsigned int i = 0; i < _environmentToGenerate.size(); ++i)
+		delete _environmentToGenerate[i];
+
 	_view = NULL;
 }
 
 void Environment::Draw(ID3D10Device* d3dDevice, Camera& camera)
 {
+	if (!_environmentToGenerate.empty())
+	{
+		SortListToGenerate(camera);
+		GenModel(d3dDevice);
+	}
+
 	if (_lightsChanged)
 	{
 		UpdateLights();
 	}
 	d3dDevice->IASetInputLayout(_vertexLayoutScene);
-
-	UINT stride = sizeof( D3DVECTOR ) * 2;
-    UINT offset = 0;
-	d3dDevice->IASetVertexBuffers(0, 1, &_bufferEnvironmentModel, &stride, &offset);
 
 	d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -305,14 +273,12 @@ void Environment::Draw(ID3D10Device* d3dDevice, Camera& camera)
 
 	D3DXVECTOR4 viewDirection = D3DXVECTOR4(*(D3DXVECTOR3*)&camera.Look(), 1.0f);
 	_viewDirection->SetFloatVector((float*)viewDirection);
+    _renderSceneTechnique->GetPassByIndex(0)->Apply(0);
 
-	D3D10_TECHNIQUE_DESC techDesc;
-	_renderSceneTechnique->GetDesc( &techDesc );
-    for( UINT p = 0; p < techDesc.Passes; ++p )
-    {
-        _renderSceneTechnique->GetPassByIndex( p )->Apply( 0 );
-		d3dDevice->Draw( _numTriangles*3, 0 );
-    }
+	for (unsigned int i = 0; i < _environmentToDraw.size(); ++i)
+	{
+		_environmentToDraw[i]->Draw(d3dDevice, _renderSceneEffect);
+	}
 }
 
 D3DXVECTOR3 Environment::blobPos(int n)
@@ -338,6 +304,22 @@ Environment::Light::Light() :
 	_size(0.1f),
 	_falloff(5.0f)
 {
+}
+
+void Environment::SortListToGenerate(Camera& camera)
+{
+	// To implement
+}
+
+void Environment::Rebuild()
+{
+	for (unsigned int i = 0; i < _environmentToDraw.size(); ++i)
+	{
+		_environmentToDraw[i]->Release();
+	}
+
+	_environmentToGenerate.insert(_environmentToGenerate.end(), _environmentToDraw.begin(), _environmentToDraw.end());
+	_environmentToDraw.clear();
 }
 
 void Environment::Update(float dt)

@@ -6,6 +6,7 @@
 #include <D3DX10.h>
 #include <vector>
 #include "Vector.h"
+#include "EnvironmentChunk.h"
 
 class Camera;
 class RenderWindow;
@@ -18,9 +19,6 @@ public:
 	void Unload();
 	void Draw(ID3D10Device* d3dDevice, Camera& camera);
 	void Update(float dt);
-	void GenBlobs();
-	void GenModel(ID3D10Device* d3dDevice);
-	void NewCave(ID3D10Device* d3dDevice);
 
 	int NumLights() const;
 	Vector3f GetLightPosition(int light) const;
@@ -33,10 +31,16 @@ public:
 	void SetLightSize(int light, float size);
 	int AddLight();
 	void RemoveLight(int light);
+	void Rebuild();
 
 private:
 	float sampleField(const D3DXVECTOR3& pos0);
 	D3DXVECTOR3 blobPos(int n);
+
+	void SortListToGenerate(Camera& camera);
+	void GenBlobs();
+	void GenModel(ID3D10Device* d3dDevice);
+	void NewCave(ID3D10Device* d3dDevice);
 
 	struct Blob
 	{
@@ -53,7 +57,10 @@ private:
 	ID3D10InputLayout* _vertexLayoutGen;
 	ID3D10InputLayout* _vertexLayoutScene;
 	ID3D10Buffer* _bufferPointGrid;
-	ID3D10Buffer* _bufferEnvironmentModel;
+
+	std::vector<EnvironmentChunk*> _environmentToGenerate;
+	std::vector<EnvironmentChunk*> _environmentToDraw;
+
 	ID3D10EffectMatrixVariable* _view;
 	ID3D10EffectVectorVariable* _viewDirection;
 	ID3D10ShaderResourceView* _texture;

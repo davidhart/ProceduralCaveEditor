@@ -6,23 +6,25 @@ struct Blob
 	float Radius;
 };
 
-cbuffer UserOptions
+cbuffer PerEnvironment
 {
 	float Threshold;
 	
 	int NumBlobs;
-
-	float CubeSize;
-	int Size;
-					  
+		  
 	Blob blobs[MAX_BLOBS] =
 	{{{0, 0, 0}, 0.5f},
 	 {{0, 0, 0}, 0.5f},
 	 {{0, 0, 0}, 0.5f},
 	 {{0, 0, 0}, 0.5f},
 	 {{0, 0, 0}, 0.5f}};
-	
-	float AnimationSpeed;
+}
+
+cbuffer PerChunk
+{
+	float CubeSize;
+	int Size;
+	float3 ChunkOffset;
 }
 
 Texture3D NoiseTexture;
@@ -148,9 +150,9 @@ int triTableValue(int i, int j)
 
 GS_INPUT mainVS( VS_INPUT input )
 {
-    GS_INPUT output = {input.Pos + float3((input.instanceID % (Size * Size)) % Size, 
+    GS_INPUT output = {ChunkOffset + float3((input.instanceID % (Size * Size)) % Size, 
 									(input.instanceID / Size) % Size,
-									input.instanceID / (Size * Size))*CubeSize - float3(Size,Size,Size)*CubeSize / 2};
+									input.instanceID / (Size * Size))*CubeSize};
     return output;
 }
 

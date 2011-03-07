@@ -8,8 +8,7 @@ Editor::Editor() :
 	_camera(Vector3f(0,0,0), 0, 0),
 	_lightIcon(NULL),
 	_selectedLight(-1),
-	_positionWidget(Vector3f(0, 0, 0)),
-	_rebuild(false)
+	_positionWidget(Vector3f(0, 0, 0))
 {
 	_editorUI.SetEnvironment(&_environment);
 	_editorUI.SetEditor(this);
@@ -53,12 +52,6 @@ void Editor::Unload()
 
 void Editor::Draw(RenderWindow& renderWindow)
 {
-	if (_rebuild)
-	{
-		_environment.GenModel(renderWindow.GetDevice());
-		_rebuild = false;
-	}
-
 	_environment.Draw(renderWindow.GetDevice(), _camera);
 
 	if (_environment.NumLights() > 0)
@@ -166,7 +159,7 @@ void Editor::Update(float dt, const Input& input)
 
 	if (input.IsKeyJustPressed(Input::KEY_SPACE))
 	{
-		_rebuild = true;
+		_environment.Rebuild();
 	}
 }
 
