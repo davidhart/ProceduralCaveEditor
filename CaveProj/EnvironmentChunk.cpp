@@ -17,7 +17,18 @@ EnvironmentChunk::~EnvironmentChunk()
 
 float EnvironmentChunk::Importance(const Camera& camera)
 {
-	return 1.0f / (camera.Position() - (_position + Vector3f(_size, _size, _size) / 2.0f)).Length();
+	Vector3f midPt = _position + Vector3f(_size, _size, _size) / 2.0f;
+	Vector3f relativePos = midPt - camera.Position();
+
+	float distance = relativePos.Length();
+
+	float dotLookRelative = camera.Look().Dot(relativePos);
+
+	float perpendiculardistance = (dotLookRelative * camera.Look() - relativePos).Length();
+
+	if (dotLookRelative < -_size) return 0;
+
+	return (1 / perpendiculardistance) * 0.25f + (1 / distance) * 2.0f;
 }
 
 void EnvironmentChunk::Generate(ID3D10Device* d3dDevice, ID3D10Effect* generateEffect, ID3D10EffectTechnique* generateTechnique)

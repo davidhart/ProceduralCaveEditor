@@ -69,7 +69,7 @@ void Environment::GenModel(ID3D10Device* d3dDevice)
 
 	Timer t;
 
-	float Budget = 0.02f;
+	float Budget = 0.001f;
 	// generate models
 
 	for (std::vector<EnvironmentChunk*>::iterator i = _environmentToGenerate.begin(); 
@@ -205,7 +205,7 @@ void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 	for (float x = -2; x < 2; x += 1)
 		for (float y = -2; y < 2; y += 1)
 			for (float z = -2; z < 2; z += 1)
-				_environmentToGenerate.push_back(new EnvironmentChunk(Vector3f(x, y, z), 1, 20));
+				_environmentToGenerate.push_back(new EnvironmentChunk(Vector3f(x, y, z), 1, 32));
 
 	NewCave(d3dDevice);
 
@@ -308,7 +308,23 @@ Environment::Light::Light() :
 
 void Environment::SortListToGenerate(Camera& camera)
 {
-	// To implement
+	for (unsigned int i = 0; i < _environmentToGenerate.size()-1; ++i)
+	{
+		bool noswap = true;
+		for (unsigned int j = 0; j < _environmentToGenerate.size() - 1 - i; ++j)
+		{
+			if (_environmentToGenerate[j]->Importance(camera) < _environmentToGenerate[j+1]->Importance(camera))
+			{
+				EnvironmentChunk* temp = _environmentToGenerate[j];
+				_environmentToGenerate[j] = _environmentToGenerate[j+1];
+				_environmentToGenerate[j+1] = temp;
+				noswap = false;
+			}
+		}
+
+		if (noswap)
+			break;
+	}
 }
 
 void Environment::Rebuild()
