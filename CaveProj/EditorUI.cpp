@@ -17,9 +17,18 @@ EditorUI::EditorUI() :
 	_dockBase(NULL),
 	_editor(NULL),
 	_environment(NULL),
+	_lightsList(NULL),
 	_lightXPosition(NULL),
 	_lightYPosition(NULL),
-	_lightZPosition(NULL)
+	_lightZPosition(NULL),
+	_lightFalloff(NULL),
+	_lightSize(NULL),
+	_octaveList(NULL),
+	_octaveXScale(NULL),
+	_octaveYScale(NULL),
+	_octaveZScale(NULL),
+	_octaveAmplitude(NULL),
+	_selectedOctave(-1)
 {
 }
 
@@ -221,23 +230,26 @@ void EditorUI::CreateNoisePage()
 	_dockBase->GetRight()->GetTabControl()->AddPage(L"Noise", s);
 	s->SetAutoHideBars(true);
 
-	Gwen::Controls::ListBox* octaveList = new Gwen::Controls::ListBox(s);
-	octaveList->SetBounds(0,0, 116, 106);
-	octaveList->AddItem(L"Octave 1");
-	octaveList->AddItem(L"Octave 2");
-	octaveList->AddItem(L"Octave 3");
-	octaveList->AddItem(L"Octave 4");
+	_octaveList = new Gwen::Controls::ListBox(s);
+	_octaveList->SetBounds(0,0, 116, 106);
+	_octaveList->onRowSelected.Add(this, &EditorUI::onOctaveSelected);
+
+	PopulateOctaveList();
 
 	Gwen::Controls::Button* addButton = new Gwen::Controls::Button(s);
 	addButton->SetBounds(122,0,50, 50);
 	addButton->SetText("+");
+	addButton->onPress.Add(this, &EditorUI::onAddOctave);
+
 	Gwen::Controls::Button* removeButton = new Gwen::Controls::Button(s);
 	removeButton->SetBounds(122, 56, 50, 50);
 	removeButton->SetText("-");
+	removeButton->onPress.Add(this, &EditorUI::onRemoveOctave);
 
-	Gwen::Controls::TextBoxNumeric* amplitudeBox = new Gwen::Controls::TextBoxNumeric(s);
-	amplitudeBox->SetBounds(60, 118, 112, 20);
-	amplitudeBox->SetText("0");
+	_octaveAmplitude = new Gwen::Controls::TextBoxNumeric(s);
+	_octaveAmplitude->SetBounds(60, 118, 112, 20);
+	_octaveAmplitude->SetText("0");
+	_octaveAmplitude->onTextChanged.Add(this, &EditorUI::onNoisePropertiesChange);
 	
 	Gwen::Controls::Label* amplitudeLabel = new Gwen::Controls::Label(s);
 	amplitudeLabel->SetBounds(0, 118, 54, 20);
@@ -250,27 +262,30 @@ void EditorUI::CreateNoisePage()
 	scaleLabel->SetText("Scale");
 	scaleLabel->SetAlignment(Gwen::Pos::Left | Gwen::Pos::CenterV);
 
-	Gwen::Controls::TextBoxNumeric* scaleXBox = new Gwen::Controls::TextBoxNumeric(s);
-	scaleXBox->SetBounds(60, 176, 112, 20);
-	scaleXBox->SetText("0");
+	_octaveXScale = new Gwen::Controls::TextBoxNumeric(s);
+	_octaveXScale->SetBounds(60, 176, 112, 20);
+	_octaveXScale->SetText("0");
+	_octaveXScale->onTextChanged.Add(this, &EditorUI::onNoisePropertiesChange);
 
 	Gwen::Controls::Label* scaleXLabel = new Gwen::Controls::Label(s);
 	scaleXLabel->SetBounds(0, 176, 54, 20);
 	scaleXLabel->SetText("x:");
 	scaleXLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
 
-	Gwen::Controls::TextBoxNumeric* scaleYBox = new Gwen::Controls::TextBoxNumeric(s);
-	scaleYBox->SetBounds(60, 202, 112, 20);
-	scaleYBox->SetText("0");
+	_octaveYScale = new Gwen::Controls::TextBoxNumeric(s);
+	_octaveYScale->SetBounds(60, 202, 112, 20);
+	_octaveYScale->SetText("0");
+	_octaveYScale->onTextChanged.Add(this, &EditorUI::onNoisePropertiesChange);
 
 	Gwen::Controls::Label* scaleYLabel = new Gwen::Controls::Label(s);
 	scaleYLabel->SetBounds(0, 202, 54, 20);
 	scaleYLabel->SetText("y:");
 	scaleYLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
 
-	Gwen::Controls::TextBoxNumeric* scaleZBox = new Gwen::Controls::TextBoxNumeric(s);
-	scaleZBox->SetBounds(60, 228, 112, 20);
-	scaleZBox->SetText("0");
+	_octaveZScale = new Gwen::Controls::TextBoxNumeric(s);
+	_octaveZScale->SetBounds(60, 228, 112, 20);
+	_octaveZScale->SetText("0");
+	_octaveZScale->onTextChanged.Add(this, &EditorUI::onNoisePropertiesChange);
 
 	Gwen::Controls::Label* scaleZLabel = new Gwen::Controls::Label(s);
 	scaleZLabel->SetBounds(0, 228, 54, 20);
@@ -470,12 +485,10 @@ void EditorUI::onLightPropertiesChange(Gwen::Controls::Base* from)
 
 void EditorUI::SelectLight(int light)
 {
-	for (unsigned int i = 0; i < _lightRows.size(); ++i)
-	{
-		_lightRows[light]->SetSelected(false);
-	}
+	_lightsList->UnselectAll();
 
-	_lightRows[light]->SetSelected(true);
+	if (light >= 0)
+		_lightRows[light]->SetSelected(true);
 
 	UpdateLightProperties(light);
 }
@@ -501,4 +514,105 @@ void EditorUI::UpdateLightProperties(int light)
 	std::stringstream sS;
 	sS << _environment->GetLightSize(light);
 	_lightSize->SetText(sS.str(), false);
+}
+
+void EditorUI::onAddOctave(Gwen::Controls::Base* from)
+{
+	int o = _environment->AddOctave();
+	_environment->Rebuild();
+
+	PopulateOctaveList();
+
+	SelectOctave(o);
+}
+
+void EditorUI::onRemoveOctave(Gwen::Controls::Base* from)
+{
+	_environment->RemoveOctave(_selectedOctave);
+	_environment->Rebuild();
+
+	PopulateOctaveList();
+
+	_selectedOctave = -1;
+}
+
+void EditorUI::SelectOctave(int octave)
+{
+	_octaveList->UnselectAll();
+	
+	if (octave >= 0)
+		_octaveRows[octave]->SetSelected(true);
+
+	UpdateNoiseProperties(octave);
+
+	_selectedOctave = octave;
+}
+
+void EditorUI::onOctaveSelected(Gwen::Controls::Base* from)
+{
+	Gwen::Controls::Layout::TableRow* selected = _octaveList->GetSelectedRow();
+
+	int i = 0;
+	for (; i < (int)_octaveRows.size(); ++i)
+	{
+		if (_octaveRows[i] == selected)
+			break;
+	}
+
+	if (i == _octaveRows.size())
+		return; // error, selected row wasn't in rows?
+
+	_selectedOctave = i;
+	UpdateNoiseProperties(_selectedOctave);
+}
+
+void EditorUI::UpdateNoiseProperties(int octave)
+{
+	if (octave >= 0)
+	{
+		std::stringstream sX;
+		sX << _environment->GetOctaveScale(octave).x;
+		_octaveXScale->SetText(sX.str(), false);
+
+		std::stringstream sY;
+		sY << _environment->GetOctaveScale(octave).y;
+		_octaveYScale->SetText(sY.str(), false);
+
+		std::stringstream sZ;
+		sZ << _environment->GetOctaveScale(octave).z;
+		_octaveZScale->SetText(sZ.str(), false);
+
+		std::stringstream sA;
+		sA << _environment->GetOctaveAmplitude(octave);
+		_octaveAmplitude->SetText(sA.str(), false);
+	}
+}
+
+void EditorUI::PopulateOctaveList()
+{
+	_octaveList->GetTable()->RemoveAllChildren();
+	_octaveRows.clear();
+	for (int i = 0; i < _environment->NumOctaves(); ++i)
+	{
+		std::stringstream ss;
+		ss << "Octave " << i + 1;
+		_octaveRows.push_back(_octaveList->AddItem(ss.str()));
+	}
+}
+
+void EditorUI::onNoisePropertiesChange(Gwen::Controls::Base* from)
+{
+	if (_selectedOctave >= 0)
+	{
+		Vector3f s;
+
+		s.x = _octaveXScale->GetFloatFromText();
+		s.y = _octaveYScale->GetFloatFromText();
+		s.z = _octaveZScale->GetFloatFromText();
+
+		_environment->SetOctaveScale(_selectedOctave, s);
+		_environment->SetOctaveAmplitude(_selectedOctave, _octaveAmplitude->GetFloatFromText());
+
+		_environment->Rebuild();
+	}
 }

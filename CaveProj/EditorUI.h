@@ -42,12 +42,20 @@ private:
 	void CreateObjectsPage();
 
 	void PopulateLightList();
+	void PopulateOctaveList();
 
 	void onAddLight(Gwen::Controls::Base* from);
 	void onRemoveLight(Gwen::Controls::Base* from);
 	void onLightSelected(Gwen::Controls::Base* from);
 
 	void onLightPropertiesChange(Gwen::Controls::Base* from);
+
+	void onAddOctave(Gwen::Controls::Base* from);
+	void onRemoveOctave(Gwen::Controls::Base* from);
+	void onOctaveSelected(Gwen::Controls::Base* from);
+	void onNoisePropertiesChange(Gwen::Controls::Base* from);
+	void SelectOctave(int octave);
+	void UpdateNoiseProperties(int octave);
 
 	Editor* _editor;
 	Environment* _environment;
@@ -59,11 +67,21 @@ private:
 
 	Gwen::Controls::ListBox* _lightsList;
 	std::vector<Gwen::Controls::Layout::TableRow*> _lightRows;
+
+	Gwen::Controls::ListBox* _octaveList;
+	std::vector<Gwen::Controls::Layout::TableRow*> _octaveRows;
+	int _selectedOctave;
+
 	Gwen::Controls::TextBoxNumeric* _lightXPosition;
 	Gwen::Controls::TextBoxNumeric* _lightYPosition;
 	Gwen::Controls::TextBoxNumeric* _lightZPosition;
 	Gwen::Controls::TextBoxNumeric* _lightFalloff;
 	Gwen::Controls::TextBoxNumeric* _lightSize;
+
+	Gwen::Controls::TextBoxNumeric* _octaveXScale;
+	Gwen::Controls::TextBoxNumeric* _octaveYScale;
+	Gwen::Controls::TextBoxNumeric* _octaveZScale;
+	Gwen::Controls::TextBoxNumeric* _octaveAmplitude;
 };
 
 #endif

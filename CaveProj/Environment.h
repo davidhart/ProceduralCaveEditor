@@ -31,6 +31,15 @@ public:
 	void SetLightSize(int light, float size);
 	int AddLight();
 	void RemoveLight(int light);
+
+	int NumOctaves() const;
+	Vector3f GetOctaveScale(int octave) const;
+	void SetOctaveScale(int octave, const Vector3f& scale);
+	float GetOctaveAmplitude(int octave) const;
+	void SetOctaveAmplitude(int octave, float amplitude);
+	int AddOctave();
+	void RemoveOctave(int octave);
+
 	void Rebuild();
 
 private:
@@ -42,13 +51,24 @@ private:
 	void GenModel(ID3D10Device* d3dDevice);
 	void NewCave(ID3D10Device* d3dDevice);
 
+	static const int MAX_BLOBS = 5;
 	struct Blob
 	{
 		D3DXVECTOR4 Position;
 		float Radius;
 	};
 
-	Blob _blobs[5];
+	Blob _blobs[MAX_BLOBS];
+
+
+	static const int MAX_OCTAVES = 5;
+	struct Octave
+	{
+		D3DXVECTOR4 Scale;
+		float Amplitude;
+	};
+
+	std::vector<Octave> _octaves;
 
 	ID3D10Effect* _genModelEffect;
 	ID3D10Effect* _renderSceneEffect;

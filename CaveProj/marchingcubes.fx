@@ -1,9 +1,17 @@
 #define MAX_BLOBS 5
+#define MAX_OCTAVES 5 
+#define NOISE_TEXTURE_SIZE 64
 
 struct Blob
 {
 	float3 Position;
 	float Radius;
+};
+
+struct Octave
+{
+	float3 Scale;
+	float Amplitude;
 };
 
 cbuffer PerEnvironment
@@ -13,11 +21,18 @@ cbuffer PerEnvironment
 	int NumBlobs;
 		  
 	Blob blobs[MAX_BLOBS] =
-	{{{0, 0, 0}, 0.5f},
-	 {{0, 0, 0}, 0.5f},
-	 {{0, 0, 0}, 0.5f},
-	 {{0, 0, 0}, 0.5f},
-	 {{0, 0, 0}, 0.5f}};
+	{{{0, 0, 0}, 0.0f},
+	 {{0, 0, 0}, 0.0f},
+	 {{0, 0, 0}, 0.0f},
+	 {{0, 0, 0}, 0.0f},
+	 {{0, 0, 0}, 0.0f}};
+
+	 Octave octaves[MAX_OCTAVES] =
+	{{{0, 0, 0}, 0.0f},
+	 {{0, 0, 0}, 0.0f},
+	 {{0, 0, 0}, 0.0f},
+	 {{0, 0, 0}, 0.0f},
+	 {{0, 0, 0}, 0.0f}};
 }
 
 cbuffer PerChunk
@@ -83,16 +98,15 @@ float3 blobPos(int n)
 	return blobs[n].Position;
 }
 
-static const int octaves = 4;
-static const float zoom = 0.3f;
-static const float persistance = 0.5f;
-static const float power = 2.7f;
-static const float scale = 0.28f;
-
 float perlin3D(int seed, float3 i)
 {
-   float density = 0;
-   
+    float density = 0;
+    [unroll(MAX_OCTAVES)] for (int o = 0; o < MAX_OCTAVES; ++o)
+	{
+		float v = (NoiseTexture.SampleLevel(NoiseSampler, i * octaves[o].Scale / NOISE_TEXTURE_SIZE, 0).r - 0.5f) * 2.0f;
+		density += v * octaves[o].Amplitude;
+    }
+   /*
    [unroll] for (int o = 0; o < 4; ++o)
    {
       float frequency = pow(2, o);
@@ -103,10 +117,11 @@ float perlin3D(int seed, float3 i)
 	  float d = NoiseTexture.SampleLevel(NoiseSampler, v / 64.0, 0).r;
       
       density += d * amplitude;
-   }
+   }*/
    
-   return clamp(scale * pow(density, power),0,1);
+	return density;
 }
+
 
 float sampleField(int i, float3 pos0)
 {

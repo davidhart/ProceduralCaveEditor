@@ -28,11 +28,23 @@ Environment::Environment() :
 	_lightsChanged(false),
 	_textureNoise3D(NULL)
 {
+
+	int o = AddOctave();
+	SetOctaveScale(o, Vector3f(6.66f, 6.66f, 6.66f));
+	SetOctaveAmplitude(o, 0.5f);
+
+	o = AddOctave();
+	SetOctaveScale(o, Vector3f(13.33f, 13.33f, 13.33f));
+	SetOctaveAmplitude(o, 0.1f);
+
+	o = AddOctave();
+	SetOctaveScale(o, Vector3f(20.0f, 0.1f, 20.0f));
+	SetOctaveAmplitude(o, 0.4f);
 }
 
 void Environment::GenBlobs()
 {
-	for (int i = 0; i < 5; ++i)
+	for (int i = 0; i < MAX_BLOBS; ++i)
 	{
 		_blobs[i].Position = D3DXVECTOR4(rand() % 200 / 100.0f - 1.0f,
 			rand() % 200 / 100.0f - 1.0f,
@@ -46,18 +58,31 @@ void Environment::GenBlobs()
 
 void Environment::GenModel(ID3D10Device* d3dDevice)
 {
+	// TODO: Store the variable locations at load and validate
 	ID3D10EffectVariable* blobs = _genModelEffect->GetVariableByName("blobs");
-
-	for (int i = 0; i < 5; ++i)
+	for (int i = 0; i < MAX_BLOBS; ++i)
 	{
-		ID3D10EffectVariable* blobi = blobs->GetElement(i);
-
-		if (!blobi->IsValid())
-			MessageBox(0, "Could not fetch the requested shader variable", "Shader Variable Error", MB_OK);
-
-		// TODO: Error check these variables too (wrap up shader class to do this?)
+		
+		ID3D10EffectVariable* blobi = blobs->GetElement(i);		
 		blobi->GetMemberByName("Position")->AsVector()->SetFloatVector((float*)&_blobs[i].Position);
 		blobi->GetMemberByName("Radius")->AsScalar()->SetFloat(_blobs[i].Radius);
+	}
+
+	ID3D10EffectVariable* octaves = _genModelEffect->GetVariableByName("octaves");
+	unsigned int i = 0;
+	for (; i < _octaves.size(); ++i)
+	{
+		ID3D10EffectVariable* octavei = octaves->GetElement(i);
+		octavei->GetMemberByName("Scale")->AsVector()->SetFloatVector((float*)&_octaves[i].Scale);
+		octavei->GetMemberByName("Amplitude")->AsScalar()->SetFloat(_octaves[i].Amplitude);
+	}
+
+	for (; i < MAX_OCTAVES; ++i)
+	{
+		ID3D10EffectVariable* octavei = octaves->GetElement(i);
+		D3DXVECTOR4 s(0, 0, 0, 0);
+		octavei->GetMemberByName("Scale")->AsVector()->SetFloatVector((float*)&s);
+		octavei->GetMemberByName("Amplitude")->AsScalar()->SetFloat(0);
 	}
 
 	d3dDevice->IASetInputLayout(_vertexLayoutGen);
@@ -69,8 +94,9 @@ void Environment::GenModel(ID3D10Device* d3dDevice)
 
 	Timer t;
 
-	float Budget = 0.001f;
-	// generate models
+	float Budget = 0.001f; // limit the amount of time we can spend per frame generating surface chunks
+						   // when the limit is exceeded, stop generating and render the frame to keep
+						   // the application responsive
 
 	for (std::vector<EnvironmentChunk*>::iterator i = _environmentToGenerate.begin(); 
 		i != _environmentToGenerate.end();)
@@ -441,4 +467,49 @@ void Environment::UpdateLights()
 		D3DXCOLOR col(0,0,0,0);
 		lighti->GetMemberByName("Color")->AsVector()->SetFloatVector(&col.r);
 	}
+}
+
+int Environment::AddOctave()
+{
+	if (_octaves.size() == MAX_OCTAVES)
+		return -1;
+
+	int i = (int)_octaves.size();
+
+	_octaves.push_back(Octave());
+	_octaves[i].Scale = D3DXVECTOR4(0,0,0,0);
+	_octaves[i].Amplitude = 0;
+
+	return i;
+}
+
+void Environment::RemoveOctave(int octave)
+{
+	_octaves.erase(_octaves.begin() + octave);
+}
+
+Vector3f Environment::GetOctaveScale(int octave) const
+{
+	const D3DXVECTOR4& s = _octaves[octave].Scale;
+	return Vector3f(s.x, s.y, s.z);
+}
+
+void Environment::SetOctaveScale(int octave, const Vector3f& scale)
+{
+	_octaves[octave].Scale = D3DXVECTOR4(scale.x, scale.y, scale.z, 0.0f);
+}
+
+float Environment::GetOctaveAmplitude(int octave) const
+{
+	return _octaves[octave].Amplitude;
+}
+
+void Environment::SetOctaveAmplitude(int octave, float amplitude)
+{
+	_octaves[octave].Amplitude = amplitude;
+}
+
+int Environment::NumOctaves() const
+{
+	return (int) _octaves.size();
 }
