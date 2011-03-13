@@ -40,6 +40,15 @@ public:
 	int AddOctave();
 	void RemoveOctave(int octave);
 
+	int NumShapes() const;
+	Vector3f GetShapePosition(int shape) const;
+	void SetShapePosition(int shape, const Vector3f& position);
+	Vector3f GetShapeScale(int shape) const;
+	void SetShapeScale(int shape, const Vector3f& scale);
+	int AddShape();
+	void RemoveShape(int shape);
+
+
 	void Rebuild();
 
 private:
@@ -55,10 +64,10 @@ private:
 	struct Blob
 	{
 		D3DXVECTOR4 Position;
-		float Radius;
+		D3DXVECTOR4 Scale;
 	};
 
-	Blob _blobs[MAX_BLOBS];
+	std::vector<Blob> _shapes;
 
 
 	static const int MAX_OCTAVES = 5;

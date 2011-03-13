@@ -44,15 +44,19 @@ Environment::Environment() :
 
 void Environment::GenBlobs()
 {
+	_shapes.resize(MAX_BLOBS);
+
 	for (int i = 0; i < MAX_BLOBS; ++i)
 	{
-		_blobs[i].Position = D3DXVECTOR4(rand() % 200 / 100.0f - 1.0f,
+		_shapes[i].Position = D3DXVECTOR4(rand() % 200 / 100.0f - 1.0f,
 			rand() % 200 / 100.0f - 1.0f,
 			rand() % 200 / 100.0f - 1.0f,
 			0.0f);
 
-		_blobs[i].Radius = rand() % 20 / 24.0f + 0.4f;
+		float r = rand() % 20 / 24.0f + 0.4f;
+		_shapes[i].Scale = D3DXVECTOR4(r, r, r, 0);
 	}
+
 	std::cout << "Generated blobs" << std::endl;
 }
 
@@ -60,17 +64,26 @@ void Environment::GenModel(ID3D10Device* d3dDevice)
 {
 	// TODO: Store the variable locations at load and validate
 	ID3D10EffectVariable* blobs = _genModelEffect->GetVariableByName("blobs");
-	for (int i = 0; i < MAX_BLOBS; ++i)
+
+	_genModelEffect->GetVariableByName("NumBlobs")->AsScalar()->SetInt(NumShapes());
+
+	unsigned int i = 0;
+	for (; i < _shapes.size(); ++i)
 	{
-		
 		ID3D10EffectVariable* blobi = blobs->GetElement(i);		
-		blobi->GetMemberByName("Position")->AsVector()->SetFloatVector((float*)&_blobs[i].Position);
-		blobi->GetMemberByName("Radius")->AsScalar()->SetFloat(_blobs[i].Radius);
+		blobi->GetMemberByName("Position")->AsVector()->SetFloatVector((float*)&_shapes[i].Position);
+		blobi->GetMemberByName("Scale")->AsVector()->SetFloatVector((float*)&_shapes[i].Scale);
+	}
+	for (; i < MAX_BLOBS; ++i)
+	{
+		D3DXVECTOR4 def(0,0,0,0);
+		ID3D10EffectVariable* blobi = blobs->GetElement(i);		
+		blobi->GetMemberByName("Position")->AsVector()->SetFloatVector((float*)&def);
+		blobi->GetMemberByName("Scale")->AsVector()->SetFloatVector((float*)&def);
 	}
 
 	ID3D10EffectVariable* octaves = _genModelEffect->GetVariableByName("octaves");
-	unsigned int i = 0;
-	for (; i < _octaves.size(); ++i)
+	for (i = 0; i < _octaves.size(); ++i)
 	{
 		ID3D10EffectVariable* octavei = octaves->GetElement(i);
 		octavei->GetMemberByName("Scale")->AsVector()->SetFloatVector((float*)&_octaves[i].Scale);
@@ -307,19 +320,14 @@ void Environment::Draw(ID3D10Device* d3dDevice, Camera& camera)
 	}
 }
 
-D3DXVECTOR3 Environment::blobPos(int n)
-{
-	return D3DXVECTOR3((float*)&_blobs[n].Position);
-}
-
 float Environment::sampleField(const D3DXVECTOR3& pos0)
 {
 	float density = 0;
-	
+	/*
 	for (int n = 0; n < 5; ++n)
 	{		
 		density += _blobs[n].Radius*1/(D3DXVec3Length(&(pos0-blobPos(n)))+0.0001f);
-	}
+	}*/
 
 	return density;
 }
@@ -512,4 +520,52 @@ void Environment::SetOctaveAmplitude(int octave, float amplitude)
 int Environment::NumOctaves() const
 {
 	return (int) _octaves.size();
+}
+
+void Environment::RemoveShape(int shape)
+{
+	_shapes.erase(_shapes.begin() + shape);
+}
+
+int Environment::AddShape()
+{
+	if (_shapes.size() == MAX_BLOBS)
+		return -1;
+
+	int i = (int)_shapes.size();
+
+	_shapes.push_back(Blob());
+	_shapes[i].Position = D3DXVECTOR4(0,0,0,0);
+	_shapes[i].Scale = D3DXVECTOR4(0,0,0,0);
+
+	return i;
+}
+
+Vector3f Environment::GetShapePosition(int shape) const
+{
+	return Vector3f(_shapes[shape].Position.x, _shapes[shape].Position.y, _shapes[shape].Position.z);
+}
+
+void Environment::SetShapePosition(int shape, const Vector3f& position)
+{
+	_shapes[shape].Position.x = position.x;
+	_shapes[shape].Position.y = position.y;
+	_shapes[shape].Position.z = position.z;
+}
+
+Vector3f Environment::GetShapeScale(int shape) const
+{
+	return Vector3f(_shapes[shape].Scale.x, _shapes[shape].Scale.y, _shapes[shape].Scale.z);
+}
+
+void Environment::SetShapeScale(int shape, const Vector3f& scale)
+{
+	_shapes[shape].Scale.x = scale.x;
+	_shapes[shape].Scale.y = scale.y;
+	_shapes[shape].Scale.z = scale.z;
+}
+
+int Environment::NumShapes() const
+{
+	return _shapes.size();
 }

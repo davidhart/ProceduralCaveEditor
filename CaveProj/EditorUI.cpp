@@ -28,7 +28,8 @@ EditorUI::EditorUI() :
 	_octaveYScale(NULL),
 	_octaveZScale(NULL),
 	_octaveAmplitude(NULL),
-	_selectedOctave(-1)
+	_selectedOctave(-1),
+	_updatingProperties(false)
 {
 }
 
@@ -40,6 +41,7 @@ void EditorUI::Load(RenderWindow& renderWindow)
 
 	_canvas = new Gwen::Controls::Canvas(&_skin);
 	_canvas->SetSize(renderWindow.GetSize().x, renderWindow.GetSize().y);
+	// TODO: make menu functional
 	Gwen::Controls::MenuStrip* m = new Gwen::Controls::MenuStrip(_canvas);
 	Gwen::Controls::Menu* fileMenu = m->AddItem("File")->GetMenu();
 	fileMenu->AddItem("New");
@@ -88,138 +90,112 @@ void EditorUI::CreateShapePage()
 	Gwen::Controls::ScrollControl* s = new Gwen::Controls::ScrollControl(_canvas);
 	_dockBase->GetRight()->GetTabControl()->AddPage(L"Shape", s);
 	s->SetAutoHideBars(true);
-	Gwen::Controls::ListBox* shapeList = new Gwen::Controls::ListBox(s);
-	shapeList->SetBounds(0,0, 116, 106);
-	shapeList->AddItem(L"Metaball 1");
-	shapeList->AddItem(L"Metaball 2");
-	shapeList->AddItem(L"Metaball 3");
-	shapeList->AddItem(L"Room 1");
-	shapeList->AddItem(L"Cylinder 1");
-	shapeList->AddItem(L"Cylinder 2");
+
+	int yPos = 0;
+
+	_shapeList = new Gwen::Controls::ListBox(s);
+	_shapeList->SetBounds(0,yPos, 116, 106);
+	_shapeList->onRowSelected.Add(this, &EditorUI::onShapeSelected);
+
+	PopulateShapeList();
 
 	Gwen::Controls::Button* addButton = new Gwen::Controls::Button(s);
-	addButton->SetBounds(122,0,50, 50);
+	addButton->SetBounds(122,yPos,50, 50);
 	addButton->SetText("+");
+	addButton->onPress.Add(this, &EditorUI::onAddShape);
+
 	Gwen::Controls::Button* removeButton = new Gwen::Controls::Button(s);
-	removeButton->SetBounds(122, 56, 50, 50);
+	removeButton->SetBounds(122, yPos+56, 50, 50);
 	removeButton->SetText("-");
+	removeButton->onPress.Add(this, &EditorUI::onRemoveShape);
 
-	Gwen::Controls::TextBox* nameBox = new Gwen::Controls::TextBox(s);
-	nameBox->SetBounds(60, 118, 112, 20);
-	nameBox->SetText("Metaball 1");
-	
-	Gwen::Controls::Label* nameLabel = new Gwen::Controls::Label(s);
-	nameLabel->SetBounds(0, 118, 54, 20);
-	nameLabel->SetText("Name:");
-	nameLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
-
+	yPos += 118;
 	Gwen::Controls::ComboBox* shapeCombo = new Gwen::Controls::ComboBox(s);
-	shapeCombo->SetBounds(60, 144, 112, 20);
+	shapeCombo->SetBounds(60, yPos, 112, 20);
 	shapeCombo->AddItem(L"Metaball");
-	shapeCombo->AddItem(L"Cube");
-	shapeCombo->AddItem(L"Cylinder");
 
 	Gwen::Controls::Label* shapeLabel = new Gwen::Controls::Label(s);
-	shapeLabel->SetBounds(0, 144, 54, 20);
+	shapeLabel->SetBounds(0, yPos, 54, 20);
 	shapeLabel->SetText("Shape:");
 	shapeLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
 
 	// Position controls
+	yPos += 32;
 	Gwen::Controls::Label* positionLabel = new Gwen::Controls::Label(s);
-	positionLabel->SetBounds(16, 176, 156, 20);
+	positionLabel->SetBounds(16, yPos, 156, 20);
 	positionLabel->SetText("Position");
 	positionLabel->SetAlignment(Gwen::Pos::Left | Gwen::Pos::CenterV);
 
-	Gwen::Controls::TextBoxNumeric* positionXBox = new Gwen::Controls::TextBoxNumeric(s);
-	positionXBox->SetBounds(60, 196, 112, 20);
-	positionXBox->SetText("0");
+	yPos += 20;
+	_shapeXPosition = new Gwen::Controls::TextBoxNumeric(s);
+	_shapeXPosition->SetBounds(60, yPos, 112, 20);
+	_shapeXPosition->SetText("0");
+	_shapeXPosition->onTextChanged.Add(this, &EditorUI::onShapePropertiesChange);
 
 	Gwen::Controls::Label* positionXLabel = new Gwen::Controls::Label(s);
-	positionXLabel->SetBounds(0, 196, 54, 20);
+	positionXLabel->SetBounds(0, yPos, 54, 20);
 	positionXLabel->SetText("x:");
 	positionXLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
 
-	Gwen::Controls::TextBoxNumeric* positionYBox = new Gwen::Controls::TextBoxNumeric(s);
-	positionYBox->SetBounds(60, 222, 112, 20);
-	positionYBox->SetText("0");
+	yPos += 26;
+	_shapeYPosition = new Gwen::Controls::TextBoxNumeric(s);
+	_shapeYPosition->SetBounds(60, yPos, 112, 20);
+	_shapeYPosition->SetText("0");
+	_shapeYPosition->onTextChanged.Add(this, &EditorUI::onShapePropertiesChange);
 
 	Gwen::Controls::Label* positionYLabel = new Gwen::Controls::Label(s);
-	positionYLabel->SetBounds(0, 222, 54, 20);
+	positionYLabel->SetBounds(0, yPos, 54, 20);
 	positionYLabel->SetText("y:");
 	positionYLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
 
-	Gwen::Controls::TextBoxNumeric* positionZBox = new Gwen::Controls::TextBoxNumeric(s);
-	positionZBox->SetBounds(60, 248, 112, 20);
-	positionZBox->SetText("0");
+	yPos += 26;
+	_shapeZPosition = new Gwen::Controls::TextBoxNumeric(s);
+	_shapeZPosition->SetBounds(60, yPos, 112, 20);
+	_shapeZPosition->SetText("0");
+	_shapeZPosition->onTextChanged.Add(this, &EditorUI::onShapePropertiesChange);
 
 	Gwen::Controls::Label* positionZLabel = new Gwen::Controls::Label(s);
-	positionZLabel->SetBounds(0, 248, 54, 20);
+	positionZLabel->SetBounds(0, yPos, 54, 20);
 	positionZLabel->SetText("z:");
 	positionZLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
 
-	// Rotation controls
-	Gwen::Controls::Label* rotationLabel = new Gwen::Controls::Label(s);
-	rotationLabel->SetBounds(16, 280, 156, 20);
-	rotationLabel->SetText("Rotation");
-	rotationLabel->SetAlignment(Gwen::Pos::Left | Gwen::Pos::CenterV);
-
-	Gwen::Controls::TextBoxNumeric* rotationXBox = new Gwen::Controls::TextBoxNumeric(s);
-	rotationXBox->SetBounds(60, 306, 112, 20);
-	rotationXBox->SetText("0");
-
-	Gwen::Controls::Label* rotationXLabel = new Gwen::Controls::Label(s);
-	rotationXLabel->SetBounds(0, 306, 54, 20);
-	rotationXLabel->SetText("x:");
-	rotationXLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
-
-	Gwen::Controls::TextBoxNumeric* rotationYBox = new Gwen::Controls::TextBoxNumeric(s);
-	rotationYBox->SetBounds(60, 332, 112, 20);
-	rotationYBox->SetText("0");
-
-	Gwen::Controls::Label* rotationYLabel = new Gwen::Controls::Label(s);
-	rotationYLabel->SetBounds(0, 332, 54, 20);
-	rotationYLabel->SetText("y:");
-	rotationYLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
-
-	Gwen::Controls::TextBoxNumeric* rotationZBox = new Gwen::Controls::TextBoxNumeric(s);
-	rotationZBox->SetBounds(60, 356, 112, 20);
-	rotationZBox->SetText("0");
-
-	Gwen::Controls::Label* rotationZLabel = new Gwen::Controls::Label(s);
-	rotationZLabel->SetBounds(0, 356, 54, 20);
-	rotationZLabel->SetText("z:");
-	rotationZLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
-
 	// Scale controls
+	yPos += 32;
 	Gwen::Controls::Label* scaleLabel = new Gwen::Controls::Label(s);
-	scaleLabel->SetBounds(16, 390, 156, 20);
+	scaleLabel->SetBounds(16, yPos, 156, 20);
 	scaleLabel->SetText("Scale");
 	scaleLabel->SetAlignment(Gwen::Pos::Left | Gwen::Pos::CenterV);
 
-	Gwen::Controls::TextBoxNumeric* scaleXBox = new Gwen::Controls::TextBoxNumeric(s);
-	scaleXBox->SetBounds(60, 416, 112, 20);
-	scaleXBox->SetText("0");
+	yPos += 20;
+	_shapeXScale = new Gwen::Controls::TextBoxNumeric(s);
+	_shapeXScale->SetBounds(60, yPos, 112, 20);
+	_shapeXScale->SetText("0");
+	_shapeXScale->onTextChanged.Add(this, &EditorUI::onShapePropertiesChange);
 
 	Gwen::Controls::Label* scaleXLabel = new Gwen::Controls::Label(s);
-	scaleXLabel->SetBounds(0, 416, 54, 20);
+	scaleXLabel->SetBounds(0, yPos, 54, 20);
 	scaleXLabel->SetText("x:");
 	scaleXLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
 
-	Gwen::Controls::TextBoxNumeric* scaleYBox = new Gwen::Controls::TextBoxNumeric(s);
-	scaleYBox->SetBounds(60, 442, 112, 20);
-	scaleYBox->SetText("0");
+	yPos += 26;
+	_shapeYScale = new Gwen::Controls::TextBoxNumeric(s);
+	_shapeYScale->SetBounds(60, yPos, 112, 20);
+	_shapeYScale->SetText("0");
+	_shapeYScale->onTextChanged.Add(this, &EditorUI::onShapePropertiesChange);
 
 	Gwen::Controls::Label* scaleYLabel = new Gwen::Controls::Label(s);
-	scaleYLabel->SetBounds(0, 442, 54, 20);
+	scaleYLabel->SetBounds(0, yPos, 54, 20);
 	scaleYLabel->SetText("y:");
 	scaleYLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
 
-	Gwen::Controls::TextBoxNumeric* scaleZBox = new Gwen::Controls::TextBoxNumeric(s);
-	scaleZBox->SetBounds(60, 468, 112, 20);
-	scaleZBox->SetText("0");
+	yPos += 26;
+	_shapeZScale = new Gwen::Controls::TextBoxNumeric(s);
+	_shapeZScale->SetBounds(60, yPos, 112, 20);
+	_shapeZScale->SetText("0");
+	_shapeZScale->onTextChanged.Add(this, &EditorUI::onShapePropertiesChange);
 
 	Gwen::Controls::Label* scaleZLabel = new Gwen::Controls::Label(s);
-	scaleZLabel->SetBounds(0, 468, 54, 20);
+	scaleZLabel->SetBounds(0, yPos, 54, 20);
 	scaleZLabel->SetText("z:");
 	scaleZLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
 }
@@ -471,16 +447,18 @@ void EditorUI::onLightSelected(Gwen::Controls::Base* from)
 
 void EditorUI::onLightPropertiesChange(Gwen::Controls::Base* from)
 {
-	Vector3f p;
+	if (!_updatingProperties)
+	{
+		Vector3f p;
 
-	p.x = _lightXPosition->GetFloatFromText();
-	p.y = _lightYPosition->GetFloatFromText();
-	p.z = _lightZPosition->GetFloatFromText();
+		p.x = _lightXPosition->GetFloatFromText();
+		p.y = _lightYPosition->GetFloatFromText();
+		p.z = _lightZPosition->GetFloatFromText();
 
-	_environment->SetLightPosition(_editor->SelectedLight(), p);
-	_environment->SetLightFalloff(_editor->SelectedLight(), _lightFalloff->GetFloatFromText());
-	_environment->SetLightSize(_editor->SelectedLight(), _lightSize->GetFloatFromText());
-	
+		_environment->SetLightPosition(_editor->SelectedLight(), p);
+		_environment->SetLightFalloff(_editor->SelectedLight(), _lightFalloff->GetFloatFromText());
+		_environment->SetLightSize(_editor->SelectedLight(), _lightSize->GetFloatFromText());
+	}
 }
 
 void EditorUI::SelectLight(int light)
@@ -495,25 +473,27 @@ void EditorUI::SelectLight(int light)
 
 void EditorUI::UpdateLightProperties(int light)
 {
+	_updatingProperties = true;
 	std::stringstream sX;
 	sX << _environment->GetLightPosition(light).x;
-	_lightXPosition->SetText(sX.str(), false);
+	_lightXPosition->SetText(sX.str());
 
 	std::stringstream sY;
 	sY << _environment->GetLightPosition(light).y;
-	_lightYPosition->SetText(sY.str(), false);
+	_lightYPosition->SetText(sY.str());
 
 	std::stringstream sZ;
 	sZ << _environment->GetLightPosition(light).z;
-	_lightZPosition->SetText(sZ.str(), false);
+	_lightZPosition->SetText(sZ.str());
 
 	std::stringstream sF;
 	sF << _environment->GetLightFalloff(light);
-	_lightFalloff->SetText(sF.str(), false);
+	_lightFalloff->SetText(sF.str());
 
 	std::stringstream sS;
 	sS << _environment->GetLightSize(light);
-	_lightSize->SetText(sS.str(), false);
+	_lightSize->SetText(sS.str());
+	_updatingProperties = false;
 }
 
 void EditorUI::onAddOctave(Gwen::Controls::Base* from)
@@ -528,12 +508,15 @@ void EditorUI::onAddOctave(Gwen::Controls::Base* from)
 
 void EditorUI::onRemoveOctave(Gwen::Controls::Base* from)
 {
-	_environment->RemoveOctave(_selectedOctave);
-	_environment->Rebuild();
+	if (_selectedOctave >= 0)
+	{
+		_environment->RemoveOctave(_selectedOctave);
+		_environment->Rebuild();
 
-	PopulateOctaveList();
+		PopulateOctaveList();
 
-	_selectedOctave = -1;
+		_selectedOctave = -1;
+	}
 }
 
 void EditorUI::SelectOctave(int octave)
@@ -570,21 +553,23 @@ void EditorUI::UpdateNoiseProperties(int octave)
 {
 	if (octave >= 0)
 	{
+		_updatingProperties = true;
 		std::stringstream sX;
 		sX << _environment->GetOctaveScale(octave).x;
-		_octaveXScale->SetText(sX.str(), false);
+		_octaveXScale->SetText(sX.str());
 
 		std::stringstream sY;
 		sY << _environment->GetOctaveScale(octave).y;
-		_octaveYScale->SetText(sY.str(), false);
+		_octaveYScale->SetText(sY.str());
 
 		std::stringstream sZ;
 		sZ << _environment->GetOctaveScale(octave).z;
-		_octaveZScale->SetText(sZ.str(), false);
+		_octaveZScale->SetText(sZ.str());
 
 		std::stringstream sA;
 		sA << _environment->GetOctaveAmplitude(octave);
-		_octaveAmplitude->SetText(sA.str(), false);
+		_octaveAmplitude->SetText(sA.str());
+		_updatingProperties = false;
 	}
 }
 
@@ -604,15 +589,135 @@ void EditorUI::onNoisePropertiesChange(Gwen::Controls::Base* from)
 {
 	if (_selectedOctave >= 0)
 	{
+		if (!_updatingProperties)
+		{
+			Vector3f s;
+
+			s.x = _octaveXScale->GetFloatFromText();
+			s.y = _octaveYScale->GetFloatFromText();
+			s.z = _octaveZScale->GetFloatFromText();
+
+			_environment->SetOctaveScale(_selectedOctave, s);
+			_environment->SetOctaveAmplitude(_selectedOctave, _octaveAmplitude->GetFloatFromText());
+
+			_environment->Rebuild();
+		}
+	}
+}
+
+void EditorUI::onAddShape(Gwen::Controls::Base* from)
+{
+	int shape = _environment->AddShape();
+
+	PopulateShapeList();
+
+	SelectShape(shape);
+
+	_environment->Rebuild();
+}
+
+void EditorUI::onRemoveShape(Gwen::Controls::Base* from)
+{
+	_environment->RemoveShape(_editor->SelectedShape());
+	_editor->DeselectShape();
+
+	PopulateShapeList();
+
+	_environment->Rebuild();
+}
+
+void EditorUI::SelectShape(int shape)
+{
+	_shapeList->UnselectAll();
+	
+	if (shape >= 0)
+		_shapeRows[shape]->SetSelected(true);
+
+	UpdateShapeProperties(shape);
+}
+
+void EditorUI::onShapeSelected(Gwen::Controls::Base* from)
+{
+	Gwen::Controls::Layout::TableRow* selected = _shapeList->GetSelectedRow();
+
+	int i = 0;
+	for (; i < (int)_shapeRows.size(); ++i)
+	{
+		if (_shapeRows[i] == selected)
+			break;
+	}
+
+	if (i == _shapeRows.size())
+		return; // error, selected row wasn't in rows?
+
+	_editor->SelectShape(i);
+	UpdateShapeProperties(i);
+}
+
+void EditorUI::UpdateShapeProperties(int shape)
+{
+	if (shape >= 0)
+	{
+		_updatingProperties = true;
+		std::stringstream pX;
+		pX << _environment->GetShapePosition(shape).x;
+		_shapeXPosition->SetText(pX.str());
+
+		std::stringstream pY;
+		pY << _environment->GetShapePosition(shape).y;
+		_shapeYPosition->SetText(pY.str());
+
+		std::stringstream pZ;
+		pZ << _environment->GetShapePosition(shape).z;
+		_shapeZPosition->SetText(pZ.str());
+
+		std::stringstream sX;
+		sX << _environment->GetShapeScale(shape).x;
+		_shapeXScale->SetText(sX.str());
+
+		std::stringstream sY;
+		sY << _environment->GetShapeScale(shape).y;
+		_shapeYScale->SetText(sY.str());
+
+		std::stringstream sZ;
+		sZ << _environment->GetShapeScale(shape).z;
+		_shapeZScale->SetText(sZ.str());
+
+		_updatingProperties = false;
+	}
+}
+
+void EditorUI::onShapePropertiesChange(Gwen::Controls::Base* from)
+{
+	if (!_updatingProperties)
+	{
+		Vector3f p;
+
+		p.x = _shapeXPosition->GetFloatFromText();
+		p.y = _shapeYPosition->GetFloatFromText();
+		p.z = _shapeZPosition->GetFloatFromText();
+
+		_environment->SetShapePosition(_editor->SelectedShape(), p);
+
 		Vector3f s;
+		s.x = _shapeXScale->GetFloatFromText();
+		s.y = _shapeYScale->GetFloatFromText();
+		s.z = _shapeZScale->GetFloatFromText();
 
-		s.x = _octaveXScale->GetFloatFromText();
-		s.y = _octaveYScale->GetFloatFromText();
-		s.z = _octaveZScale->GetFloatFromText();
-
-		_environment->SetOctaveScale(_selectedOctave, s);
-		_environment->SetOctaveAmplitude(_selectedOctave, _octaveAmplitude->GetFloatFromText());
+		_environment->SetShapeScale(_editor->SelectedShape(), s);
 
 		_environment->Rebuild();
+	}
+}
+
+void EditorUI::PopulateShapeList()
+{
+	_shapeList->GetTable()->RemoveAllChildren();
+	_shapeRows.clear();
+	for (int i = 0; i < _environment->NumShapes(); ++i)
+	{
+		std::stringstream ss;
+		ss << "Metaball " << i + 1;
+		_shapeRows.push_back(_shapeList->AddItem(ss.str()));
 	}
 }

@@ -34,6 +34,9 @@ public:
 	void SelectLight(int light);
 	void UpdateLightProperties(int light);
 
+	void SelectShape(int shape);
+	void UpdateShapeProperties(int shape);
+
 private:
 	void CreateShapePage();
 	void CreateNoisePage();
@@ -41,21 +44,27 @@ private:
 	void CreateWaterPage();
 	void CreateObjectsPage();
 
-	void PopulateLightList();
-	void PopulateOctaveList();
+	void PopulateShapeList();
+	void onAddShape(Gwen::Controls::Base* from);
+	void onRemoveShape(Gwen::Controls::Base* from);
+	void onShapeSelected(Gwen::Controls::Base* from);
+	void onShapePropertiesChange(Gwen::Controls::Base* from);
 
+	void PopulateLightList();
 	void onAddLight(Gwen::Controls::Base* from);
 	void onRemoveLight(Gwen::Controls::Base* from);
 	void onLightSelected(Gwen::Controls::Base* from);
-
 	void onLightPropertiesChange(Gwen::Controls::Base* from);
 
+	void PopulateOctaveList();
 	void onAddOctave(Gwen::Controls::Base* from);
 	void onRemoveOctave(Gwen::Controls::Base* from);
 	void onOctaveSelected(Gwen::Controls::Base* from);
 	void onNoisePropertiesChange(Gwen::Controls::Base* from);
 	void SelectOctave(int octave);
 	void UpdateNoiseProperties(int octave);
+
+	bool _updatingProperties;
 
 	Editor* _editor;
 	Environment* _environment;
@@ -65,18 +74,27 @@ private:
 	Gwen::Input::Windows _inputHelper;
 	Gwen::Controls::DockBase* _dockBase;
 
+	Gwen::Controls::ListBox* _shapeList;
+	std::vector<Gwen::Controls::Layout::TableRow*> _shapeRows;
+	Gwen::Controls::TextBoxNumeric* _shapeXPosition;
+	Gwen::Controls::TextBoxNumeric* _shapeYPosition;
+	Gwen::Controls::TextBoxNumeric* _shapeZPosition;
+	Gwen::Controls::TextBoxNumeric* _shapeXScale;
+	Gwen::Controls::TextBoxNumeric* _shapeYScale;
+	Gwen::Controls::TextBoxNumeric* _shapeZScale;
+
 	Gwen::Controls::ListBox* _lightsList;
 	std::vector<Gwen::Controls::Layout::TableRow*> _lightRows;
-
-	Gwen::Controls::ListBox* _octaveList;
-	std::vector<Gwen::Controls::Layout::TableRow*> _octaveRows;
-	int _selectedOctave;
 
 	Gwen::Controls::TextBoxNumeric* _lightXPosition;
 	Gwen::Controls::TextBoxNumeric* _lightYPosition;
 	Gwen::Controls::TextBoxNumeric* _lightZPosition;
 	Gwen::Controls::TextBoxNumeric* _lightFalloff;
 	Gwen::Controls::TextBoxNumeric* _lightSize;
+
+	Gwen::Controls::ListBox* _octaveList;
+	std::vector<Gwen::Controls::Layout::TableRow*> _octaveRows;
+	int _selectedOctave;
 
 	Gwen::Controls::TextBoxNumeric* _octaveXScale;
 	Gwen::Controls::TextBoxNumeric* _octaveYScale;

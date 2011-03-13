@@ -8,6 +8,7 @@ Editor::Editor() :
 	_camera(Vector3f(0,0,0), 0, 0),
 	_lightIcon(NULL),
 	_selectedLight(-1),
+	_selectedShape(-1),
 	_positionWidget(Vector3f(0, 0, 0))
 {
 	_editorUI.SetEnvironment(&_environment);
@@ -180,4 +181,16 @@ void Editor::DeselectLight()
 {
 	_positionWidget.EndDrag();
 	_selectedLight = -1;
+}
+
+void Editor::SelectShape(int shape)
+{
+	_selectedShape = shape;
+
+	// TODO: 3D controls for shape
+}
+
+void Editor::DeselectShape()
+{
+	_selectedShape = -1;
 }

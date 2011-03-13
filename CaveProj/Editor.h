@@ -29,6 +29,10 @@ public:
 	inline int SelectedLight() { return _selectedLight; }
 	void DeselectLight();
 
+	void SelectShape(int shape);
+	inline int SelectedShape() { return _selectedShape; }
+	void DeselectShape();
+
 private:
 	ID3D10ShaderResourceView* _lightIcon;
 	Camera _camera;
@@ -36,6 +40,7 @@ private:
 	Environment _environment;
 	PositionWidget _positionWidget;
 	int _selectedLight;
+	int _selectedShape;
 	EditorUI _editorUI;
 };
 
