@@ -4,12 +4,13 @@
 
 #include <iostream>
 
-Editor::Editor() : 
+Editor::Editor(RenderWindow& renderWindow) : 
 	_camera(Vector3f(0,0,0), 0, 0),
 	_lightIcon(NULL),
 	_selectedLight(-1),
 	_selectedShape(-1),
-	_positionWidget(Vector3f(0, 0, 0))
+	_positionWidget(Vector3f(0, 0, 0)),
+	_editorUI(renderWindow)
 {
 	_editorUI.SetEnvironment(&_environment);
 	_editorUI.SetEditor(this);
@@ -33,7 +34,7 @@ void Editor::Load(RenderWindow& renderWindow)
 	}
 
 	_environment.AddLight();
-	_environment.SetLightColor(1, COLOR_ARGB(255, 100, 200, 100));
+	_environment.SetLightColor(1, COLOR_ARGB(255, 0, 200, 100));
 	_environment.SetLightPosition(1, Vector3f(0, -0.3f, 0));
 	_positionWidget.Load(renderWindow);
 

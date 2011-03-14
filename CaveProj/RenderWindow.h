@@ -27,6 +27,9 @@ public:
 	inline ID3D10Device* GetDevice() { return _d3dDevice; }
 	inline const Vector2i& GetSize() const { return _size; }
 	const Input& GetInput() const { return _input; }
+	void SetTitle(const std::string& title);
+	inline const std::string& GetTitle() const { return _windowTitle; }
+	inline HWND GetWnd() { return _hwnd; }
 
 private:
 	bool CreateWnd();

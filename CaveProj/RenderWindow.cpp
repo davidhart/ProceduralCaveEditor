@@ -67,7 +67,10 @@ void RenderWindow::Present()
 
 void RenderWindow::Close()
 {
-
+	if (_isOpen)
+	{
+		DestroyWindow(_hwnd);
+	}
 }
 
 bool RenderWindow::CreateWnd()
@@ -325,4 +328,14 @@ LRESULT CALLBACK RenderWindow::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LP
 	}
 	return DefWindowProc(hwnd, msg, wparam, lparam);
 }
+
+void RenderWindow::SetTitle(const std::string& title)
+{
+	_windowTitle = title;
+	if (_isOpen)
+	{
+		SetWindowText(_hwnd, title.c_str());
+	}
+}
+
 

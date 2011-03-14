@@ -2,11 +2,13 @@
 #ifndef _ENVIRONMENT_H_
 #define _ENVIRONMENT_H_
 
+#include "Vector.h"
+#include "EnvironmentChunk.h"
+
 #include <D3D10.h>
 #include <D3DX10.h>
 #include <vector>
-#include "Vector.h"
-#include "EnvironmentChunk.h"
+#include <string>
 
 class Camera;
 class RenderWindow;
@@ -48,6 +50,7 @@ public:
 	int AddShape();
 	void RemoveShape(int shape);
 
+	void Save(const std::wstring& filename) const;
 
 	void Rebuild();
 

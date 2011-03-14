@@ -20,7 +20,7 @@ class Editor;
 class EditorUI : public Gwen::Event::Handler
 {
 public:
-	EditorUI();
+	EditorUI(RenderWindow& renderWindow);
 
 	void Load(RenderWindow& renderWindow);
 	void Unload();
@@ -44,6 +44,9 @@ private:
 	void CreateWaterPage();
 	void CreateObjectsPage();
 
+	void onSaveMenuItem(Gwen::Controls::Base* from);
+	void onQuitMenuItem(Gwen::Controls::Base* from);
+
 	void PopulateShapeList();
 	void onAddShape(Gwen::Controls::Base* from);
 	void onRemoveShape(Gwen::Controls::Base* from);
@@ -65,6 +68,7 @@ private:
 	void UpdateNoiseProperties(int octave);
 
 	bool _updatingProperties;
+	RenderWindow& _renderWindow;
 
 	Editor* _editor;
 	Environment* _environment;

@@ -15,7 +15,7 @@ class Environment;
 class Editor
 {
 public:
-	Editor();
+	Editor(RenderWindow& renderWindow);
 
 	void Load(RenderWindow& renderWindow);
 	void Unload();

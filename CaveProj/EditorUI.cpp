@@ -10,8 +10,9 @@
 #include <Gwen/Controls/ComboBox.h>
 #include <Gwen/Controls/HSVColorPicker.h>
 #include <sstream>
+#include <Shobjidl.h>
 
-EditorUI::EditorUI() : 
+EditorUI::EditorUI(RenderWindow& renderWindow) : 
 	_renderer(NULL),
 	_canvas(NULL),
 	_dockBase(NULL),
@@ -29,7 +30,8 @@ EditorUI::EditorUI() :
 	_octaveZScale(NULL),
 	_octaveAmplitude(NULL),
 	_selectedOctave(-1),
-	_updatingProperties(false)
+	_updatingProperties(false),
+	_renderWindow(renderWindow)
 {
 }
 
@@ -47,10 +49,10 @@ void EditorUI::Load(RenderWindow& renderWindow)
 	fileMenu->AddItem("New");
 	fileMenu->AddItem("Open");
 	fileMenu->AddDivider();
-	fileMenu->AddItem("Save");
+	fileMenu->AddItem("Save")->onPress.Add(this, &EditorUI::onSaveMenuItem);
 	fileMenu->AddItem("Save As");
 	fileMenu->AddDivider();
-	fileMenu->AddItem("Quit");
+	fileMenu->AddItem("Quit")->onPress.Add(this, &EditorUI::onQuitMenuItem);
 
 	Gwen::Controls::Menu* viewMenu = m->AddItem("View")->GetMenu();
 	viewMenu->AddItem("Editor");
@@ -720,4 +722,46 @@ void EditorUI::PopulateShapeList()
 		ss << "Metaball " << i + 1;
 		_shapeRows.push_back(_shapeList->AddItem(ss.str()));
 	}
+}
+
+void EditorUI::onSaveMenuItem(Gwen::Controls::Base* from)
+{
+	IFileDialog *pfd;
+
+	HRESULT hr = CoCreateInstance(CLSID_FileSaveDialog, 
+		NULL, 
+		CLSCTX_INPROC_SERVER, 
+		IID_PPV_ARGS(&pfd));
+
+	if (SUCCEEDED(hr))
+	{
+		COMDLG_FILTERSPEC filetypes[] = { L"Cave", L"*.cave" };
+		pfd->SetFileTypes(1, filetypes);
+		pfd->SetDefaultExtension(L"cave");
+		hr = pfd->Show(_renderWindow.GetWnd());
+
+		if (SUCCEEDED(hr))
+		{
+			IShellItem *psiResult;
+			hr = pfd->GetResult(&psiResult);
+
+			if (SUCCEEDED(hr))
+			{
+				LPWSTR filename;
+				psiResult->GetDisplayName(SIGDN_FILESYSPATH, &filename);
+				std::wstring s(filename);
+
+				CoTaskMemFree(filename);
+				psiResult->Release();
+
+				_environment->Save(s);
+			}
+		}
+		pfd->Release();
+	}
+}
+
+void EditorUI::onQuitMenuItem(Gwen::Controls::Base* from)
+{
+	_renderWindow.Close();
 }

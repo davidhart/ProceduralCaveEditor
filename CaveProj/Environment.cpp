@@ -9,6 +9,8 @@
 
 #include <cstdlib>
 #include <iostream>
+#include <iomanip>
+#include <fstream>
 #include <vector>
 
 Environment::Environment() :
@@ -461,7 +463,10 @@ void Environment::UpdateLights()
 
 		lighti->GetMemberByName("Position")->AsVector()->SetFloatVector((float*)&_lights[i]._position);
 
-		D3DXCOLOR col(_lights[i]._color);
+		D3DXCOLOR col(Util::GetR(_lights[i]._color) / 255.0f,
+			Util::GetG(_lights[i]._color) / 255.0f,
+			Util::GetB(_lights[i]._color) / 255.0f,
+			0);
 		lighti->GetMemberByName("Color")->AsVector()->SetFloatVector(&col.r);
 	
 		lighti->GetMemberByName("Size")->AsScalar()->SetFloat(_lights[i]._size);
@@ -568,4 +573,51 @@ void Environment::SetShapeScale(int shape, const Vector3f& scale)
 int Environment::NumShapes() const
 {
 	return _shapes.size();
+}
+
+void Environment::Save(const std::wstring& filename) const
+{
+	std::ofstream file(filename.c_str());
+
+	if (file.is_open())
+	{
+		file << "version 1\n";
+		file << "shapes " << _shapes.size() << "\n";
+		file << "{\n";
+		for (unsigned int i = 0; i < _shapes.size(); ++i)
+		{
+			file << _shapes[i].Position.x << ' ';
+			file << _shapes[i].Position.y << ' ';
+			file << _shapes[i].Position.z << ' ';
+			file << _shapes[i].Scale.x << ' ';
+			file << _shapes[i].Scale.y << ' ';
+			file << _shapes[i].Scale.z << '\n';
+		}
+		file << "}\n";
+		file << "octaves " << _octaves.size() << '\n';
+		file << "{\n";
+		for (unsigned int i = 0; i < _octaves.size(); ++i)
+		{
+			file << _octaves[i].Amplitude << ' ';
+			file << _octaves[i].Scale.x << ' ';
+			file << _octaves[i].Scale.y << ' ';
+			file << _octaves[i].Scale.z << '\n';
+		}
+		file << "}\n";
+		file << "lights " << _lights.size() << '\n';
+		file << "{\n";
+		for (unsigned int i = 0; i < _lights.size(); ++i)
+		{
+			file << _lights[i]._position.x << ' ';
+			file << _lights[i]._position.y << ' ';
+			file << _lights[i]._position.z << ' ';
+			file << _lights[i]._size << ' ';
+			file << _lights[i]._falloff << ' ';
+			file << std::hex << std::left << std::setw(2) << std::setfill('0') << Util::GetR(_lights[i]._color);
+			file << std::hex << std::left << std::setw(2) << std::setfill('0') << Util::GetG(_lights[i]._color);
+			file << std::hex << std::left << std::setw(2) << std::setfill('0') << Util::GetB(_lights[i]._color) << '\n';
+		}
+		file << "}";
+		file.close();
+	}
 }

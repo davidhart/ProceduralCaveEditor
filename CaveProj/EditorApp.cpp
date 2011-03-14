@@ -2,8 +2,10 @@
 
 
 
-EditorApp::EditorApp()
+EditorApp::EditorApp() : 
+	_editor(_renderWindow)
 {
+	_renderWindow.SetTitle("Cave Editor");
 }
 
 void EditorApp::LoadGraphics()
