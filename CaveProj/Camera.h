@@ -25,6 +25,12 @@ public:
 	inline void Position(const Vector3f& position) { _position = position; }
 	inline const Vector3f& Position() const { return _position; }
 
+	inline void PitchYaw(float pitch, float yaw)
+	{
+		_pitch = pitch;
+		_yaw = yaw;
+	}
+
 	inline void Pitch(float pitch) { _pitch = pitch; }
 	inline float Pitch() { return _pitch; }
 	inline void Yaw(float yaw) { _yaw = yaw; }

@@ -195,3 +195,9 @@ void Editor::DeselectShape()
 {
 	_selectedShape = -1;
 }
+
+void Editor::ResetCamera()
+{
+	_camera.Position(Vector3f(0,0,0));
+	_camera.PitchYaw(0,0);
+}

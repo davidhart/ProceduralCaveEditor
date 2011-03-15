@@ -70,6 +70,9 @@
     <ClCompile Include="EnvironmentChunk.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Util.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h">

@@ -47,10 +47,10 @@ void EditorUI::Load(RenderWindow& renderWindow)
 	Gwen::Controls::MenuStrip* m = new Gwen::Controls::MenuStrip(_canvas);
 	Gwen::Controls::Menu* fileMenu = m->AddItem("File")->GetMenu();
 	fileMenu->AddItem("New");
-	fileMenu->AddItem("Open");
+	fileMenu->AddItem("Open")->onPress.Add(this, &EditorUI::onOpenMenuItem);;
 	fileMenu->AddDivider();
 	fileMenu->AddItem("Save")->onPress.Add(this, &EditorUI::onSaveMenuItem);
-	fileMenu->AddItem("Save As");
+	fileMenu->AddItem("Save As")->onPress.Add(this, &EditorUI::onSaveAsMenuItem);
 	fileMenu->AddDivider();
 	fileMenu->AddItem("Quit")->onPress.Add(this, &EditorUI::onQuitMenuItem);
 
@@ -726,6 +726,18 @@ void EditorUI::PopulateShapeList()
 
 void EditorUI::onSaveMenuItem(Gwen::Controls::Base* from)
 {
+	if (!_currentfilename.empty())
+	{
+		_environment->Save(_currentfilename);
+	}
+	else
+	{
+		onSaveAsMenuItem(from);
+	}
+}
+
+void EditorUI::onSaveAsMenuItem(Gwen::Controls::Base* from)
+{
 	IFileDialog *pfd;
 
 	HRESULT hr = CoCreateInstance(CLSID_FileSaveDialog, 
@@ -754,10 +766,59 @@ void EditorUI::onSaveMenuItem(Gwen::Controls::Base* from)
 				CoTaskMemFree(filename);
 				psiResult->Release();
 
-				_environment->Save(s);
+				if (_environment->Save(s))
+				{
+					_currentfilename = s;
+				}
 			}
 		}
 		pfd->Release();
+	}
+}
+
+void EditorUI::onOpenMenuItem(Gwen::Controls::Base* from)
+{
+	IFileDialog *pfd;
+	
+	HRESULT hr = CoCreateInstance(CLSID_FileOpenDialog, 
+		NULL, 
+		CLSCTX_INPROC_SERVER, 
+		IID_PPV_ARGS(&pfd));
+
+	if (SUCCEEDED(hr))
+	{
+		COMDLG_FILTERSPEC filetypes[] = { L"Cave", L"*.cave" };
+		pfd->SetFileTypes(1, filetypes);
+		pfd->SetDefaultExtension(L"cave");
+		hr = pfd->Show(_renderWindow.GetWnd());
+
+		if (SUCCEEDED(hr))
+		{
+			IShellItem *psiResult;
+			hr = pfd->GetResult(&psiResult);
+
+			if (SUCCEEDED(hr))
+			{
+				LPWSTR filename;
+				psiResult->GetDisplayName(SIGDN_FILESYSPATH, &filename);
+				std::wstring s(filename);
+
+				CoTaskMemFree(filename);
+				psiResult->Release();
+
+				if (_environment->Open(s))
+				{
+					_currentfilename = s;
+					_editor->DeselectLight();
+					_editor->DeselectShape();
+					_editor->ResetCamera();
+
+					PopulateLightList();
+					PopulateOctaveList();
+					PopulateShapeList();
+				}
+			}
+		}
 	}
 }
 

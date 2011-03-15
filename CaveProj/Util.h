@@ -3,6 +3,7 @@
 #define _UTIL_H_
 
 #include <Windows.h>
+#include <istream>
 
 class Util
 {
@@ -39,6 +40,10 @@ public:
 	{
 		return argb >> 24;
 	}
+
+	static bool HexCharToInt(char c, int& i);
+
+	static bool ReadHexColor(std::istream& stream, DWORD& color);
 };
 
 #endif

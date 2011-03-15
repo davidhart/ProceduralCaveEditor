@@ -575,7 +575,7 @@ int Environment::NumShapes() const
 	return _shapes.size();
 }
 
-void Environment::Save(const std::wstring& filename) const
+bool Environment::Save(const std::wstring& filename) const
 {
 	std::ofstream file(filename.c_str());
 
@@ -618,6 +618,132 @@ void Environment::Save(const std::wstring& filename) const
 			file << std::hex << std::left << std::setw(2) << std::setfill('0') << Util::GetB(_lights[i]._color) << '\n';
 		}
 		file << "}";
+
 		file.close();
+
+		return !file.fail();
 	}
+	else
+	{
+		return false;
+	}
+}
+
+bool Environment::Open(const std::wstring& filename)
+{
+
+	std::ifstream file(filename.c_str());
+
+	bool error = false;
+
+	if (file.is_open())
+	{
+		std::string token;
+
+		file >> token;
+		if (token != "version") error = true;
+
+		int version = 0;
+		file >> version;
+		if (version != 1) error = true;
+
+		file >> token;
+		if (token != "shapes") error = true;
+
+		int numShapes = -1;
+		file >> numShapes;
+		if (numShapes < 0) error = true;
+
+		std::vector<Blob> tempShapes(numShapes);
+
+		file >> token;
+		if (token != "{") error = true;
+
+		for (int i = 0; i < numShapes; ++i)
+		{
+			file >> tempShapes[i].Position.x;
+			file >> tempShapes[i].Position.y;
+			file >> tempShapes[i].Position.z;
+
+			file >> tempShapes[i].Scale.x;
+			file >> tempShapes[i].Scale.y;
+			file >> tempShapes[i].Scale.z;
+		}
+
+		if (file.fail()) error = true;
+		
+		file >> token;
+		if (token != "}") error = true;
+
+		file >> token;
+		if (token != "octaves") error = true;
+
+		int numOctaves = -1;
+		file >> numOctaves;
+		if (numOctaves < 0) error = true;
+
+		std::vector<Octave> tempOctaves(numOctaves);
+
+		file >> token;
+		if (token != "{") error = true;
+
+		for (int i = 0; i < numOctaves; ++i)
+		{
+			file >> tempOctaves[i].Amplitude;
+			file >> tempOctaves[i].Scale.x;
+			file >> tempOctaves[i].Scale.y;
+			file >> tempOctaves[i].Scale.z;
+		}
+
+		file >> token;
+		if (token != "}") error = true;
+
+		file >> token;
+		if (token != "lights") error = true;
+
+		int numLights = -1;
+		file >>numLights;
+		if (numLights < 0) error = true;
+
+		std::vector<Light> tempLights(numLights);
+
+		file >> token;
+		if (token != "{") error = true;
+
+		for (int i = 0; i < numLights; ++i)
+		{
+			file >> tempLights[i]._position.x;
+			file >> tempLights[i]._position.y;
+			file >> tempLights[i]._position.z;
+
+			file >> tempLights[i]._size;
+			file >> tempLights[i]._falloff;
+
+			if (!Util::ReadHexColor(file, tempLights[i]._color))
+				error = true;
+		}
+
+		file >>token;
+		if (token != "}") error = true;
+
+		file.close();
+
+		if (!error)
+		{
+			// loading code
+			_lights = tempLights;
+			_lightsChanged = true;
+
+			_shapes = tempShapes;
+			_octaves = tempOctaves;
+
+			Rebuild();
+		}
+	}
+	else
+	{
+		error = true;
+	}
+
+	return !error;
 }

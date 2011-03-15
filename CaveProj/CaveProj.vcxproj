@@ -87,6 +87,7 @@
     <ClCompile Include="RenderWindow.cpp" />
     <ClCompile Include="ShaderBuilder.cpp" />
     <ClCompile Include="Timer.cpp" />
+    <ClCompile Include="Util.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AABB.h" />

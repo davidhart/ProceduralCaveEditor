@@ -45,6 +45,8 @@ private:
 	void CreateObjectsPage();
 
 	void onSaveMenuItem(Gwen::Controls::Base* from);
+	void onSaveAsMenuItem(Gwen::Controls::Base* from);
+	void onOpenMenuItem(Gwen::Controls::Base* from);
 	void onQuitMenuItem(Gwen::Controls::Base* from);
 
 	void PopulateShapeList();
@@ -69,6 +71,8 @@ private:
 
 	bool _updatingProperties;
 	RenderWindow& _renderWindow;
+
+	std::wstring _currentfilename;
 
 	Editor* _editor;
 	Environment* _environment;

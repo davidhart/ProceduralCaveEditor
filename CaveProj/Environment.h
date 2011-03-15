@@ -50,7 +50,8 @@ public:
 	int AddShape();
 	void RemoveShape(int shape);
 
-	void Save(const std::wstring& filename) const;
+	bool Open(const std::wstring& filename);
+	bool Save(const std::wstring& filename) const;
 
 	void Rebuild();
 

@@ -25,6 +25,8 @@ public:
 
 	void HandleMessage(MSG msg);
 
+	void ResetCamera();
+
 	void SelectLight(int light);
 	inline int SelectedLight() { return _selectedLight; }
 	void DeselectLight();
