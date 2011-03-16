@@ -76,7 +76,7 @@ private:
 
 	Editor* _editor;
 	Environment* _environment;
-	Gwen::Skin::TexturedBase _skin;
+	Gwen::Skin::TexturedBase* _skin;
 	Gwen::Renderer::DirectX10* _renderer;
 	Gwen::Controls::Canvas* _canvas;
 	Gwen::Input::Windows _inputHelper;

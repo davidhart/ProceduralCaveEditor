@@ -111,6 +111,8 @@ void BillboardSpriteDrawer::Flush()
 		_device->IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
 		_device->Draw(_sprites.size(), 0);
 
+		buffer->Release();
+
 		_sprites.clear();
 	}
 }

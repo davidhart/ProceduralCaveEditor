@@ -4,6 +4,8 @@
 
 #include "Util.h"
 
+#include "LeakDetector.h"
+
 namespace Gwen
 {
 	namespace Renderer
@@ -220,7 +222,7 @@ namespace Gwen
 			ID3DX10Font* pD3DXFont;
 			HRESULT hr = D3DX10CreateFontIndirectW(m_pDevice, &fd, &pD3DXFont);
 
-			FontData* pFontData = new FontData();
+			FontData* pFontData = new FontData;
 			pFontData->pFont = pD3DXFont;
 
 			// ID3DXFont doesn't measure trailing spaces, so we measure the width of a space here and store it
@@ -246,10 +248,7 @@ namespace Gwen
 			FontData* pFontData = (FontData*)font->data;
 
 			if (pFontData->pFont)
-			{
 				pFontData->pFont->Release();
-				pFontData->pFont = NULL;
-			}
 
 			delete pFontData;
 			font->data = NULL;
