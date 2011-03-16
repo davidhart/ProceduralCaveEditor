@@ -111,6 +111,9 @@ void BillboardSpriteDrawer::Flush()
 		_device->IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
 		_device->Draw(_sprites.size(), 0);
 
+		ID3D10Buffer* null = NULL;
+		_device->IASetVertexBuffers(0, 1, &null, &stride, &offset); // Suppress "currently bound buffer is released" warnings
+
 		buffer->Release();
 
 		_sprites.clear();
