@@ -81,6 +81,20 @@ public:
 		return *this;
 	}
 
+	inline const Vector3<T> operator/ (const Vector3<T>& rhs) const
+	{
+		return Vector3<T>(x / rhs.x, y / rhs.y, z / rhs.z);
+	}
+
+	inline const Vector3<T>& operator/= (const Vector3<T>& rhs)
+	{
+		x /= rhs.x;
+		y /= rhs.y;
+		z /= rhs.z;
+
+		return *this;
+	}
+
 	inline const Vector3<T> operator/ (T s) const
 	{
 		return Vector3<T>(x / s, y / s, z / s);

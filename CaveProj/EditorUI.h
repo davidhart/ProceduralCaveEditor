@@ -11,6 +11,7 @@
 #include <Gwen/Events.h>
 #include <Gwen/Controls/ListBox.h>
 #include <Gwen/Controls/TextBox.h>
+#include <Gwen/Controls/HSVColorPicker.h>
 #include <vector>
 
 class RenderWindow;
@@ -81,6 +82,7 @@ private:
 	Gwen::Controls::Canvas* _canvas;
 	Gwen::Input::Windows _inputHelper;
 	Gwen::Controls::DockBase* _dockBase;
+	Gwen::Controls::HSVColorPicker* _lightColor;
 
 	Gwen::Controls::ListBox* _shapeList;
 	std::vector<Gwen::Controls::Layout::TableRow*> _shapeRows;

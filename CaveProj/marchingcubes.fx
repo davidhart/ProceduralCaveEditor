@@ -102,7 +102,7 @@ float perlin3D(int seed, float3 i)
     float density = 0;
     [unroll(MAX_OCTAVES)] for (int o = 0; o < MAX_OCTAVES; ++o)
 	{
-		float v = (NoiseTexture.SampleLevel(NoiseSampler, i * octaves[o].Scale / NOISE_TEXTURE_SIZE, 0).r - 0.5f) * 2.0f;
+		float v = NoiseTexture.SampleLevel(NoiseSampler, i * octaves[o].Scale / NOISE_TEXTURE_SIZE, 0).r*2.0f - 1.0f;
 		density += v * octaves[o].Amplitude;
     }
    
@@ -121,7 +121,7 @@ float sampleField(int i, float3 pos0)
 		density += 1 / (length((pos - blobPos(n))/blobs[n].Scale) + 0.0001f);
 	}
 
-	density += (perlin3D(0, pos)-0.5f)*2.0f;
+	density += perlin3D(0, pos);
 
 	return density;
 }

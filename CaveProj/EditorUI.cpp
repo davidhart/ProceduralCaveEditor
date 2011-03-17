@@ -1,5 +1,6 @@
 #include "EditorUI.h"
 #include "Editor.h"
+#include "Util.h"
 #include "RenderWindow.h"
 
 #include <Gwen/Controls/WindowControl.h>
@@ -8,7 +9,6 @@
 #include <Gwen/Controls/DockBase.h>
 #include <Gwen/Controls/MenuStrip.h>
 #include <Gwen/Controls/ComboBox.h>
-#include <Gwen/Controls/HSVColorPicker.h>
 #include <sstream>
 #include <Shobjidl.h>
 
@@ -57,7 +57,7 @@ void EditorUI::Load(RenderWindow& renderWindow)
 	fileMenu->AddItem("Quit")->onPress.Add(this, &EditorUI::onQuitMenuItem);
 
 	Gwen::Controls::Menu* viewMenu = m->AddItem("View")->GetMenu();
-	viewMenu->AddItem("Editor");
+	viewMenu->AddItem("Preview");
 
 	m->Dock(Gwen::Pos::Top);
 	m->SetSize(100, 20);
@@ -300,8 +300,9 @@ void EditorUI::CreateLightingPage()
 	colorLabel->SetBounds(0, 118, 176, 20);
 	colorLabel->SetText("Light Color: ");
 	colorLabel->SetAlignment(Gwen::Pos::CenterV | Gwen::Pos::Left);
-	//Gwen::Controls::HSVColorPicker* lightColor = new Gwen::Controls::HSVColorPicker(s);
-	//lightColor->SetBounds(-4, 138, 176, 150);
+	_lightColor = new Gwen::Controls::HSVColorPicker(s);
+	_lightColor->SetBounds(0, 138, 176, 150);
+	_lightColor->onColorChanged.Add(this, &EditorUI::onLightPropertiesChange);
 
 	_lightSize = new Gwen::Controls::TextBoxNumeric(s);
 	_lightSize->SetBounds(60, 286, 112, 20);
@@ -449,12 +450,16 @@ void EditorUI::onLightSelected(Gwen::Controls::Base* from)
 		return; // error, selected row wasn't in rows?
 
 	_editor->SelectLight(i);
+	UpdateLightProperties(i);
 }
 
 void EditorUI::onLightPropertiesChange(Gwen::Controls::Base* from)
 {
 	if (!_updatingProperties)
 	{
+		if (_editor->SelectedLight() < 0)
+			return;
+
 		Vector3f p;
 
 		p.x = _lightXPosition->GetFloatFromText();
@@ -464,6 +469,8 @@ void EditorUI::onLightPropertiesChange(Gwen::Controls::Base* from)
 		_environment->SetLightPosition(_editor->SelectedLight(), p);
 		_environment->SetLightFalloff(_editor->SelectedLight(), _lightFalloff->GetFloatFromText());
 		_environment->SetLightSize(_editor->SelectedLight(), _lightSize->GetFloatFromText());
+
+		_environment->SetLightColor(_editor->SelectedLight(), COLOR_ARGB(255, _lightColor->GetColor().r, _lightColor->GetColor().g, _lightColor->GetColor().b));
 	}
 }
 
@@ -479,6 +486,9 @@ void EditorUI::SelectLight(int light)
 
 void EditorUI::UpdateLightProperties(int light)
 {
+	if (light < 0)
+		return;
+
 	_updatingProperties = true;
 	std::stringstream sX;
 	sX << _environment->GetLightPosition(light).x;
@@ -499,6 +509,12 @@ void EditorUI::UpdateLightProperties(int light)
 	std::stringstream sS;
 	sS << _environment->GetLightSize(light);
 	_lightSize->SetText(sS.str());
+
+	_lightColor->SetColor(Gwen::Color(Util::GetR(_environment->GetLightColor(light)),
+		Util::GetG(_environment->GetLightColor(light)),
+		Util::GetB(_environment->GetLightColor(light)),
+		255));
+
 	_updatingProperties = false;
 }
 
@@ -697,6 +713,9 @@ void EditorUI::onShapePropertiesChange(Gwen::Controls::Base* from)
 {
 	if (!_updatingProperties)
 	{
+		if (_editor->SelectedShape() < 0)
+			return;
+
 		Vector3f p;
 
 		p.x = _shapeXPosition->GetFloatFromText();

@@ -55,9 +55,10 @@ public:
 
 	void Rebuild();
 
+	float Sample(const Vector3f& position);
+	Vector3f SampleNormal(const Vector3f& position);
+
 private:
-	float sampleField(const D3DXVECTOR3& pos0);
-	D3DXVECTOR3 blobPos(int n);
 
 	void SortListToGenerate(Camera& camera);
 	void GenBlobs();

@@ -14,7 +14,7 @@ Camera::Camera(const Vector3f& position, float pitch, float yaw) :
 void Camera::ViewportSize(const Vector2i& size)
 {
 	_viewportSize = size;
-	D3DXMatrixPerspectiveFovLH( &_projection, ( float )D3DX_PI * 0.25f, (float)_viewportSize.x / (float)_viewportSize.y, 0.1f, 100.0f );
+	D3DXMatrixPerspectiveFovLH( &_projection, ( float )D3DX_PI * 0.25f, (float)_viewportSize.x / (float)_viewportSize.y, 0.01f, 100.0f );
 }
 
 Camera::~Camera()

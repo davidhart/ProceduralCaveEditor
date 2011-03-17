@@ -61,8 +61,7 @@ PS_INPUT mainVS(VS_INPUT input)
 }
 
 float4 mainPS(PS_INPUT input) : SV_TARGET
-{	
-	
+{
 	float3x3 NBT = float3x3 (input.Normal.zyx * float3(1,1,1),
 		input.Normal.xzy * float3(1,1,1),
 		input.Normal);
@@ -76,22 +75,22 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 	float3 textureCoord = input.WSPos * 5.0f;
 
 	float3 nx = float3(1,
-						  texDisplacement.Sample(TextureSampler, textureCoord.zy+float2(0, stepSize)).r*heightMapScale-
-						  texDisplacement.Sample(TextureSampler, textureCoord.zy-float2(0, stepSize)).r*heightMapScale,
-						  texDisplacement.Sample(TextureSampler, textureCoord.zy+float2(stepSize, 0)).r*heightMapScale-
-						  texDisplacement.Sample(TextureSampler, textureCoord.zy-float2(stepSize, 0)).r*heightMapScale);
+					   texDisplacement.Sample(TextureSampler, textureCoord.zy+float2(0, stepSize)).r*heightMapScale-
+					   texDisplacement.Sample(TextureSampler, textureCoord.zy-float2(0, stepSize)).r*heightMapScale,
+					   texDisplacement.Sample(TextureSampler, textureCoord.zy+float2(stepSize, 0)).r*heightMapScale-
+					   texDisplacement.Sample(TextureSampler, textureCoord.zy-float2(stepSize, 0)).r*heightMapScale);
 
 	float3 ny = float3(texDisplacement.Sample(TextureSampler, textureCoord.xz+float2(0, stepSize)).r*heightMapScale-
-						  texDisplacement.Sample(TextureSampler, textureCoord.xz-float2(0, stepSize)).r*heightMapScale,
-						  1,
-						  texDisplacement.Sample(TextureSampler, textureCoord.xz+float2(stepSize, 0)).r*heightMapScale-
-						  texDisplacement.Sample(TextureSampler, textureCoord.xz-float2(stepSize, 0)).r*heightMapScale);
+					   texDisplacement.Sample(TextureSampler, textureCoord.xz-float2(0, stepSize)).r*heightMapScale,
+					   1,
+					   texDisplacement.Sample(TextureSampler, textureCoord.xz+float2(stepSize, 0)).r*heightMapScale-
+					   texDisplacement.Sample(TextureSampler, textureCoord.xz-float2(stepSize, 0)).r*heightMapScale);
 
 	float3 nz = float3(texDisplacement.Sample(TextureSampler, textureCoord.xy+float2(0, stepSize)).r*heightMapScale-
-						  texDisplacement.Sample(TextureSampler, textureCoord.xy-float2(0, stepSize)).r*heightMapScale,
-						  texDisplacement.Sample(TextureSampler, textureCoord.xy+float2(stepSize, 0)).r*heightMapScale-
-						  texDisplacement.Sample(TextureSampler, textureCoord.xy-float2(stepSize, 0)).r*heightMapScale,
-						  1);
+					   texDisplacement.Sample(TextureSampler, textureCoord.xy-float2(0, stepSize)).r*heightMapScale,
+					   texDisplacement.Sample(TextureSampler, textureCoord.xy+float2(stepSize, 0)).r*heightMapScale-
+					   texDisplacement.Sample(TextureSampler, textureCoord.xy-float2(stepSize, 0)).r*heightMapScale,
+					   1);
 
 	float3 N = normalize ((nz * iNormal.z + 
 						ny * iNormal.y + 

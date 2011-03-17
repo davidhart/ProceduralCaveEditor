@@ -232,8 +232,6 @@ void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 	_view = _renderSceneEffect->GetVariableByName("View")->AsMatrix();
 	_viewDirection = _renderSceneEffect->GetVariableByName("ViewDirection")->AsVector();
 
-	ID3D10EffectScalarVariable* blobCount = _genModelEffect->GetVariableByName("NumBlobs")->AsScalar();
-	blobCount->SetInt(5);
 	ID3D10EffectScalarVariable* threshold = _genModelEffect->GetVariableByName("Threshold")->AsScalar();
 	threshold->SetFloat(3.6f);
 
@@ -320,18 +318,6 @@ void Environment::Draw(ID3D10Device* d3dDevice, Camera& camera)
 	{
 		_environmentToDraw[i]->Draw(d3dDevice, _renderSceneEffect);
 	}
-}
-
-float Environment::sampleField(const D3DXVECTOR3& pos0)
-{
-	float density = 0;
-	/*
-	for (int n = 0; n < 5; ++n)
-	{		
-		density += _blobs[n].Radius*1/(D3DXVec3Length(&(pos0-blobPos(n)))+0.0001f);
-	}*/
-
-	return density;
 }
 
 Environment::Light::Light() : 
@@ -746,4 +732,28 @@ bool Environment::Open(const std::wstring& filename)
 	}
 
 	return !error;
+}
+
+float Environment::Sample(const Vector3f& position)
+{
+	float density = 0;
+	for (unsigned int i = 0; i < _shapes.size(); ++i)
+	{
+		Vector3f shapepos (_shapes[i].Position.x, _shapes[i].Position.y, _shapes[i].Position.z);
+		Vector3f shapeScale (_shapes[i].Scale.x,  _shapes[i].Scale.y,  _shapes[i].Scale.z);
+		density += 1.0f / (((position - shapepos)/ shapeScale).Length() + 0.0001f);
+	}
+	return density;
+}
+
+Vector3f Environment::SampleNormal(const Vector3f& position)
+{
+	float CubeSize = 1/64.0f;
+	Vector3f d ((Sample(position+Vector3f(CubeSize, 0.0f, 0.0f))-3.6f) - (Sample(position - Vector3f(CubeSize, 0.0f, 0.0f))-3.6f),
+			    (Sample(position+Vector3f(0.0f, CubeSize, 0.0f))-3.6f) - (Sample(position - Vector3f(0.0f, CubeSize, 0.0f))-3.6f),
+				(Sample(position+Vector3f(0.0f, 0.0f, CubeSize))-3.6f) - (Sample(position - Vector3f(0.0f, 0.0f, CubeSize))-3.6f));
+
+	d /= CubeSize*2;
+
+	return d;
 }

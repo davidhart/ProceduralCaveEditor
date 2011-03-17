@@ -106,6 +106,12 @@ void Editor::Update(float dt, const Input& input)
 		_camera.RotateYaw(input.GetMouseDistance().x*0.006f);
 	}
 
+	// Distance from surface calculation
+	//if (_environment.Sample(_camera.Position()) > 3.6f)
+	//{
+	//	std::cout << (_environment.Sample(_camera.Position())-3.6f) / _environment.SampleNormal(_camera.Position()).Length() << std::endl;
+	//}
+
 	if (input.IsButtonJustPressed(Input::BUTTON_LEFT))
 	{
 		Ray r = _camera.UnprojectCoord(input.GetCursorPosition());
@@ -114,6 +120,9 @@ void Editor::Update(float dt, const Input& input)
 
 		for (int i = 0; i < _environment.NumLights(); ++i)
 		{
+			if (i == _selectedLight)
+				continue;
+
 			float t = r.Intersects(_environment.GetLightPosition(i), 0.03f);
 			if (t >= 0.0f)
 			{
