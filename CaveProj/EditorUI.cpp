@@ -45,11 +45,10 @@ void EditorUI::Load(RenderWindow& renderWindow)
 
 	_canvas = new Gwen::Controls::Canvas(_skin);
 	_canvas->SetSize(renderWindow.GetSize().x, renderWindow.GetSize().y);
-	// TODO: make menu functional
 	Gwen::Controls::MenuStrip* m = new Gwen::Controls::MenuStrip(_canvas);
 	Gwen::Controls::Menu* fileMenu = m->AddItem("File")->GetMenu();
-	fileMenu->AddItem("New");
-	fileMenu->AddItem("Open")->onPress.Add(this, &EditorUI::onOpenMenuItem);;
+	fileMenu->AddItem("New")->onPress.Add(this, &EditorUI::onNewMenuItem);
+	fileMenu->AddItem("Open")->onPress.Add(this, &EditorUI::onOpenMenuItem);
 	fileMenu->AddDivider();
 	fileMenu->AddItem("Save")->onPress.Add(this, &EditorUI::onSaveMenuItem);
 	fileMenu->AddItem("Save As")->onPress.Add(this, &EditorUI::onSaveAsMenuItem);
@@ -57,7 +56,7 @@ void EditorUI::Load(RenderWindow& renderWindow)
 	fileMenu->AddItem("Quit")->onPress.Add(this, &EditorUI::onQuitMenuItem);
 
 	Gwen::Controls::Menu* viewMenu = m->AddItem("View")->GetMenu();
-	viewMenu->AddItem("Preview");
+	viewMenu->AddItem("Preview")->onPress.Add(this, &EditorUI::onPreviewMenuItem);
 
 	m->Dock(Gwen::Pos::Top);
 	m->SetSize(100, 20);
@@ -848,4 +847,14 @@ void EditorUI::onOpenMenuItem(Gwen::Controls::Base* from)
 void EditorUI::onQuitMenuItem(Gwen::Controls::Base* from)
 {
 	_renderWindow.Close();
+}
+
+void EditorUI::onNewMenuItem(Gwen::Controls::Base* from)
+{
+	// TODO: implement
+}
+
+void EditorUI::onPreviewMenuItem(Gwen::Controls::Base* from)
+{
+	_editor->Preview(true);
 }

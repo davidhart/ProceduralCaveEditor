@@ -175,7 +175,7 @@ void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 	{
 		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
 	}
-	
+
 	std::cout << "Created textures" << std::endl;
 
 	// Create shader and get render technique

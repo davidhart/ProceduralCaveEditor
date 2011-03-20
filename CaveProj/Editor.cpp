@@ -10,7 +10,9 @@ Editor::Editor(RenderWindow& renderWindow) :
 	_selectedLight(-1),
 	_selectedShape(-1),
 	_positionWidget(Vector3f(0, 0, 0)),
-	_editorUI(renderWindow)
+	_editorUI(renderWindow),
+	_preview(false),
+	_ball(_environment)
 {
 	_editorUI.SetEnvironment(&_environment);
 	_editorUI.SetEditor(this);
@@ -39,6 +41,7 @@ void Editor::Load(RenderWindow& renderWindow)
 	_positionWidget.Load(renderWindow);
 
 	_editorUI.Load(renderWindow);
+	_ball.Load(renderWindow);
 }
 
 void Editor::Unload()
@@ -50,32 +53,40 @@ void Editor::Unload()
 	_lightIcon = NULL;
 
 	_editorUI.Unload();
+	_ball.Unload();
 }
 
 void Editor::Draw(RenderWindow& renderWindow)
 {
 	_environment.Draw(renderWindow.GetDevice(), _camera);
 
-	if (_environment.NumLights() > 0)
+	if (_preview)
 	{
-		_billboardDrawer.Begin(_camera);
-		for (int i = 0; i < _environment.NumLights(); ++i)
-		{
-			_billboardDrawer.Draw(_environment.GetLightPosition(i),
-									0.05f,
-									_environment.GetLightColor(i),
-									_lightIcon);
-		}
-		_billboardDrawer.End();
-
-		if (_selectedLight >= 0)
-		{
-			_positionWidget.SetPosition(_environment.GetLightPosition(_selectedLight));
-			_positionWidget.Draw(_camera, renderWindow);
-		}
+		_ball.Draw(renderWindow, _camera);
 	}
+	else
+	{
+		if (_environment.NumLights() > 0)
+		{
+			_billboardDrawer.Begin(_camera);
+			for (int i = 0; i < _environment.NumLights(); ++i)
+			{
+				_billboardDrawer.Draw(_environment.GetLightPosition(i),
+					0.05f,
+					_environment.GetLightColor(i),
+					_lightIcon);
+			}
+			_billboardDrawer.End();
 
-	_editorUI.Draw();
+			if (_selectedLight >= 0)
+			{
+				_positionWidget.SetPosition(_environment.GetLightPosition(_selectedLight));
+				_positionWidget.Draw(_camera, renderWindow);
+			}
+		}
+
+		_editorUI.Draw();
+	}
 }
 
 void Editor::Update(float dt, const Input& input)
@@ -100,72 +111,96 @@ void Editor::Update(float dt, const Input& input)
 		_camera.MoveStrafe(dt*0.3f);
 	}
 
-	if (input.IsButtonDown(Input::BUTTON_MID))
+	if (_preview)
 	{
-		_camera.RotatePitch(input.GetMouseDistance().y*0.006f);
-		_camera.RotateYaw(input.GetMouseDistance().x*0.006f);
-	}
-
-	// Distance from surface calculation
-	//if (_environment.Sample(_camera.Position()) > 3.6f)
-	//{
-	//	std::cout << (_environment.Sample(_camera.Position())-3.6f) / _environment.SampleNormal(_camera.Position()).Length() << std::endl;
-	//}
-
-	if (input.IsButtonJustPressed(Input::BUTTON_LEFT))
-	{
-		Ray r = _camera.UnprojectCoord(input.GetCursorPosition());
-		float nearestPoint = -1;
-		int nearestLight = -1;
-
-		for (int i = 0; i < _environment.NumLights(); ++i)
+		if (input.IsButtonDown(Input::BUTTON_MID))
 		{
-			if (i == _selectedLight)
-				continue;
+			_camera.RotatePitch(input.GetMouseDistance().y*0.006f);
+			_camera.RotateYaw(input.GetMouseDistance().x*0.006f);
+		}
 
-			float t = r.Intersects(_environment.GetLightPosition(i), 0.03f);
-			if (t >= 0.0f)
+		if (input.IsButtonJustPressed(Input::BUTTON_LEFT))
+		{
+			_ball.SetPosition(_camera.Position());
+			_ball.SetVelocity(_camera.Look()*3.0f);
+		}
+		
+		_ball.Update(dt);
+
+		if (input.IsKeyJustPressed(Input::KEY_ESC))
+		{
+			Preview(false);
+		}
+	}
+	else
+	{
+		if (input.IsButtonDown(Input::BUTTON_MID))
+		{
+			_camera.RotatePitch(input.GetMouseDistance().y*0.006f);
+			_camera.RotateYaw(input.GetMouseDistance().x*0.006f);
+		}
+
+		// Distance from surface calculation
+		//if (_environment.Sample(_camera.Position()) > 3.6f)
+		//{
+		//	std::cout << (_environment.Sample(_camera.Position())-3.6f) / _environment.SampleNormal(_camera.Position()).Length() << std::endl;
+		//}
+
+		if (input.IsButtonJustPressed(Input::BUTTON_LEFT))
+		{
+			Ray r = _camera.UnprojectCoord(input.GetCursorPosition());
+			float nearestPoint = -1;
+			int nearestLight = -1;
+
+			for (int i = 0; i < _environment.NumLights(); ++i)
 			{
-				if (nearestPoint < 0 || t < nearestPoint)
+				if (i == _selectedLight)
+					continue;
+
+				float t = r.Intersects(_environment.GetLightPosition(i), 0.03f);
+				if (t >= 0.0f)
 				{
-					nearestPoint = t;
-					nearestLight = i;
+					if (nearestPoint < 0 || t < nearestPoint)
+					{
+						nearestPoint = t;
+						nearestLight = i;
+					}
+				}
+			}
+
+			PositionWidget::eGrabState grab = PositionWidget::GRAB_NONE;
+			float positionintersect;
+
+			if (_selectedLight >= 0)
+			{
+				grab = _positionWidget.TestIntersection(r, positionintersect);
+			}
+
+			if (grab != PositionWidget::GRAB_NONE && (positionintersect < nearestPoint || nearestPoint < 0))
+			{
+				_positionWidget.StartDrag(r, positionintersect, grab);
+			}
+			else
+			{
+				if (nearestLight >= 0)
+				{
+					_selectedLight = nearestLight;
+					_editorUI.SelectLight(_selectedLight);
 				}
 			}
 		}
 
-		PositionWidget::eGrabState grab = PositionWidget::GRAB_NONE;
-		float positionintersect;
-
-		if (_selectedLight >= 0)
+		if (_positionWidget.IsInDrag())
 		{
-			grab = _positionWidget.TestIntersection(r, positionintersect);
+			_positionWidget.HandleDrag(_camera, input.GetCursorPosition());
+			_environment.SetLightPosition(_selectedLight, _positionWidget.GetPosition());
+			_editorUI.UpdateLightProperties(_selectedLight);
 		}
 
-		if (grab != PositionWidget::GRAB_NONE && (positionintersect < nearestPoint || nearestPoint < 0))
+		if (input.IsButtonJustReleased(Input::BUTTON_LEFT))
 		{
-			_positionWidget.StartDrag(r, positionintersect, grab);
+			_positionWidget.EndDrag();
 		}
-		else
-		{
-			if (nearestLight >= 0)
-			{
-				_selectedLight = nearestLight;
-				_editorUI.SelectLight(_selectedLight);
-			}
-		}
-	}
-
-	if (_positionWidget.IsInDrag())
-	{
-		_positionWidget.HandleDrag(_camera, input.GetCursorPosition());
-		_environment.SetLightPosition(_selectedLight, _positionWidget.GetPosition());
-		_editorUI.UpdateLightProperties(_selectedLight);
-	}
-
-	if (input.IsButtonJustReleased(Input::BUTTON_LEFT))
-	{
-		_positionWidget.EndDrag();
 	}
 
 	if (input.IsKeyJustPressed(Input::KEY_SPACE))
@@ -176,7 +211,10 @@ void Editor::Update(float dt, const Input& input)
 
 void Editor::HandleMessage(MSG msg)
 {
-	_editorUI.HandleMessage(msg);
+	if (!_preview)
+	{
+		_editorUI.HandleMessage(msg);
+	}
 }
 
 void Editor::SelectLight(int light)
@@ -209,4 +247,17 @@ void Editor::ResetCamera()
 {
 	_camera.Position(Vector3f(0,0,0));
 	_camera.PitchYaw(0,0);
+}
+
+void Editor::Preview(bool enable)
+{
+	if (enable && !_preview)
+	{
+		// TODO: enable stuff
+	}
+	else if (!enable && _preview)
+	{
+		// disable stuff
+	}
+	_preview = enable;
 }

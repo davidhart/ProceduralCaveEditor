@@ -118,6 +118,11 @@ public:
 		return sqrt(x*x + y*y + z*z);
 	}
 
+	inline Vector3<T> Normalize()
+	{
+		return *this / Length();
+	}
+
 	T x;
 	T y;
 	T z;

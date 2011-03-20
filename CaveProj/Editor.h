@@ -9,6 +9,7 @@
 #include "Environment.h"
 #include "EditorUI.h"
 #include "PositionWidget.h"
+#include "PhysicsBall.h"
 
 class Environment;
 
@@ -35,6 +36,8 @@ public:
 	inline int SelectedShape() { return _selectedShape; }
 	void DeselectShape();
 
+	void Preview(bool enable);
+
 private:
 	ID3D10ShaderResourceView* _lightIcon;
 	Camera _camera;
@@ -44,6 +47,8 @@ private:
 	int _selectedLight;
 	int _selectedShape;
 	EditorUI _editorUI;
+	bool _preview;
+	PhysicsBall _ball;
 };
 
 #endif

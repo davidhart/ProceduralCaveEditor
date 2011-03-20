@@ -49,6 +49,8 @@ private:
 	void onSaveAsMenuItem(Gwen::Controls::Base* from);
 	void onOpenMenuItem(Gwen::Controls::Base* from);
 	void onQuitMenuItem(Gwen::Controls::Base* from);
+	void onPreviewMenuItem(Gwen::Controls::Base* from);
+	void onNewMenuItem(Gwen::Controls::Base* from);
 
 	void PopulateShapeList();
 	void onAddShape(Gwen::Controls::Base* from);

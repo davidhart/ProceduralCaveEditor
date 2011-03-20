@@ -15,6 +15,7 @@ public:
 	enum eKey
 	{
 		KEY_SPACE = 0x20,
+		KEY_ESC = 0x1B,
 
 		KEY_A = 0x41,
 		KEY_D = 0x44,
