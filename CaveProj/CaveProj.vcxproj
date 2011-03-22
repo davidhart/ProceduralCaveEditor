@@ -81,6 +81,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MarchingCubesData.cpp" />
     <ClCompile Include="Math.cpp" />
+    <ClCompile Include="NoiseVolume.cpp" />
     <ClCompile Include="PhysicsBall.cpp" />
     <ClCompile Include="Plane.cpp" />
     <ClCompile Include="PositionWidget.cpp" />
@@ -106,6 +107,7 @@
     <ClInclude Include="LeakDetector.h" />
     <ClInclude Include="MarchingCubesData.h" />
     <ClInclude Include="Math.h" />
+    <ClInclude Include="NoiseVolume.h" />
     <ClInclude Include="PhysicsBall.h" />
     <ClInclude Include="Plane.h" />
     <ClInclude Include="PositionWidget.h" />

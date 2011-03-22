@@ -28,19 +28,19 @@ Environment::Environment() :
 	_texture(NULL),
 	_textureDisplacement(NULL),
 	_lightsChanged(false),
-	_textureNoise3D(NULL)
+	_noiseVolume(Vector3i(256, 256, 256))
 {
 
 	int o = AddOctave();
-	SetOctaveScale(o, Vector3f(6.66f, 6.66f, 6.66f));
+	SetOctaveScale(o, Vector3f(1.5f, 1.5f, 1.5f));
 	SetOctaveAmplitude(o, 0.5f);
 
 	o = AddOctave();
-	SetOctaveScale(o, Vector3f(13.33f, 13.33f, 13.33f));
+	SetOctaveScale(o, Vector3f(3.25f, 3.25f, 3.25f));
 	SetOctaveAmplitude(o, 0.1f);
 
 	o = AddOctave();
-	SetOctaveScale(o, Vector3f(20.0f, 0.1f, 20.0f));
+	SetOctaveScale(o, Vector3f(5.0f, 0.025f, 5.0f));
 	SetOctaveAmplitude(o, 0.4f);
 }
 
@@ -48,14 +48,16 @@ void Environment::GenBlobs()
 {
 	_shapes.resize(MAX_BLOBS);
 
+	std::srand(152);
+
 	for (int i = 0; i < MAX_BLOBS; ++i)
 	{
-		_shapes[i].Position = D3DXVECTOR4(rand() % 200 / 100.0f - 1.0f,
-			rand() % 200 / 100.0f - 1.0f,
-			rand() % 200 / 100.0f - 1.0f,
+		_shapes[i].Position = D3DXVECTOR4(std::rand() % 200 / 100.0f - 1.0f,
+			std::rand() % 200 / 100.0f - 1.0f,
+			std::rand() % 200 / 100.0f - 1.0f,
 			0.0f);
 
-		float r = rand() % 20 / 24.0f + 0.4f;
+		float r = std::rand() % 20 / 24.0f + 0.4f;
 		_shapes[i].Scale = D3DXVECTOR4(r, r, r, 0);
 	}
 
@@ -133,6 +135,8 @@ void Environment::GenModel(ID3D10Device* d3dDevice)
 
 void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 {	
+	_noiseVolume.Load(d3dDevice);
+
 	// Create Vertex Buffer
 	std::vector<D3DVECTOR> inputData;
 	inputData.push_back(D3DXVECTOR3(0, 0, 0));
@@ -171,11 +175,6 @@ void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
 	}
 
-	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "Random3D.dds", &loadInfo, NULL, &_textureNoise3D, &hr)))
-	{
-		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
-	}
-
 	std::cout << "Created textures" << std::endl;
 
 	// Create shader and get render technique
@@ -188,7 +187,7 @@ void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 	_genModelTechnique = _genModelEffect->GetTechniqueByName("Render");
 
 
-	_genModelEffect->GetVariableByName("NoiseTexture")->AsShaderResource()->SetResource(_textureNoise3D);
+	_genModelEffect->GetVariableByName("NoiseTexture")->AsShaderResource()->SetResource(_noiseVolume.GetResource());
 
 	D3D10_PASS_DESC PassDesc;
 
@@ -258,6 +257,8 @@ void Environment::NewCave(ID3D10Device* d3dDevice)
 
 void Environment::Unload()
 {
+	_noiseVolume.Unload();
+
 	_genModelTechnique = NULL;
 	_renderSceneTechnique = NULL;
 
@@ -278,9 +279,6 @@ void Environment::Unload()
 
 	_textureDisplacement->Release();
 	_textureDisplacement = NULL;
-
-	_textureNoise3D->Release();
-	_textureNoise3D = NULL;
 
 	for(unsigned int i = 0; i < _environmentToDraw.size(); ++i)
 		delete _environmentToDraw[i];

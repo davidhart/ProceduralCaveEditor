@@ -4,6 +4,7 @@
 
 #include "Vector.h"
 #include "EnvironmentChunk.h"
+#include "NoiseVolume.h"
 
 #include <D3D10.h>
 #include <D3DX10.h>
@@ -99,7 +100,7 @@ private:
 	ID3D10EffectVectorVariable* _viewDirection;
 	ID3D10ShaderResourceView* _texture;
 	ID3D10ShaderResourceView* _textureDisplacement;
-	ID3D10ShaderResourceView* _textureNoise3D;
+
 	UINT _numTriangles;
 	int _resolution;
 
@@ -117,6 +118,7 @@ private:
 	std::vector<Light> _lights;
 	bool _lightsChanged;
 
+	NoiseVolume _noiseVolume;
 };
 
 #endif

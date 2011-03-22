@@ -76,6 +76,9 @@
     <ClCompile Include="PhysicsBall.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="NoiseVolume.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h">
@@ -148,6 +151,9 @@
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="PhysicsBall.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="NoiseVolume.h">
       <Filter>Source</Filter>
     </ClInclude>
   </ItemGroup>

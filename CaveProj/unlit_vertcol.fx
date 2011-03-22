@@ -47,8 +47,8 @@ DepthStencilState EnableDepth
 
 DepthStencilState DisableDepth
 {
-    //DepthEnable = FALSE;
-    //DepthWriteMask = 0;
+    DepthEnable = FALSE;
+    DepthWriteMask = 0;
 };
 
 
