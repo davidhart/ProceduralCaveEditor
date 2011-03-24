@@ -44,6 +44,11 @@ public:
 	static bool HexCharToInt(char c, int& i);
 
 	static bool ReadHexColor(std::istream& stream, DWORD& color);
+
+	template<typename T> inline static T Lerp(T a, T b, T f)
+	{
+		return a * (1 - f) + b * f;
+	}
 };
 
 #endif

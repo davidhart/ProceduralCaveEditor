@@ -172,14 +172,7 @@ void mainGS( point GS_INPUT input[1], inout TriangleStream<PS_INPUT> stream )
 	if (sampleField(6, pos0) < Threshold) cubeindex = cubeindex | 64;
 	if (sampleField(7, pos0) < Threshold) cubeindex = cubeindex | 128;
 
-	if (cubeindex != 0)
-	{
-	
-	float3 vertlist[12] = {{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},
-	{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0},{0,0,0}}; // MUST initialise this because of X4850 error
-	
-	float3 normlist[12];
-
+	float3 vertlist[12];
 	vertlist[0] = vertexInterp(Threshold, cubePos(0, pos0), sampleField(0, pos0), cubePos(1, pos0), sampleField(1, pos0));
 	vertlist[1] = vertexInterp(Threshold, cubePos(1, pos0), sampleField(1, pos0), cubePos(2, pos0), sampleField(2, pos0));
 	vertlist[2] = vertexInterp(Threshold, cubePos(2, pos0), sampleField(2, pos0), cubePos(3, pos0), sampleField(3, pos0));
@@ -193,6 +186,7 @@ void mainGS( point GS_INPUT input[1], inout TriangleStream<PS_INPUT> stream )
 	vertlist[10] = vertexInterp(Threshold, cubePos(2, pos0), sampleField(2, pos0), cubePos(6, pos0), sampleField(6, pos0));
 	vertlist[11] = vertexInterp(Threshold, cubePos(3, pos0), sampleField(3, pos0), cubePos(7, pos0), sampleField(7, pos0));
 	
+	float3 normlist[12];
 	[unroll(12)] for (int n = 0; n < 12; ++n)
 	{
 		normlist[n] = GetNormal(vertlist[n]);
@@ -219,7 +213,6 @@ void mainGS( point GS_INPUT input[1], inout TriangleStream<PS_INPUT> stream )
 		{
 			break;
 		}
-	}
 	}
 }
 

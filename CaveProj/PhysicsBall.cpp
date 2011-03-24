@@ -3,7 +3,7 @@
 
 PhysicsBall::PhysicsBall(Environment& environment) :
 	_environment(environment),
-	_radius(0.05f),
+	_radius(0.01f),
 	_position(0, 0, 0),
 	_velocity(0, 0, 0),
 	_inside(false)
@@ -29,7 +29,7 @@ void PhysicsBall::Draw(RenderWindow& renderWindow, const Camera& camera)
 
 void PhysicsBall::Update(float dt)
 {
-	const float maxTimeStep = 1 / 150.0f;
+	const float maxTimeStep = 1 / 250.0f;
 
 	while (dt > maxTimeStep)
 	{
@@ -54,6 +54,6 @@ void PhysicsBall::UpdateStep(float dt)
 		Vector3f nn = normal.Normalize();
 		_position = prevPos;
 		_velocity -= 2 * _velocity.Dot(nn) * nn;
-		_velocity *= 0.90f;
+		_velocity *= 0.80f;
 	}
 }

@@ -741,6 +741,13 @@ float Environment::Sample(const Vector3f& position)
 		Vector3f shapeScale (_shapes[i].Scale.x,  _shapes[i].Scale.y,  _shapes[i].Scale.z);
 		density += 1.0f / (((position - shapepos)/ shapeScale).Length() + 0.0001f);
 	}
+
+	for (unsigned int i = 0; i < _octaves.size(); ++i)
+	{
+		float v = _noiseVolume.Sample(position * Vector3f(_octaves[i].Scale.x, _octaves[i].Scale.y, _octaves[i].Scale.z) / 64) * 2.0f - 1.0f;
+		density += v * _octaves[i].Amplitude;
+    }
+
 	return density;
 }
 

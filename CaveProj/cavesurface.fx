@@ -99,7 +99,7 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 	float3 spec = float3(0,0,0);
 	float3 diffuse = float3(0,0,0);
 	
-	float4 ambient = float4(0.08f, 0.08f, 0.08f, 1.0f);
+	float4 ambient = float4(0.13f, 0.13f, 0.13f, 1.0f);
 
 	[unroll] for (int i = 0; i < 8; ++i)
 	{

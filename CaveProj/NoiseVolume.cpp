@@ -1,4 +1,5 @@
 #include "NoiseVolume.h"
+#include "Util.h"
 #include <cstdlib>
 
 NoiseVolume::NoiseVolume(const Vector3i& size) :
@@ -51,4 +52,48 @@ void NoiseVolume::Unload()
 
 	_noiseTexture->Release();
 	_noiseTexture = NULL;
+}
+
+float NoiseVolume::ReadTexel(const Vector3i& position)
+{
+	return _noiseTexels[position.x + position.y * _size.x + position.z * _size.x * _size.y] / 255.0f;
+}
+
+float NoiseVolume::Sample(const Vector3f& position)
+{
+	Vector3f texelPos (position.x *  _size.x, position.y * _size.y, position.z * _size.z);
+
+	Vector3i texelMin ((int)floor(texelPos.x), (int)floor(texelPos.y), (int)floor(texelPos.z));
+	Vector3i texelMax = texelMin + Vector3i(1, 1, 1);
+	
+	Vector3f lerpAmount(texelPos.x - texelMin.x, texelPos.y - texelMin.y, texelPos.z - texelMin.z);
+
+	texelMin.x %= _size.x; if (texelMin.x < 0) texelMin.x += _size.x;
+	texelMin.y %= _size.y; if (texelMin.y < 0) texelMin.y += _size.y;
+	texelMin.z %= _size.z; if (texelMin.z < 0) texelMin.z += _size.z;
+
+	texelMax.x %= _size.x; if (texelMax.x < 0) texelMax.x += _size.x;
+	texelMax.y %= _size.y; if (texelMax.y < 0) texelMax.y += _size.y;
+	texelMax.z %= _size.z; if (texelMax.z < 0) texelMax.z += _size.z;
+
+	// Trilinear interpolation of 8 sample values
+	float na = ReadTexel(Vector3i(texelMin.x, texelMin.y, texelMin.z));
+	float nb = ReadTexel(Vector3i(texelMax.x, texelMin.y, texelMin.z));
+	float nc = ReadTexel(Vector3i(texelMin.x, texelMax.y, texelMin.z));
+	float nd = ReadTexel(Vector3i(texelMax.x, texelMax.y, texelMin.z));
+
+	float ne = ReadTexel(Vector3i(texelMin.x, texelMin.y, texelMax.z));
+	float nf = ReadTexel(Vector3i(texelMax.x, texelMin.y, texelMax.z));
+	float ng = ReadTexel(Vector3i(texelMin.x, texelMax.y, texelMax.z));
+	float nh = ReadTexel(Vector3i(texelMax.x, texelMax.y, texelMax.z));
+
+	float la = Util::Lerp(na, nb, lerpAmount.x);
+	float lb = Util::Lerp(nc, nd, lerpAmount.x);
+	float lc = Util::Lerp(la, lb, lerpAmount.y);
+
+	float ld = Util::Lerp(ne, nf, lerpAmount.x);
+	float le = Util::Lerp(ng, nh, lerpAmount.x);
+	float lf = Util::Lerp(ld, le, lerpAmount.y);
+
+	return Util::Lerp(lc, lf, lerpAmount.z);
 }
