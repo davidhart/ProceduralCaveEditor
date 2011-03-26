@@ -1,13 +1,47 @@
 #include "PhysicsBall.h"
 #include "Environment.h"
+#include <cstdlib>
 
 PhysicsBall::PhysicsBall(Environment& environment) :
 	_environment(environment),
-	_radius(0.01f),
+	_radius(0.05f),
 	_position(0, 0, 0),
 	_velocity(0, 0, 0),
 	_inside(false)
 {
+
+	std::srand(1231);
+
+	for (int i = 0; i < 24; ++i)
+	{
+		Vector3f v ((std::rand() % 1000) / 1000.0f,
+			(std::rand() % 1000) / 1000.0f,
+			(std::rand() % 1000) / 1000.0f);
+
+		v = v.Normalize();
+
+		v.x *= std::rand() % 2 * 2 - 1;
+		v.y *= std::rand() % 2 * 2 - 1;
+		v.z *= std::rand() % 2 * 2 - 1;
+
+		_samplePositions.push_back(v * _radius);
+		_samplePositions.push_back(v * _radius * 0.5f);
+	}
+
+	/*
+	_samplePositions.push_back(Vector3f(0, 0, 0));
+	_samplePositions.push_back(Vector3f(1, 0, 0)*_radius);
+	_samplePositions.push_back(Vector3f(-1, 0, 0)*_radius);
+	_samplePositions.push_back(Vector3f(0, -1, 0)*_radius);
+	_samplePositions.push_back(Vector3f(0, 1, 0)*_radius);
+	_samplePositions.push_back(Vector3f(0, 0, 1)*_radius);
+	_samplePositions.push_back(Vector3f(0, 0, -1)*_radius);
+	_samplePositions.push_back(Vector3f(0.5, 0, 0)*_radius);
+	_samplePositions.push_back(Vector3f(-0.5, 0, 0)*_radius);
+	_samplePositions.push_back(Vector3f(0, -0.5, 0)*_radius);
+	_samplePositions.push_back(Vector3f(0, 0.5, 0)*_radius);
+	_samplePositions.push_back(Vector3f(0, 0, 0.5)*_radius);
+	_samplePositions.push_back(Vector3f(0, 0, -0.5)*_radius);*/
 }
 
 void PhysicsBall::Load(RenderWindow& renderWindow)
@@ -47,13 +81,22 @@ void PhysicsBall::UpdateStep(float dt)
 	_velocity += Vector3f(0, -0.005f, 0);
 	_velocity -= _velocity * 0.001f;
 
-	Vector3f normal = _environment.SampleNormal(_position);
-
-	if ((_environment.Sample(_position)-3.6f) / normal.Length() < _radius)
+	Vector3f normal;
+	bool collision = false;
+	for (unsigned int i = 0; i < _samplePositions.size(); ++i)
 	{
-		Vector3f nn = normal.Normalize();
+		if (_environment.Sample(_position + _samplePositions[i]) < 3.6f)
+		{
+			normal+= _environment.SampleNormal(_position + _samplePositions[i]);
+			collision = true;
+		}
+	}
+
+	if (collision)
+	{
 		_position = prevPos;
-		_velocity -= 2 * _velocity.Dot(nn) * nn;
+		normal = normal.Normalize();
+		_velocity -= 2 * _velocity.Dot(normal) * normal;
 		_velocity *= 0.80f;
 	}
 }

@@ -4,6 +4,7 @@
 
 #include "DebugDrawer.h"
 #include "Vector.h"
+#include <vector>
 
 class Environment;
 class RenderWindow;
@@ -29,6 +30,7 @@ private:
 	Vector3f _velocity;
 	float _radius;
 	bool _inside;
+	std::vector<Vector3f> _samplePositions;
 };
 
 #endif

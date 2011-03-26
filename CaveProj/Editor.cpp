@@ -122,7 +122,7 @@ void Editor::Update(float dt, const Input& input)
 		if (input.IsButtonJustPressed(Input::BUTTON_LEFT))
 		{
 			_ball.SetPosition(_camera.Position());
-			_ball.SetVelocity(_camera.Look()*3.0f);
+			_ball.SetVelocity(_camera.UnprojectCoord(input.GetCursorPosition())._direction*3.0f);
 		}
 		
 		_ball.Update(dt);

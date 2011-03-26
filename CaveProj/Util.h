@@ -49,6 +49,12 @@ public:
 	{
 		return a * (1 - f) + b * f;
 	}
+
+	template<typename T> inline static T Smoothstep(T a, T b, T f)
+	{
+		float blendfactor = f*f*(3-2*f); // smoothstep (3t^2 - 2t^3)
+		return a * (1-blendfactor) + b * blendfactor; // linear interpolation
+	}
 };
 
 #endif
