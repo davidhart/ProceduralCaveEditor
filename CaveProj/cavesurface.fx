@@ -35,6 +35,7 @@ sampler TextureSampler = sampler_state
 	Filter = MIN_MAG_MIP_LINEAR;
 	AddressU = Wrap;
 	AddressV = Wrap;
+	AddressW = Wrap;
 };
 
 struct VS_INPUT

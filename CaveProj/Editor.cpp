@@ -65,7 +65,7 @@ void Editor::Draw(RenderWindow& renderWindow)
 
 	if (_preview)
 	{
-		//_ball.Draw(renderWindow, _camera);
+		_ball.Draw(renderWindow, _camera);
 		_particleSystem.Draw(renderWindow, _camera);
 	}
 	else

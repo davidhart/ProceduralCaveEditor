@@ -61,7 +61,9 @@ float NoiseVolume::ReadTexel(const Vector3i& position)
 
 float NoiseVolume::Sample(const Vector3f& position)
 {
-	Vector3f texelPos (position.x *  _size.x, position.y * _size.y, position.z * _size.z);
+	//Vector3f texelPos ((position.x - 0.5f / _size.x) *  _size.x, (position.y - 0.5f / _size.y) * _size.y, (position.z - 0.5f / _size.z) * _size.z);
+
+	Vector3f texelPos (position.x * _size.x - 0.5f, position.y * _size.y - 0.5f, position.z * _size.z - 0.5f);
 
 	Vector3i texelMin ((int)floor(texelPos.x), (int)floor(texelPos.y), (int)floor(texelPos.z));
 	Vector3i texelMax = texelMin + Vector3i(1, 1, 1);
@@ -87,13 +89,13 @@ float NoiseVolume::Sample(const Vector3f& position)
 	float ng = ReadTexel(Vector3i(texelMin.x, texelMax.y, texelMax.z));
 	float nh = ReadTexel(Vector3i(texelMax.x, texelMax.y, texelMax.z));
 
-	float la = Util::Smoothstep(na, nb, lerpAmount.x);
-	float lb = Util::Smoothstep(nc, nd, lerpAmount.x);
-	float lc = Util::Smoothstep(la, lb, lerpAmount.y);
+	float la = Util::Lerp(na, nb, lerpAmount.x);
+	float lb = Util::Lerp(nc, nd, lerpAmount.x);
+	float lc = Util::Lerp(la, lb, lerpAmount.y);
 
-	float ld = Util::Smoothstep(ne, nf, lerpAmount.x);
-	float le = Util::Smoothstep(ng, nh, lerpAmount.x);
-	float lf = Util::Smoothstep(ld, le, lerpAmount.y);
+	float ld = Util::Lerp(ne, nf, lerpAmount.x);
+	float le = Util::Lerp(ng, nh, lerpAmount.x);
+	float lf = Util::Lerp(ld, le, lerpAmount.y);
 
 	return Util::Smoothstep(lc, lf, lerpAmount.z);
 }
