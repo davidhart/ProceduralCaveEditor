@@ -84,4 +84,6 @@ void DebugDrawer::DrawLine(const Vector3f& start, const Vector3f& end, RenderWin
 	d3dDevice->IASetVertexBuffers(0, 1, &buffer, &stride, &offset);
 	d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
 	d3dDevice->Draw( 2, 0 );
+
+	// TODO: Release buffer
 }

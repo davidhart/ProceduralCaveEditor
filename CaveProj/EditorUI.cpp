@@ -639,6 +639,9 @@ void EditorUI::onAddShape(Gwen::Controls::Base* from)
 
 void EditorUI::onRemoveShape(Gwen::Controls::Base* from)
 {
+	if (_editor->SelectedShape() < 0)
+		return;
+
 	_environment->RemoveShape(_editor->SelectedShape());
 	_editor->DeselectShape();
 

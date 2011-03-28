@@ -12,7 +12,7 @@ PhysicsBall::PhysicsBall(Environment& environment) :
 
 	std::srand(1231);
 
-	for (int i = 0; i < 24; ++i)
+	for (int i = 0; i < 16; ++i)
 	{
 		Vector3f v ((std::rand() % 1000) / 1000.0f,
 			(std::rand() % 1000) / 1000.0f,
@@ -25,7 +25,7 @@ PhysicsBall::PhysicsBall(Environment& environment) :
 		v.z *= std::rand() % 2 * 2 - 1;
 
 		_samplePositions.push_back(v * _radius);
-		_samplePositions.push_back(v * _radius * 0.5f);
+		_samplePositions.push_back(v * -_radius);
 	}
 
 	/*

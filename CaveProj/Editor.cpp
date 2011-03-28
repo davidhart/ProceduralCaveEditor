@@ -12,7 +12,8 @@ Editor::Editor(RenderWindow& renderWindow) :
 	_positionWidget(Vector3f(0, 0, 0)),
 	_editorUI(renderWindow),
 	_preview(false),
-	_ball(_environment)
+	_ball(_environment),
+	_particleSystem(500, _environment)
 {
 	_editorUI.SetEnvironment(&_environment);
 	_editorUI.SetEditor(this);
@@ -42,6 +43,7 @@ void Editor::Load(RenderWindow& renderWindow)
 
 	_editorUI.Load(renderWindow);
 	_ball.Load(renderWindow);
+	_particleSystem.Load(renderWindow);
 }
 
 void Editor::Unload()
@@ -54,6 +56,7 @@ void Editor::Unload()
 
 	_editorUI.Unload();
 	_ball.Unload();
+	_particleSystem.Unload();
 }
 
 void Editor::Draw(RenderWindow& renderWindow)
@@ -62,7 +65,8 @@ void Editor::Draw(RenderWindow& renderWindow)
 
 	if (_preview)
 	{
-		_ball.Draw(renderWindow, _camera);
+		//_ball.Draw(renderWindow, _camera);
+		_particleSystem.Draw(renderWindow, _camera);
 	}
 	else
 	{
@@ -126,6 +130,7 @@ void Editor::Update(float dt, const Input& input)
 		}
 		
 		_ball.Update(dt);
+		_particleSystem.Update(dt);
 
 		if (input.IsKeyJustPressed(Input::KEY_ESC))
 		{

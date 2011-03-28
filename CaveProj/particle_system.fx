@@ -4,6 +4,11 @@ cbuffer Matrices
 	float4x4 InvView;
 };
 
+cbuffer ParticleSystem
+{
+	float3 Center;
+};
+
 cbuffer Immutable
 {
     float3 VertPos[4] =
@@ -13,6 +18,7 @@ cbuffer Immutable
         float3(-0.5, -0.5, 0),
         float3(0.5, -0.5, 0),
     };
+
     float2 VertTexCoord[4] = 
     { 
         float2(0,0), 
@@ -26,7 +32,7 @@ Texture2D Tex;
 
 sampler TextureSampler = sampler_state
 {
-	Filter = MIN_MAG_MIP_POINT;
+ 	Filter = MIN_MAG_MIP_LINEAR;
 	AddressU = Wrap;
 	AddressV = Wrap;
 };
@@ -34,8 +40,9 @@ sampler TextureSampler = sampler_state
 struct GS_INPUT
 {
 	float3 Pos : POSITION;
-	float4 Color : COLOR0;
-	float Size: TEXCOORD0;
+	float3 Vel : TEXCOORD0;
+	float Life : TEXCOORD1;
+	float Alive : TEXCOORD2;
 };
 
 struct PS_INPUT
@@ -54,14 +61,21 @@ GS_INPUT mainVS(GS_INPUT input)
 void mainGS(point GS_INPUT input[1],
         inout TriangleStream<PS_INPUT> SpriteStream)
 {
+	float lifeFrac = 1 - input[0].Alive / input[0].Life;
+
+	float len = 0.06f * clamp(abs(input[0].Vel.y), 0.4f, 1.8f);
+	float width = 0.025f;
+
+	float3 size = float3(width, len, 1);
+
 	PS_INPUT output;
-    [unroll] for(int i=0; i<4; i++)
+    [unroll] for(int i = 0; i < 4; i++)
     {
-        float3 position = VertPos[i]*input[0].Size;
-        position = mul(position, (float3x3)InvView) + input[0].Pos;
+        float3 position = VertPos[i] * size;
+		position = mul(position, (float3x3)InvView) + input[0].Pos;
         output.Pos = mul(float4(position, 1.0), WorldViewProjection);
         
-        output.Color = input[0].Color;
+        output.Color = float4(1, 1, 1, lifeFrac);
         output.TexCoord = VertTexCoord[i];
         SpriteStream.Append(output);
     }
@@ -71,20 +85,23 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 {	
 	float4 color = input.Color * Tex.Sample(TextureSampler, input.TexCoord);
 
+	if (color.a <= 0.0f)
+		discard;
+
 	return color;
 }
 
 DepthStencilState EnableDepth
 {
     DepthEnable = TRUE;
-    DepthWriteMask = ZERO;
+    DepthWriteMask = 0;
     DepthFunc = LESS_EQUAL;
 };
 
 RasterizerState RasterizerSettings
 {
 	//FillMode = WIREFRAME;
-    CullMode = BACK;
+    CullMode = NONE;
 };
 
 technique10 Render

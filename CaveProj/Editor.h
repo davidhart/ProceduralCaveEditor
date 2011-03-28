@@ -10,6 +10,7 @@
 #include "EditorUI.h"
 #include "PositionWidget.h"
 #include "PhysicsBall.h"
+#include "ParticleSystem.h"
 
 class Environment;
 
@@ -49,6 +50,7 @@ private:
 	EditorUI _editorUI;
 	bool _preview;
 	PhysicsBall _ball;
+	ParticleSystem _particleSystem;
 };
 
 #endif
