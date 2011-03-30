@@ -240,6 +240,17 @@ void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 	texturesampler = _renderSceneEffect->GetVariableByName("texDisplacement")->AsShaderResource();
 	texturesampler->SetResource(_textureDisplacement);
 
+
+	ID3D10EffectVariable* lights = _renderSceneEffect->GetVariableByName("lights");
+	int i;
+	for (i = 0; i < MAX_LIGHTS; ++i)
+	{
+		ID3D10EffectVariable* lighti = lights->GetElement(i);
+		_surfaceLightParam.Pos[i] = lighti->GetMemberByName("Position")->AsVector();
+		_surfaceLightParam.Color[i] = lighti->GetMemberByName("Color")->AsVector();
+		_surfaceLightParam.Size[i] = lighti->GetMemberByName("Size")->AsScalar();
+		_surfaceLightParam.Falloff[i] = lighti->GetMemberByName("Falloff")->AsScalar();
+	}
 	for (float x = -2; x < 2; x += 1)
 		for (float y = -2; y < 2; y += 1)
 			for (float z = -2; z < 2; z += 1)
@@ -433,36 +444,32 @@ void Environment::RemoveLight(int light)
 
 void Environment::UpdateLights()
 {
-	ID3D10EffectVariable* lights = _renderSceneEffect->GetVariableByName("lights");
+	LoadLightParameters(_surfaceLightParam);
 
+}
+
+void Environment::LoadLightParameters(const LightParam& lightParam)
+{
 	int i;
 	for (i = 0; i < NumLights(); ++i)
 	{
-		ID3D10EffectVariable* lighti = lights->GetElement(i);
-
-		if (!lighti->IsValid())
-		{
-			std::cout << "Invalid shader var" << std::endl;
-		}
-
-		lighti->GetMemberByName("Position")->AsVector()->SetFloatVector((float*)&_lights[i]._position);
+		lightParam.Pos[i]->SetFloatVector((float*)&_lights[i]._position);
 
 		D3DXCOLOR col(Util::GetR(_lights[i]._color) / 255.0f,
 			Util::GetG(_lights[i]._color) / 255.0f,
 			Util::GetB(_lights[i]._color) / 255.0f,
 			0);
-		lighti->GetMemberByName("Color")->AsVector()->SetFloatVector(&col.r);
+		lightParam.Color[i]->SetFloatVector(&col.r);
 	
-		lighti->GetMemberByName("Size")->AsScalar()->SetFloat(_lights[i]._size);
+		lightParam.Size[i]->SetFloat(_lights[i]._size);
 	
-		lighti->GetMemberByName("Falloff")->AsScalar()->SetFloat(_lights[i]._falloff);
+		lightParam.Falloff[i]->SetFloat(_lights[i]._falloff);
 	}
 
 	for (; i < 8; ++i)
 	{
-		ID3D10EffectVariable* lighti = lights->GetElement(i);
 		D3DXCOLOR col(0,0,0,0);
-		lighti->GetMemberByName("Color")->AsVector()->SetFloatVector(&col.r);
+		lightParam.Color[i]->SetFloatVector(&col.r);
 	}
 }
 

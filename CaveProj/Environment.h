@@ -59,6 +59,18 @@ public:
 	float Sample(const Vector3f& position);
 	Vector3f SampleNormal(const Vector3f& position);
 
+	static const int MAX_LIGHTS = 8; 
+
+	struct LightParam
+	{
+		ID3D10EffectVectorVariable* Pos[MAX_LIGHTS];
+		ID3D10EffectVectorVariable* Color[MAX_LIGHTS];
+		ID3D10EffectScalarVariable* Size[MAX_LIGHTS];
+		ID3D10EffectScalarVariable* Falloff[MAX_LIGHTS];
+	};
+
+	void LoadLightParameters(const LightParam& lightParam);
+
 private:
 
 	void SortListToGenerate(Camera& camera);
@@ -100,6 +112,8 @@ private:
 	ID3D10EffectVectorVariable* _viewDirection;
 	ID3D10ShaderResourceView* _texture;
 	ID3D10ShaderResourceView* _textureDisplacement;
+
+	LightParam _surfaceLightParam;
 
 	UINT _numTriangles;
 	int _resolution;

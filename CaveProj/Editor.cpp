@@ -13,7 +13,7 @@ Editor::Editor(RenderWindow& renderWindow) :
 	_editorUI(renderWindow),
 	_preview(false),
 	_ball(_environment),
-	_particleSystem(500, _environment)
+	_particleSystem(5000, _environment)
 {
 	_editorUI.SetEnvironment(&_environment);
 	_editorUI.SetEditor(this);
@@ -259,6 +259,7 @@ void Editor::Preview(bool enable)
 	if (enable && !_preview)
 	{
 		// TODO: enable stuff
+		_particleSystem.Reset();
 	}
 	else if (!enable && _preview)
 	{

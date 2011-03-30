@@ -28,6 +28,19 @@ cbuffer Immutable
     };
 };
 
+struct Light
+{
+	float3 Position;
+	float4 Color;
+	float Size;
+	float Falloff;
+};
+
+cbuffer cbLight
+{
+	Light lights[8];
+};
+
 Texture2D Tex;
 
 sampler TextureSampler = sampler_state
@@ -50,6 +63,7 @@ struct PS_INPUT
 	float4 Pos : SV_POSITION;
 	float2 TexCoord: TEXCOORD0;
 	float4 Color : COLOR0;
+	float3 WSPos : POSITION;
 };
 
 GS_INPUT mainVS(GS_INPUT input)
@@ -63,7 +77,7 @@ void mainGS(point GS_INPUT input[1],
 {
 	float lifeFrac = 1 - input[0].Alive / input[0].Life;
 
-	float len = 0.06f * clamp(abs(input[0].Vel.y), 0.4f, 1.8f);
+	float len = 0.1f * clamp(abs(input[0].Vel.y), 0.4f, 1.8f);
 	float width = 0.025f;
 
 	float3 size = float3(width, len, 1);
@@ -73,6 +87,7 @@ void mainGS(point GS_INPUT input[1],
     {
         float3 position = VertPos[i] * size;
 		position = mul(position, (float3x3)InvView) + input[0].Pos;
+		output.WSPos = input[0].Pos;
         output.Pos = mul(float4(position, 1.0), WorldViewProjection);
         
         output.Color = float4(1, 1, 1, lifeFrac);
@@ -84,11 +99,22 @@ void mainGS(point GS_INPUT input[1],
 float4 mainPS(PS_INPUT input) : SV_TARGET
 {	
 	float4 color = input.Color * Tex.Sample(TextureSampler, input.TexCoord);
-
+	
 	if (color.a <= 0.0f)
 		discard;
 
-	return color;
+	float3 diffuse = float3(0, 0, 0);
+	float3 ambient = float3(0.2f, 0.2f, 0.2f);
+	float TA = 0.5f;
+	[unroll] for (int i = 0; i < 8; ++i)
+	{
+		float3 lightDirection = lights[i].Position - input.WSPos;
+		float attenuation = clamp(lights[i].Size/(length(lightDirection) + pow(length(lightDirection), 2.0f)*lights[i].Falloff), 0.0f, 1.0f);
+		TA += attenuation;
+		diffuse += attenuation * lights[i].Color.rgb;
+	}
+
+	return min(float4(diffuse + ambient, TA), 1) * color;
 }
 
 DepthStencilState EnableDepth

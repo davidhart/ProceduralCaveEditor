@@ -17,7 +17,9 @@ ParticleSystem::ParticleSystem(unsigned int maxParticles, Environment& environme
 
 void ParticleSystem::SpawnParticle(unsigned int i)
 {
-	_particles[i]._position = Vector3f(0, 0, 0);
+	_particles[i]._position = Vector3f(0, 0, (std::rand() % 10000) * 0.5f / 10000.0f - 0.25f);
+
+
 		Vector3f v ((std::rand() % 1000) / 5000.0f - 0.1f,
 		-1.0f,
 		(std::rand() % 1000) / 5000.0f - 0.1f);
@@ -27,7 +29,7 @@ void ParticleSystem::SpawnParticle(unsigned int i)
 	//v.y *= std::rand() % 2 * 2 - 1;
 	//v.z *= std::rand() % 2 * 2 - 1;
 
-	_particles[i]._velocity = v*1.0f;
+	_particles[i]._velocity = v*0.3f;
 
 	_particles[i]._lifespan = 2 + std::rand() % 2000 / 1000.0f;
 	_particles[i]._aliveTime = 0;
@@ -69,6 +71,18 @@ void ParticleSystem::Load(RenderWindow& renderWindow)
 
 	_particleEffect->GetVariableByName("Tex")->AsShaderResource()->SetResource(_particleTexture);
 	_invview = _particleEffect->GetVariableByName("InvView")->AsMatrix();
+
+	ID3D10EffectVariable* lights = _particleEffect->GetVariableByName("lights");
+	int i;
+	for (i = 0; i < Environment::MAX_LIGHTS; ++i)
+	{
+		ID3D10EffectVariable* lighti = lights->GetElement(i);
+		_lightParams.Pos[i] = lighti->GetMemberByName("Position")->AsVector();
+		_lightParams.Color[i] = lighti->GetMemberByName("Color")->AsVector();
+		_lightParams.Size[i] = lighti->GetMemberByName("Size")->AsScalar();
+		_lightParams.Falloff[i] = lighti->GetMemberByName("Falloff")->AsScalar();
+	}
+	_environment.LoadLightParameters(_lightParams);
 }
 
 void ParticleSystem::Unload()
@@ -146,3 +160,7 @@ void ParticleSystem::UpdateStep(float dt)
 	}
 }
 
+void ParticleSystem::Reset()
+{
+	_environment.LoadLightParameters(_lightParams);
+}

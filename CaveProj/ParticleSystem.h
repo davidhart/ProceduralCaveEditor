@@ -19,6 +19,7 @@ public:
 	void Update(float dt);
 	void UpdateStep(float dt);
 	void SpawnParticle(unsigned int i);
+	void Reset();
 
 private:
 	class Particle
@@ -60,6 +61,8 @@ private:
 
 	std::vector<Particle> _particles;
 	Environment& _environment;
+
+	Environment::LightParam _lightParams;
 };
 
 #endif
