@@ -260,6 +260,7 @@ void Editor::Preview(bool enable)
 	{
 		// TODO: enable stuff
 		_particleSystem.Reset();
+		_ball.Reset();
 	}
 	else if (!enable && _preview)
 	{

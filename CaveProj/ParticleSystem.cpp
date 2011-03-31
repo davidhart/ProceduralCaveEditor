@@ -136,10 +136,10 @@ void ParticleSystem::Draw(RenderWindow& renderWindow, const Camera& camera)
 void ParticleSystem::Update(float dt)
 {
 	int steps = 0;
-	while (dt > 1 / 150.0f && steps < 4)
+	while (dt > 1 / 60.0f && steps < 4)
 	{
-		dt -= 1 / 150.0f;
-		UpdateStep(1 / 150.0f);
+		dt -= 1 / 60.0f;
+		UpdateStep(1 / 60.0f);
 		++steps;
 	}
 

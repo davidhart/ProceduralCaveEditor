@@ -82,6 +82,12 @@
     <ClCompile Include="ParticleSystem.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Mesh.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Model.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h">
@@ -162,6 +168,12 @@
     <ClInclude Include="ParticleSystem.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="Mesh.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Model.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="marchingcubes.fx">
@@ -180,6 +192,9 @@
       <Filter>Source</Filter>
     </None>
     <None Include="particle_system.fx">
+      <Filter>Source</Filter>
+    </None>
+    <None Include="generic_diffuse.fx">
       <Filter>Source</Filter>
     </None>
   </ItemGroup>

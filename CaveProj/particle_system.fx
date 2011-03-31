@@ -77,8 +77,8 @@ void mainGS(point GS_INPUT input[1],
 {
 	float lifeFrac = 1 - input[0].Alive / input[0].Life;
 
-	float len = 0.1f * clamp(abs(input[0].Vel.y), 0.4f, 1.8f);
-	float width = 0.025f;
+	float len = 0.2f * clamp(abs(input[0].Vel.y), 0.4f, 1.8f);
+	float width = 0.05f;
 
 	float3 size = float3(width, len, 1);
 

@@ -208,6 +208,8 @@ void PositionWidget::Draw(const Camera& camera, RenderWindow& renderWindow)
 	d3dDevice->IASetVertexBuffers(0, 1, &_bufferLines, &stride, &offset);
 	d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
 	d3dDevice->Draw( _numLines*2, 0 );
+
+	d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 PositionWidget::eGrabState PositionWidget::TestIntersection(const Ray& ray, float& intersection)
