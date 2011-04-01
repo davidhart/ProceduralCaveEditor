@@ -395,14 +395,14 @@ void EditorUI::CreateLightingPage()
 
 void EditorUI::CreateWaterPage()
 {
-	Gwen::Controls::Button* b3 = new Gwen::Controls::Button(_canvas);
-	_dockBase->GetRight()->GetTabControl()->AddPage(L"Water", b3);
+	//Gwen::Controls::Button* b3 = new Gwen::Controls::Button(_canvas);
+	//_dockBase->GetRight()->GetTabControl()->AddPage(L"Water", b3);
 }
 
 void EditorUI::CreateObjectsPage()
 {
-	Gwen::Controls::Button* b5 = new Gwen::Controls::Button(_canvas);
-	_dockBase->GetRight()->GetTabControl()->AddPage(L"Objects", b5);
+	//Gwen::Controls::Button* b5 = new Gwen::Controls::Button(_canvas);
+	//_dockBase->GetRight()->GetTabControl()->AddPage(L"Objects", b5);
 }
 
 void EditorUI::PopulateLightList()
@@ -432,6 +432,7 @@ void EditorUI::onRemoveLight(Gwen::Controls::Base* from)
 	_editor->DeselectLight();
 
 	PopulateLightList();
+	UpdateLightProperties(_editor->SelectedLight());
 }
 
 void EditorUI::onLightSelected(Gwen::Controls::Base* from)
@@ -487,8 +488,9 @@ void EditorUI::UpdateLightProperties(int light)
 {
 	if (light < 0)
 		return;
-
+	
 	_updatingProperties = true;
+
 	std::stringstream sX;
 	sX << _environment->GetLightPosition(light).x;
 	_lightXPosition->SetText(sX.str());

@@ -9,8 +9,9 @@
 
 #include <iostream>
 
-const PositionWidget::Vertex PositionWidget::LineVerts[6] = 
+const PositionWidget::Vertex PositionWidget::LineVerts[24] = 
 {
+// Deselected
 	{ D3DXVECTOR3(0, 0, 0), D3DXCOLOR(1, 0, 0, 1) },
 	{ D3DXVECTOR3(0.08f, 0, 0), D3DXCOLOR(1, 0, 0, 1) },
 
@@ -117,7 +118,7 @@ void PositionWidget::Load(RenderWindow& renderWindow)
 {
 	ID3D10Device* d3dDevice = renderWindow.GetDevice();
 
-	_renderEffect = ShaderBuilder::RequestEffect("unlit_vertcol", "fx_4_0", d3dDevice);
+	_renderEffect = ShaderBuilder::RequestEffect("unlit", "fx_4_0", d3dDevice);
 	_renderTechnique = _renderEffect->GetTechniqueByName("Render");
 
 	D3D10_PASS_DESC PassDesc;
@@ -136,6 +137,7 @@ void PositionWidget::Load(RenderWindow& renderWindow)
 	_view = _renderEffect->GetVariableByName("View")->AsMatrix();
 	_proj = _renderEffect->GetVariableByName("Proj")->AsMatrix();
 	_world = _renderEffect->GetVariableByName("World")->AsMatrix();
+	_color = _renderEffect->GetVariableByName("Color")->AsVector();
 
 	_numLines = 3;
 
@@ -196,27 +198,48 @@ void PositionWidget::Draw(const Camera& camera, RenderWindow& renderWindow)
 
 	d3dDevice->IASetInputLayout(_vertexLayout);
 
-	_renderTechnique->GetPassByIndex(0)->Apply( 0 );
+	D3DXVECTOR4 colors[3] = { D3DXVECTOR4(1, 0, 0, 1),
+							 D3DXVECTOR4(0, 1, 0, 1),
+							 D3DXVECTOR4(0, 0, 1, 1)
+	};
+
+	D3DXVECTOR4 colorDrag (0.3f, 0.3f, 0.3f, 1);
+	D3DXVECTOR4 colorHover (0.6f, 0.6f, 0.6f, 1);
 
 	UINT stride = sizeof( Vertex );
     UINT offset = 0;
 
-	d3dDevice->IASetVertexBuffers(0, 1, &_bufferPolys, &stride, &offset);
-	d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-	d3dDevice->Draw( _numPolys*3, 0 );
+	for (int i = 0; i < 3; ++i)
+	{
+		if (_grabState == i+1)
+			_color->SetFloatVector((float*)&colorDrag);
+		else if (_hover == i+1)
+			_color->SetFloatVector((float*)&colorHover);
+		else
+			_color->SetFloatVector((float*)&colors[i]);
 
-	d3dDevice->IASetVertexBuffers(0, 1, &_bufferLines, &stride, &offset);
-	d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
-	d3dDevice->Draw( _numLines*2, 0 );
+		_renderTechnique->GetPassByIndex(0)->Apply(0);
+
+		d3dDevice->IASetVertexBuffers(0, 1, &_bufferPolys, &stride, &offset);
+		d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		d3dDevice->Draw(_numPolys, _numPolys * i);
+
+		d3dDevice->IASetVertexBuffers(0, 1, &_bufferLines, &stride, &offset);
+		d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
+		d3dDevice->Draw(2, 2*i);
+	}
 
 	d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 }
 
 PositionWidget::eGrabState PositionWidget::TestIntersection(const Ray& ray, float& intersection)
 {
-	AABB xArrowBounds(Vector3f(0.08f, -0.005f, -0.005f)+_position, Vector3f(0.1f, 0.005f, 0.005f)+_position);
-	AABB yArrowBounds(Vector3f(-0.005f, 0.08f, -0.005f)+_position, Vector3f(0.005f, 0.1f, 0.005f)+_position);
-	AABB zArrowBounds(Vector3f(-0.005f, -0.005f, 0.08f)+_position, Vector3f(0.005f, 0.005f, 0.1f)+_position);
+	float width = 0.006f;
+	float start = 0.075f;
+	float end = 0.105f;
+	AABB xArrowBounds(Vector3f(start, -width, -width)+_position, Vector3f(end, width, width)+_position);
+	AABB yArrowBounds(Vector3f(-width, start, -width)+_position, Vector3f(width, end, width)+_position);
+	AABB zArrowBounds(Vector3f(-width, -width, start)+_position, Vector3f(width, width, end)+_position);
 
 	eGrabState grab = GRAB_NONE;
 

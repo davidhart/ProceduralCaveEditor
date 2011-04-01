@@ -68,23 +68,21 @@ void Environment::GenModel(ID3D10Device* d3dDevice)
 {
 	// TODO: Store the variable locations at load and validate
 	ID3D10EffectVariable* blobs = _genModelEffect->GetVariableByName("blobs");
-
-	_genModelEffect->GetVariableByName("NumBlobs")->AsScalar()->SetInt(NumShapes());
-
+	
 	unsigned int i = 0;
+	int validBlobs = 0;
 	for (; i < _shapes.size(); ++i)
 	{
-		ID3D10EffectVariable* blobi = blobs->GetElement(i);		
-		blobi->GetMemberByName("Position")->AsVector()->SetFloatVector((float*)&_shapes[i].Position);
-		blobi->GetMemberByName("Scale")->AsVector()->SetFloatVector((float*)&_shapes[i].Scale);
+		if (_shapes[i].Scale.x != 0 && _shapes[i].Scale.y != 0 && _shapes[i].Scale.z != 0)
+		{
+			ID3D10EffectVariable* blobi = blobs->GetElement(validBlobs);		
+			blobi->GetMemberByName("Position")->AsVector()->SetFloatVector((float*)&_shapes[i].Position);
+			blobi->GetMemberByName("Scale")->AsVector()->SetFloatVector((float*)&_shapes[i].Scale);
+			++validBlobs;
+		}
 	}
-	for (; i < MAX_BLOBS; ++i)
-	{
-		D3DXVECTOR4 def(0,0,0,0);
-		ID3D10EffectVariable* blobi = blobs->GetElement(i);		
-		blobi->GetMemberByName("Position")->AsVector()->SetFloatVector((float*)&def);
-		blobi->GetMemberByName("Scale")->AsVector()->SetFloatVector((float*)&def);
-	}
+
+	_genModelEffect->GetVariableByName("NumBlobs")->AsScalar()->SetInt(validBlobs);
 
 	ID3D10EffectVariable* octaves = _genModelEffect->GetVariableByName("octaves");
 	for (i = 0; i < _octaves.size(); ++i)

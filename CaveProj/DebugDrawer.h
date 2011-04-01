@@ -21,7 +21,6 @@ private:
 	struct Vertex
 	{
 		D3DXVECTOR3 pos;
-		D3DXCOLOR col;
 	};
 
 	ID3D10Effect* _renderEffect;

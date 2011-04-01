@@ -9,7 +9,7 @@ void DebugDrawer::Load(RenderWindow& renderWindow)
 {
 	ID3D10Device* d3dDevice = renderWindow.GetDevice();
 
-	_renderEffect = ShaderBuilder::RequestEffect("unlit_vertcol", "fx_4_0", d3dDevice);
+	_renderEffect = ShaderBuilder::RequestEffect("unlit", "fx_4_0", d3dDevice);
 	_renderTechnique = _renderEffect->GetTechniqueByName("Render");
 
 	D3D10_PASS_DESC PassDesc;
@@ -18,7 +18,6 @@ void DebugDrawer::Load(RenderWindow& renderWindow)
 	D3D10_INPUT_ELEMENT_DESC layoutRender[] =
     {
         { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D10_INPUT_PER_VERTEX_DATA, 0 },
     };
 	
 	UINT numElementsRender = sizeof( layoutRender ) / sizeof( layoutRender[0] );
@@ -51,8 +50,6 @@ void DebugDrawer::DrawLine(const Vector3f& start, const Vector3f& end, RenderWin
 	Vertex verts[2];
 	verts[0].pos = D3DXVECTOR3(start.x, start.y, start.z);
 	verts[1].pos = D3DXVECTOR3(end.x, end.y, end.z);
-	verts[0].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
-	verts[1].col = D3DXCOLOR(1.0f, 1.0f, 1.0f, 1.0f);
 
 	D3D10_BUFFER_DESC bd;
     bd.Usage = D3D10_USAGE_DEFAULT;
@@ -85,5 +82,5 @@ void DebugDrawer::DrawLine(const Vector3f& start, const Vector3f& end, RenderWin
 	d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_LINELIST);
 	d3dDevice->Draw( 2, 0 );
 
-	// TODO: Release buffer
+	buffer->Release();
 }

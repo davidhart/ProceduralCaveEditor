@@ -37,6 +37,8 @@ public:
 	void EndDrag();
 	inline bool IsInDrag() { return _grabState != GRAB_NONE; }
 
+	inline void SetHover(eGrabState hover) { _hover = hover; }
+
 private:
 	struct Vertex
 	{
@@ -44,12 +46,13 @@ private:
 		D3DXCOLOR col;
 	};
 
-	static const Vertex LineVerts[6];
+	static const Vertex LineVerts[24];
 	static const Vertex PolyVerts[54];
 
 	Vector3f _position;
 	Vector3f _grabPoint;
 	eGrabState _grabState;
+	eGrabState _hover;
 	ID3D10Effect* _renderEffect;
 	ID3D10EffectTechnique* _renderTechnique;
 	ID3D10InputLayout* _vertexLayout;
@@ -58,6 +61,7 @@ private:
 	ID3D10EffectMatrixVariable* _world;
 	ID3D10EffectMatrixVariable* _view;
 	ID3D10EffectMatrixVariable* _proj;
+	ID3D10EffectVectorVariable* _color;
 
 	UINT _numLines;
 	UINT _numPolys;

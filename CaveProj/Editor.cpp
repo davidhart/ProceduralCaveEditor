@@ -141,58 +141,8 @@ void Editor::Update(float dt, const Input& input)
 	{
 		if (input.IsButtonDown(Input::BUTTON_MID))
 		{
-			_camera.RotatePitch(input.GetMouseDistance().y*0.006f);
-			_camera.RotateYaw(input.GetMouseDistance().x*0.006f);
-		}
-
-		// Distance from surface calculation
-		//if (_environment.Sample(_camera.Position()) > 3.6f)
-		//{
-		//	std::cout << (_environment.Sample(_camera.Position())-3.6f) / _environment.SampleNormal(_camera.Position()).Length() << std::endl;
-		//}
-
-		if (input.IsButtonJustPressed(Input::BUTTON_LEFT))
-		{
-			Ray r = _camera.UnprojectCoord(input.GetCursorPosition());
-			float nearestPoint = -1;
-			int nearestLight = -1;
-
-			for (int i = 0; i < _environment.NumLights(); ++i)
-			{
-				if (i == _selectedLight)
-					continue;
-
-				float t = r.Intersects(_environment.GetLightPosition(i), 0.03f);
-				if (t >= 0.0f)
-				{
-					if (nearestPoint < 0 || t < nearestPoint)
-					{
-						nearestPoint = t;
-						nearestLight = i;
-					}
-				}
-			}
-
-			PositionWidget::eGrabState grab = PositionWidget::GRAB_NONE;
-			float positionintersect;
-
-			if (_selectedLight >= 0)
-			{
-				grab = _positionWidget.TestIntersection(r, positionintersect);
-			}
-
-			if (grab != PositionWidget::GRAB_NONE && (positionintersect < nearestPoint || nearestPoint < 0))
-			{
-				_positionWidget.StartDrag(r, positionintersect, grab);
-			}
-			else
-			{
-				if (nearestLight >= 0)
-				{
-					_selectedLight = nearestLight;
-					_editorUI.SelectLight(_selectedLight);
-				}
-			}
+			_camera.RotatePitch(input.GetMouseDistance().y*0.0025f);
+			_camera.RotateYaw(input.GetMouseDistance().x*0.0025f);
 		}
 
 		if (_positionWidget.IsInDrag())
@@ -202,7 +152,58 @@ void Editor::Update(float dt, const Input& input)
 			_editorUI.UpdateLightProperties(_selectedLight);
 		}
 
-		if (input.IsButtonJustReleased(Input::BUTTON_LEFT))
+		_positionWidget.SetHover(PositionWidget::GRAB_NONE);
+
+		// Work out what is under the cursor
+		Ray r = _camera.UnprojectCoord(input.GetCursorPosition());
+		float nearestPoint = -1;
+		int nearestLight = -1;
+
+		for (int i = 0; i < _environment.NumLights(); ++i)
+		{
+			if (i == _selectedLight)
+				continue;
+
+			float t = r.Intersects(_environment.GetLightPosition(i), 0.03f);
+			if (t >= 0.0f)
+			{
+				if (nearestPoint < 0 || t < nearestPoint)
+				{
+					nearestPoint = t;
+					nearestLight = i;
+				}
+			}
+		}
+
+		PositionWidget::eGrabState grab = PositionWidget::GRAB_NONE;
+		float positionintersect;
+
+		if (_selectedLight >= 0)
+		{
+			grab = _positionWidget.TestIntersection(r, positionintersect);
+		}
+
+		if (grab != PositionWidget::GRAB_NONE && (positionintersect < nearestPoint || nearestPoint < 0))
+		{
+			_positionWidget.SetHover(grab);
+			if (input.IsButtonJustPressed(Input::BUTTON_LEFT))
+			{
+				_positionWidget.StartDrag(r, positionintersect, grab);
+			}
+		}
+		else
+		{
+			if (input.IsButtonJustPressed(Input::BUTTON_LEFT))
+			{
+				if (nearestLight >= 0)
+				{
+					_selectedLight = nearestLight;
+					_editorUI.SelectLight(_selectedLight);
+				}
+			}
+		}
+
+		if (input.IsButtonJustReleased(Input::BUTTON_LEFT) && _positionWidget.IsInDrag())
 		{
 			_positionWidget.EndDrag();
 		}
