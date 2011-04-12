@@ -88,6 +88,7 @@
     <ClCompile Include="PhysicsBall.cpp" />
     <ClCompile Include="Plane.cpp" />
     <ClCompile Include="PositionWidget.cpp" />
+    <ClCompile Include="Random.cpp" />
     <ClCompile Include="Ray.cpp" />
     <ClCompile Include="RenderWindow.cpp" />
     <ClCompile Include="ShaderBuilder.cpp" />
@@ -117,6 +118,7 @@
     <ClInclude Include="PhysicsBall.h" />
     <ClInclude Include="Plane.h" />
     <ClInclude Include="PositionWidget.h" />
+    <ClInclude Include="Random.h" />
     <ClInclude Include="Ray.h" />
     <ClInclude Include="RenderWindow.h" />
     <ClInclude Include="ShaderBuilder.h" />
@@ -131,7 +133,7 @@
     <None Include="marchingcubes.fx" />
     <None Include="particle_system.fx" />
     <None Include="render2D.fx" />
-    <None Include="unlit_vertcol.fx" />
+    <None Include="unlit.fx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

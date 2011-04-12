@@ -18,6 +18,7 @@ class Environment
 {
 public:
 	Environment();
+	void New();
 	void Load(ID3D10Device* d3dDevice, Camera& camera);
 	void Unload();
 	void Draw(ID3D10Device* d3dDevice, Camera& camera);
@@ -74,9 +75,7 @@ public:
 private:
 
 	void SortListToGenerate(Camera& camera);
-	void GenBlobs();
 	void GenModel(ID3D10Device* d3dDevice);
-	void NewCave(ID3D10Device* d3dDevice);
 
 	static const int MAX_BLOBS = 5;
 	struct Blob

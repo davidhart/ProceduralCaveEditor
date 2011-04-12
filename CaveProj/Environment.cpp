@@ -6,8 +6,8 @@
 #include "MarchingCubesData.h"
 #include "Timer.h"
 #include "Util.h"
+#include "Random.h"
 
-#include <cstdlib>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -30,38 +30,6 @@ Environment::Environment() :
 	_lightsChanged(false),
 	_noiseVolume(Vector3i(256, 256, 256))
 {
-
-	int o = AddOctave();
-	SetOctaveScale(o, Vector3f(1.5f, 1.5f, 1.5f));
-	SetOctaveAmplitude(o, 0.5f);
-
-	o = AddOctave();
-	SetOctaveScale(o, Vector3f(3.25f, 3.25f, 3.25f));
-	SetOctaveAmplitude(o, 0.1f);
-
-	o = AddOctave();
-	SetOctaveScale(o, Vector3f(5.0f, 0.025f, 5.0f));
-	SetOctaveAmplitude(o, 0.4f);
-}
-
-void Environment::GenBlobs()
-{
-	_shapes.resize(MAX_BLOBS);
-
-	std::srand(152);
-
-	for (int i = 0; i < MAX_BLOBS; ++i)
-	{
-		_shapes[i].Position = D3DXVECTOR4(std::rand() % 200 / 100.0f - 1.0f,
-			std::rand() % 200 / 100.0f - 1.0f,
-			std::rand() % 200 / 100.0f - 1.0f,
-			0.0f);
-
-		float r = std::rand() % 20 / 24.0f + 0.4f;
-		_shapes[i].Scale = D3DXVECTOR4(r, r, r, 0);
-	}
-
-	std::cout << "Generated blobs" << std::endl;
 }
 
 void Environment::GenModel(ID3D10Device* d3dDevice)
@@ -254,14 +222,17 @@ void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 			for (float z = -2; z < 2; z += 1)
 				_environmentToGenerate.push_back(new EnvironmentChunk(Vector3f(x, y, z), 1, 32));
 
-	NewCave(d3dDevice);
-
-	AddLight();
+	New();
 }
 
-void Environment::NewCave(ID3D10Device* d3dDevice)
+void Environment::New()
 {
-	GenBlobs();
+	_lights.clear();
+	_lightsChanged = true;
+	_octaves.clear();
+	_shapes.clear();
+
+	Rebuild();
 }
 
 void Environment::Unload()

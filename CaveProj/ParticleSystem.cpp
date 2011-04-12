@@ -7,8 +7,6 @@ ParticleSystem::ParticleSystem(unsigned int maxParticles, Environment& environme
 	_particles(maxParticles),
 	_environment(environment)
 {
-	std::srand(1238721);
-
 	for (unsigned int i = 0; i < _particles.size(); ++i)
 	{
 		SpawnParticle(i);
@@ -17,21 +15,18 @@ ParticleSystem::ParticleSystem(unsigned int maxParticles, Environment& environme
 
 void ParticleSystem::SpawnParticle(unsigned int i)
 {
-	_particles[i]._position = Vector3f(0, 0, (std::rand() % 10000) * 0.5f / 10000.0f - 0.25f);
+	_particles[i]._position = Vector3f(0, 0, (Util::Rand.Next() % 10000) * 0.5f / 10000.0f - 0.25f);
 
 
-		Vector3f v ((std::rand() % 1000) / 5000.0f - 0.1f,
+	Vector3f v ((Util::Rand.Next() % 1000) / 5000.0f - 0.1f,
 		-1.0f,
-		(std::rand() % 1000) / 5000.0f - 0.1f);
+		(Util::Rand.Next() % 1000) / 5000.0f - 0.1f);
 
 	v = v.Normalize();
-	//v.x *= std::rand() % 2 * 2 - 1;
-	//v.y *= std::rand() % 2 * 2 - 1;
-	//v.z *= std::rand() % 2 * 2 - 1;
 
 	_particles[i]._velocity = v*0.3f;
 
-	_particles[i]._lifespan = 2 + std::rand() % 2000 / 1000.0f;
+	_particles[i]._lifespan = 2 + Util::Rand.Next() % 2000 / 1000.0f;
 	_particles[i]._aliveTime = 0;
 }
 

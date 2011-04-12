@@ -4,6 +4,7 @@
 
 #include <Windows.h>
 #include <istream>
+#include "Random.h"
 
 class Util
 {
@@ -53,8 +54,10 @@ public:
 	template<typename T> inline static T Smoothstep(T a, T b, T f)
 	{
 		float blendfactor = f*f*(3-2*f); // smoothstep (3t^2 - 2t^3)
-		return a * (1-blendfactor) + b * blendfactor; // linear interpolation
+		return Lerp(a, b, f);
 	}
+
+	static Random Rand;
 };
 
 #endif

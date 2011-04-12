@@ -1,20 +1,21 @@
 #include "NoiseVolume.h"
 #include "Util.h"
-#include <cstdlib>
+#include "Random.h"
 
 NoiseVolume::NoiseVolume(const Vector3i& size) :
 	_size(size),
 	_resourceView(NULL),
 	_noiseTexture(NULL)
 {
-	std::srand(0);
+	Random rand;
+	rand.Seed(5557);
 	
 	const int numTexels = size.x * size.y * size.z; 
 	_noiseTexels.resize(numTexels);
 
 	for (int i = 0; i < numTexels; ++i)
 	{
-		_noiseTexels[i] = (unsigned char)(std::rand() % 256);
+		_noiseTexels[i] = (unsigned char)(rand.Next() % 256);
 	}
 }
 
@@ -61,8 +62,7 @@ float NoiseVolume::ReadTexel(const Vector3i& position)
 
 float NoiseVolume::Sample(const Vector3f& position)
 {
-	//Vector3f texelPos ((position.x - 0.5f / _size.x) *  _size.x, (position.y - 0.5f / _size.y) * _size.y, (position.z - 0.5f / _size.z) * _size.z);
-
+	// Texel position must be offset by 0.5 pixels, to match GPU linear interpolation model
 	Vector3f texelPos (position.x * _size.x - 0.5f, position.y * _size.y - 0.5f, position.z * _size.z - 0.5f);
 
 	Vector3i texelMin ((int)floor(texelPos.x), (int)floor(texelPos.y), (int)floor(texelPos.z));

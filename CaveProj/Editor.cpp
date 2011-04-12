@@ -36,9 +36,6 @@ void Editor::Load(RenderWindow& renderWindow)
 		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
 	}
 
-	_environment.AddLight();
-	_environment.SetLightColor(1, COLOR_ARGB(255, 0, 200, 100));
-	_environment.SetLightPosition(1, Vector3f(0, -0.3f, 0));
 	_positionWidget.Load(renderWindow);
 
 	_editorUI.Load(renderWindow);

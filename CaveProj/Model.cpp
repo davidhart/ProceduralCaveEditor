@@ -44,22 +44,20 @@ void Model::OBJ_FORMAT_INDEX::SetVt(int vt)
 }
 
 Model::Model() :
-	m_loaded(false),
-	m_read(false),
-	m_boneBuffer(NULL),
-	m_boneTexture(NULL)
+	_loaded(false),
+	_read(false)
 {
 
 }
 
 void Model::Read(const std::string& path)
 {
-	m_path = path;
+	_path = path;
 
-	while (!m_meshes.empty())
+	while (!_meshes.empty())
 	{
-		delete m_meshes.back();
-		m_meshes.pop_back();
+		delete _meshes.back();
+		_meshes.pop_back();
 	}
 
 	std::string ext = path.substr(path.find_last_of(".") + 1);
@@ -72,7 +70,7 @@ void Model::Read(const std::string& path)
 		{
 			ReadOBJ(file);
 			file.close();
-			m_read = true;
+			_read = true;
 		}
 	}
 	else
@@ -82,7 +80,7 @@ void Model::Read(const std::string& path)
 		return;
 	}
 
-	if (!m_read)
+	if (!_read)
 	{
 		std::cout << "MODEL (" << path << ") File could not be read" << std::endl;
 	}	
@@ -92,9 +90,9 @@ Model::~Model()
 {
 	Unload();
 
-	for (unsigned int i = 0; i < m_meshes.size(); i++)
+	for (unsigned int i = 0; i < _meshes.size(); i++)
 	{
-		delete m_meshes[i];
+		delete _meshes[i];
 	}
 }
 
@@ -210,7 +208,7 @@ void Model::ReadOBJ(std::ifstream& file)
 					UintVector packedIndices;
 					int vertexFormat;
 					ConvertOBJMesh(vertices, vertNormals, vertTextureCoords, indices, packedVertices, packedIndices, vertexFormat);
-					m_meshes.push_back(new Mesh(packedVertices, packedIndices, vertexFormat));
+					_meshes.push_back(new Mesh(packedVertices, packedIndices, vertexFormat));
 					indices.clear();
 				}
 
@@ -236,16 +234,16 @@ void Model::ReadOBJ(std::ifstream& file)
 		UintVector packedIndices;
 		int vertexFormat;
 		ConvertOBJMesh(vertices, vertNormals, vertTextureCoords, indices, packedVertices, packedIndices, vertexFormat);
-		m_meshes.push_back(new Mesh(packedVertices, packedIndices, vertexFormat));
+		_meshes.push_back(new Mesh(packedVertices, packedIndices, vertexFormat));
 	}
 
 	t.Stop();
 
 	unsigned int numTri = 0;
-	for (unsigned int i = 0; i < m_meshes.size(); ++i)
-		numTri += m_meshes[i]->NumTriangles();
+	for (unsigned int i = 0; i < _meshes.size(); ++i)
+		numTri += _meshes[i]->NumTriangles();
 
-	std::cout << "MODEL (" << m_path << ") fetched in " << t.GetTime() << "s [" << m_meshes.size() << " surfaces - " << numTri << " triangles]" << std::endl;
+	std::cout << "MODEL (" << _path << ") fetched in " << t.GetTime() << "s [" << _meshes.size() << " surfaces - " << numTri << " triangles]" << std::endl;
 }
 
 void Model::ConvertOBJMesh(const Vector3fVector& vertices, const Vector3fVector& normals, const Vector2fVector& texCoords, const ObjIndicesVector& indices,
@@ -363,96 +361,47 @@ void Model::ConvertOBJMesh(const Vector3fVector& vertices, const Vector3fVector&
 	}
 }
 
-bool Model::ReadToken(std::istream& stream, const std::string& name)
-{
-	std::streampos p = stream.tellg();
-	std::string token;
-	stream >> token;
-
-	if (stream.fail() || token != name)
-	{
-		stream.seekg(p);
-		stream.clear();
-
-		return false;
-	}
-
-	return true;
-}
-
-bool Model::ReadEnclosedString(std::istream& stream, std::string& string)
-{
-	std::streampos p = stream.tellg();
-	char c;
-
-	stream >> c;
-
-	if (c == '\"' && !stream.fail())
-	{
-		std::string readstring;
-
-		while (!stream.eof())
-		{
-			stream.get(c);
-
-			if (c == '\"')
-			{
-				string = readstring;
-
-				return true;
-			}
-
-			readstring += c;
-		}
-	}
-
-	stream.seekg(p);
-	stream.clear();
-
-	return false;
-}
-
 void Model::Draw(ID3D10Device* d3dDevice)
 {
-	if (m_loaded)
+	if (_loaded)
 	{
-		for (unsigned int i = 0; i < m_meshes.size(); i++)
+		for (unsigned int i = 0; i < _meshes.size(); i++)
 		{
-			m_meshes[i]->Draw(d3dDevice);
+			_meshes[i]->Draw(d3dDevice);
 		}
 	}
 }
 
 void Model::Load(ID3D10Device* d3dDevice)
 {
-	if (!m_loaded && m_read)
+	if (!_loaded && _read)
 	{
 		Timer t;
 		t.Start();
 
-		for (unsigned int i = 0; i < m_meshes.size(); i++)
+		for (unsigned int i = 0; i < _meshes.size(); i++)
 		{
-			m_meshes[i]->Load(d3dDevice);
+			_meshes[i]->Load(d3dDevice);
 		}
 
-		m_loaded = true;
+		_loaded = true;
 
 		t.Stop();
 		
-		std::cout << "MODEL (" << m_path << ") loaded in " << t.GetTime() << "s" << std::endl;
+		std::cout << "MODEL (" << _path << ") loaded in " << t.GetTime() << "s" << std::endl;
 	}
 }
 
 void Model::Unload()
 {
-	if (m_loaded)
+	if (_loaded)
 	{
-		for (unsigned int i = 0; i < m_meshes.size(); i++)
+		for (unsigned int i = 0; i < _meshes.size(); i++)
 		{
-			m_meshes[i]->Unload();
+			_meshes[i]->Unload();
 		}
 
-		m_loaded = false;
+		_loaded = false;
 	}
 }
 

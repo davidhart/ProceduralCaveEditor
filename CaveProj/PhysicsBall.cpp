@@ -3,6 +3,7 @@
 #include "RenderWindow.h"
 #include "ShaderBuilder.h"
 #include <cstdlib>
+#include "Random.h"
 
 PhysicsBall::PhysicsBall(Environment& environment) :
 	_environment(environment),
@@ -11,21 +12,20 @@ PhysicsBall::PhysicsBall(Environment& environment) :
 	_velocity(0, 0, 0),
 	_inside(false)
 {
+	Random rand;
+	rand.Seed(111);
 
-	// TODO: statically initialise these
-	std::srand(1231);
-
-	for (int i = 0; i < 16; ++i)
+	for (int i = 0; i < 8; ++i)
 	{
-		Vector3f v ((std::rand() % 1000) / 1000.0f,
-			(std::rand() % 1000) / 1000.0f,
-			(std::rand() % 1000) / 1000.0f);
+		Vector3f v ((rand.Next() % 1000) / 1000.0f,
+			(rand.Next() % 1000) / 1000.0f,
+			(rand.Next() % 1000) / 1000.0f);
 
 		v = v.Normalize();
 
-		v.x *= std::rand() % 2 * 2 - 1;
-		v.y *= std::rand() % 2 * 2 - 1;
-		v.z *= std::rand() % 2 * 2 - 1;
+		v.x *= rand.Next() % 2 * 2 - 1;
+		v.y *= rand.Next() % 2 * 2 - 1;
+		v.z *= rand.Next() % 2 * 2 - 1;
 
 		_samplePositions.push_back(v * _radius);
 		_samplePositions.push_back(v * -_radius);

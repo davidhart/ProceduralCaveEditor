@@ -1,5 +1,7 @@
 #include "Util.h"
 
+Random Util::Rand;
+
 bool Util::HexCharToInt(char c, int& i)
 {
 	if (c >= '0' && c <= '9')

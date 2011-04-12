@@ -5,6 +5,9 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{809eccd3-6bc7-427e-ba55-75b94aef6fd7}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Application.cpp">
@@ -86,6 +89,9 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="Model.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Random.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>
@@ -174,28 +180,31 @@
     <ClInclude Include="Model.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="Random.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="marchingcubes.fx">
-      <Filter>Source</Filter>
+    <None Include="billboard_sprite.fx">
+      <Filter>Shaders</Filter>
     </None>
     <None Include="cavesurface.fx">
-      <Filter>Source</Filter>
-    </None>
-    <None Include="unlit_vertcol.fx">
-      <Filter>Source</Filter>
-    </None>
-    <None Include="render2D.fx">
-      <Filter>Source</Filter>
-    </None>
-    <None Include="billboard_sprite.fx">
-      <Filter>Source</Filter>
-    </None>
-    <None Include="particle_system.fx">
-      <Filter>Source</Filter>
+      <Filter>Shaders</Filter>
     </None>
     <None Include="generic_diffuse.fx">
-      <Filter>Source</Filter>
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="marchingcubes.fx">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="particle_system.fx">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="render2D.fx">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="unlit.fx">
+      <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
 </Project>

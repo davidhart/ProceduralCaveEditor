@@ -856,7 +856,19 @@ void EditorUI::onQuitMenuItem(Gwen::Controls::Base* from)
 
 void EditorUI::onNewMenuItem(Gwen::Controls::Base* from)
 {
-	// TODO: implement
+	_environment->New();
+	_currentfilename.clear();
+	_editor->DeselectLight();
+	_editor->DeselectShape();
+	_editor->ResetCamera();
+	_selectedOctave = -1;
+	PopulateLightList();
+	PopulateOctaveList();
+	PopulateShapeList();
+
+	UpdateLightProperties(_editor->SelectedLight());
+	UpdateShapeProperties(_editor->SelectedShape());
+	UpdateNoiseProperties(_selectedOctave);
 }
 
 void EditorUI::onPreviewMenuItem(Gwen::Controls::Base* from)
