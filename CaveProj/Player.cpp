@@ -8,7 +8,7 @@ Player::Player(Environment& environment) :
 	_radius(0.025f),
 	_height(0.1f),
 	_camera(Vector3f(0, 0, 0), 0, 0),
-	_onGround(false)
+	_onGround(true)
 {
 	Random rand;
 	rand.Seed(111);
@@ -16,7 +16,7 @@ Player::Player(Environment& environment) :
 	const Vector3f scale(_radius, _height / 2, _radius);
 	const Vector3f altScale(-_radius, -_height / 2, -_radius);
 
-	for (int i = 0; i < 8; ++i)
+	for (int i = 0; i < 6; ++i)
 	{
 		Vector3f v ((rand.Next() % 1000) / 1000.0f,
 			(rand.Next() % 1000) / 1000.0f,
@@ -52,69 +52,72 @@ void Player::Update(const Vector2f& movement, const Vector2f& rotation, float dt
 	}
 	else
 	{
-		bool collision;
+		bool collision = false;
+
+		Vector3f lookVec (0, 0, 1);
+		Vector3f upVec(0, 1, 0);
+		D3DXMATRIX yawMatrix;
+
+		D3DXMatrixRotationAxis(&yawMatrix, (D3DXVECTOR3*)&upVec, _camera.Yaw());
+		D3DXVec3TransformCoord((D3DXVECTOR3*)&lookVec, (D3DXVECTOR3*)&lookVec, &yawMatrix);
+		Vector3f strafeVec (lookVec.z, 0, -lookVec.x);
+
+		Vector3f force;
+		force += movement.y * lookVec*0.5f;
+		force += movement.x * strafeVec*0.5f;
+
+		if (jump && _onGround)
+		{
+			_velocity += Vector3f(0, 0.5f, 0);
+		}
+
+		_velocity += Vector3f(0, -0.8f, 0) * dt;
+		_velocity -= _velocity * 0.001f;
+
+		Vector3f normal;
+		Vector3f contactNormal;
+		
 		int it = 0;
 		do
 		{
 			collision = false;
-			Vector3f lookVec (0, 0, 1);
-			Vector3f upVec(0, 1, 0);
-			D3DXMATRIX yawMatrix;
-
-			D3DXMatrixRotationAxis(&yawMatrix, (D3DXVECTOR3*)&upVec, _camera.Yaw());
-			D3DXVec3TransformCoord((D3DXVECTOR3*)&lookVec, (D3DXVECTOR3*)&lookVec, &yawMatrix);
-			Vector3f strafeVec (lookVec.z, 0, -lookVec.x);
-
-			Vector3f force;
-			force += movement.y * lookVec * dt;
-			force += movement.x * strafeVec * dt;
-			force += Vector3f(0, -0.2f, 0) * dt;
-
-			if (_onGround)
-			{
-				_contactNormal.Normalize();
-				force -= 2 * force.Dot(_contactNormal) * _contactNormal;
-
-				if (jump)
-				{
-					force += Vector3f(0, 0.5f, 0);
-				}
-			}
-
-			_velocity += force;
-
-			_velocity -= _velocity * 0.001f;
-
-			_onGround = false;
-
-			Vector3f normal;
-			Vector3f newPosition = position + _velocity * dt;
-
-			bool collision = false;
+			Vector3f newPosition = position + (_velocity + force) * dt + contactNormal * (it * it * 0.00005f);
+			contactNormal = Vector3f(0,0,0);
 			for (unsigned int i = 0; i < _samplePositions.size(); ++i)
 			{
 				if (_environment.Sample(newPosition + _samplePositions[i]) < 3.6f)
 				{
-					normal += _environment.SampleNormal(newPosition + _samplePositions[i]);
 					collision = true;
+					contactNormal += _environment.SampleNormal(newPosition + _samplePositions[i]);
 				}
 			}
-			if (collision)
+			if (!collision)
 			{
-				normal.Normalize();
-				_contactNormal = normal;
-
-				_velocity -= _velocity.Dot(_contactNormal) * _contactNormal;
-
-				_onGround = true;
-				collision = true;
+				position = newPosition;
 			}
 			else
-				position = newPosition;
+			{
+				contactNormal.Normalize();
+				_velocity.y = 0;
+			}
 			++it;
-		} while (collision && it < 20);
-	}
 
+		} while (collision && it < 6);
+		//std::cout << it << std::endl;
+		
+		_onGround = false;
+
+		Vector3f testPosition = position - Vector3f(0, 0.001f, 0);
+
+		for (unsigned int i = 0; i < _samplePositions.size(); ++i)
+		{
+			if (_environment.Sample(testPosition + _samplePositions[i]) < 3.6f)
+			{
+				_onGround = true;
+				break;
+			}
+		}
+	}
 
 	_camera.Position(position);
 }

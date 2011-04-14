@@ -63,7 +63,7 @@ void Editor::Draw(RenderWindow& renderWindow)
 	if (_preview)
 	{
 		_ball.Draw(renderWindow, _player.GetCamera());
-		//_particleSystem.Draw(renderWindow, _camera);
+		_particleSystem.Draw(renderWindow, _player.GetCamera());
 	}
 	else
 	{
@@ -125,7 +125,7 @@ void Editor::Update(float dt, const Input& input)
 		}
 		
 		_ball.Update(dt);
-		//_particleSystem.Update(dt);
+		_particleSystem.Update(dt);
 
 		if (input.IsKeyJustPressed(Input::KEY_ESC))
 		{

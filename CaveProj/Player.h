@@ -26,7 +26,6 @@ private:
 	Environment& _environment;
 	Vector3f _velocity;
 	Camera _camera;
-	Vector3f _contactNormal;
 	bool _onGround;
 };
 
