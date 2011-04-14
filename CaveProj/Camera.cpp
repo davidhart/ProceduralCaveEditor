@@ -40,6 +40,18 @@ Vector3f Camera::Look() const
 	return lookVec;
 }
 
+Vector3f Camera::Strafe() const
+{
+	Vector3f upVec (0.0f,1.0f,0.0f);
+	Vector3f rightVec (1.0f,0.0f,0.0f);
+
+	D3DXMATRIX yawMatrix;
+	D3DXMatrixRotationAxis(&yawMatrix, (D3DXVECTOR3*)&upVec, _yaw);
+	D3DXVec3TransformCoord((D3DXVECTOR3*)&rightVec, (D3DXVECTOR3*)&rightVec, &yawMatrix); 
+
+	return rightVec;
+}
+
 void Camera::MoveAdvance(float distance)
 {
 	Vector3f lookVec = Look();

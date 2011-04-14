@@ -34,7 +34,8 @@ private:
 
 			if (environment.Sample(newPos) < 3.6f)
 			{
-				Vector3f normal = environment.SampleNormal(_position).Normalize();
+				Vector3f normal = environment.SampleNormal(_position);
+				normal.Normalize();
 				_velocity -= 2 * _velocity.Dot(normal) * normal;
 				_velocity *= 0.60f;
 			}

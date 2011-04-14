@@ -19,6 +19,7 @@ public:
 	void RotatePitch(float rotation);
 
 	Vector3f Look() const;
+	Vector3f Strafe() const;
 
 	void RotateYaw(float rotation);
 

@@ -94,6 +94,7 @@
     <ClCompile Include="Random.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="Player.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h">
@@ -181,6 +182,9 @@
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="Random.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="Player.h">
       <Filter>Source</Filter>
     </ClInclude>
   </ItemGroup>

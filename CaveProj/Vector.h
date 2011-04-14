@@ -12,14 +12,86 @@ public:
 
 	inline void Normalise()
 	{ 
-		float length = sqrt(x*x+y*y); 
+		T length = Length(); 
 		x /= length;
 		y /= length; 
+	}
+
+	inline T Length()
+	{
+		return sqrt(x*x+y*y);
+	}
+
+	inline const Vector2<T> operator+ (const Vector2<T>& r) const
+	{
+		return Vector2<T>(x+r.x, y+r.y);
+	}
+
+	inline const Vector2<T>& operator+= (const Vector2<T>& r)
+	{
+		x += r.x;
+		y += r.y;
+		return *this;
 	}
 
 	inline const Vector2<T> operator- (const Vector2<T>& r) const
 	{
 		return Vector2<T>(x-r.x, y-r.y);
+	}
+
+	inline const Vector2<T>& operator-= (const Vector2<T>& r)
+	{
+		x -= r.x;
+		y -= r.y;
+		return *this;
+	}
+
+	inline const Vector2<T> operator* (const Vector2<T>& r)
+	{
+		return Vector2<T>(x*r.x, y*r.y);
+	}
+
+	inline const Vector2<T> operator* (const T r)
+	{
+		return Vector2<T>(x*r, y*r);
+	}
+
+	inline const Vector2<T>& operator*= (const Vector2<T>& r)
+	{
+		x *= r.x;
+		y *= r.y;
+		return *this;
+	}
+	
+	inline const Vector2<T>& operator*= (const T r)
+	{
+		x *= r;
+		y *= r;
+		return *this;
+	}
+
+	inline const Vector2<T> operator/ (const Vector2<T>& r)
+	{
+		return Vector2<T>(x/r.x, y/r.y);
+	}
+
+	inline const Vector2<T> operator/ (const T r)
+	{
+		return Vector2<T>(x/r, y/r);
+	}
+
+	inline const Vector2<T>& operator/= (const Vector2<T>& r)
+	{
+		x /= r.x;
+		y /= r.y;
+		return *this;
+	}
+
+	inline const Vector2<T>& operator/= (const T r)
+	{
+		x /= r;
+		y /= r;
+		return *this;
 	}
 
 	T x;
@@ -86,6 +158,14 @@ public:
 		return Vector3<T>(x * rhs.x, y * rhs.y, z * rhs.z);
 	}
 
+	inline const Vector3<T>& operator *= (const Vector3<T>& rhs)
+	{
+		x *= rhs.x;
+		y *= rhs.y;
+		z *= rhs.z;
+		return *this;
+	}
+
 	inline const Vector3<T> operator/ (const Vector3<T>& rhs) const
 	{
 		return Vector3<T>(x / rhs.x, y / rhs.y, z / rhs.z);
@@ -123,9 +203,12 @@ public:
 		return sqrt(x*x + y*y + z*z);
 	}
 
-	inline Vector3<T> Normalize()
+	inline void Normalize()
 	{
-		return *this / Length();
+		float length = Length();
+		x /= length;
+		y /= length;
+		z /= length;
 	}
 
 	T x;

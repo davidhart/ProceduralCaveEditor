@@ -2,7 +2,6 @@
 #include "Environment.h"
 #include "RenderWindow.h"
 #include "ShaderBuilder.h"
-#include <cstdlib>
 #include "Random.h"
 
 PhysicsBall::PhysicsBall(Environment& environment) :
@@ -21,7 +20,7 @@ PhysicsBall::PhysicsBall(Environment& environment) :
 			(rand.Next() % 1000) / 1000.0f,
 			(rand.Next() % 1000) / 1000.0f);
 
-		v = v.Normalize();
+		v.Normalize();
 
 		v.x *= rand.Next() % 2 * 2 - 1;
 		v.y *= rand.Next() % 2 * 2 - 1;
@@ -128,9 +127,9 @@ void PhysicsBall::Update(float dt)
 void PhysicsBall::UpdateStep(float dt)
 {
 	Vector3f prevPos = _position;
-	_position += _velocity * dt;
 	_velocity += Vector3f(0, -0.005f, 0);
 	_velocity -= _velocity * 0.001f;
+	_position += _velocity * dt;
 
 	Vector3f normal;
 	bool collision = false;
@@ -138,7 +137,7 @@ void PhysicsBall::UpdateStep(float dt)
 	{
 		if (_environment.Sample(_position + _samplePositions[i]) < 3.6f)
 		{
-			normal+= _environment.SampleNormal(_position + _samplePositions[i]);
+			normal += _environment.SampleNormal(_position + _samplePositions[i]);
 			collision = true;
 		}
 	}
@@ -146,7 +145,7 @@ void PhysicsBall::UpdateStep(float dt)
 	if (collision)
 	{
 		_position = prevPos;
-		normal = normal.Normalize();
+		normal.Normalize();
 		_velocity -= 2 * _velocity.Dot(normal) * normal;
 		_velocity *= 0.80f;
 	}

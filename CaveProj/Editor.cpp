@@ -5,7 +5,6 @@
 #include <iostream>
 
 Editor::Editor(RenderWindow& renderWindow) : 
-	_camera(Vector3f(0,0,0), 0, 0),
 	_lightIcon(NULL),
 	_selectedLight(-1),
 	_selectedShape(-1),
@@ -13,6 +12,7 @@ Editor::Editor(RenderWindow& renderWindow) :
 	_editorUI(renderWindow),
 	_preview(false),
 	_ball(_environment),
+	_player(_environment),
 	_particleSystem(5000, _environment)
 {
 	_editorUI.SetEnvironment(&_environment);
@@ -21,8 +21,8 @@ Editor::Editor(RenderWindow& renderWindow) :
 
 void Editor::Load(RenderWindow& renderWindow)
 {
-	_camera.ViewportSize(renderWindow.GetSize());
-	_environment.Load(renderWindow.GetDevice(), _camera);
+	_player.Load(renderWindow);
+	_environment.Load(renderWindow.GetDevice(), _player.GetCamera());
 	_billboardDrawer.Load(renderWindow);
 
 	D3DX10_IMAGE_LOAD_INFO loadInfo;
@@ -58,18 +58,18 @@ void Editor::Unload()
 
 void Editor::Draw(RenderWindow& renderWindow)
 {
-	_environment.Draw(renderWindow.GetDevice(), _camera);
+	_environment.Draw(renderWindow.GetDevice(), _player.GetCamera());
 
 	if (_preview)
 	{
-		_ball.Draw(renderWindow, _camera);
-		_particleSystem.Draw(renderWindow, _camera);
+		_ball.Draw(renderWindow, _player.GetCamera());
+		//_particleSystem.Draw(renderWindow, _camera);
 	}
 	else
 	{
 		if (_environment.NumLights() > 0)
 		{
-			_billboardDrawer.Begin(_camera);
+			_billboardDrawer.Begin(_player.GetCamera());
 			for (int i = 0; i < _environment.NumLights(); ++i)
 			{
 				_billboardDrawer.Draw(_environment.GetLightPosition(i),
@@ -82,7 +82,7 @@ void Editor::Draw(RenderWindow& renderWindow)
 			if (_selectedLight >= 0)
 			{
 				_positionWidget.SetPosition(_environment.GetLightPosition(_selectedLight));
-				_positionWidget.Draw(_camera, renderWindow);
+				_positionWidget.Draw(_player.GetCamera(), renderWindow);
 			}
 		}
 
@@ -92,42 +92,40 @@ void Editor::Draw(RenderWindow& renderWindow)
 
 void Editor::Update(float dt, const Input& input)
 {
-	if (input.IsKeyDown(Input::KEY_W))
+
+	Vector2f movement(0, 0);
+	if (input.IsKeyDown(Input::KEY_W)) movement.y = 1;
+	if (input.IsKeyDown(Input::KEY_S)) movement.y = -1;
+	if (input.IsKeyDown(Input::KEY_A)) movement.x = -1;
+	if (input.IsKeyDown(Input::KEY_D)) movement.x = 1;
+	if (movement.Length() != 0)
 	{
-		_camera.MoveAdvance(dt*0.3f);
+		movement.Normalise();
+		movement *= 0.3f;
 	}
 
-	if (input.IsKeyDown(Input::KEY_S))
+	Vector2f rotation;
+	if (input.IsButtonDown(Input::BUTTON_MID))
 	{
-		_camera.MoveAdvance(-dt*0.3f);
+		rotation.x = input.GetMouseDistance().y*0.006f;
+		rotation.y = input.GetMouseDistance().x*0.006f;
 	}
 
-	if (input.IsKeyDown(Input::KEY_A))
-	{
-		_camera.MoveStrafe(-dt*0.3f);
-	}
+	bool jump = input.IsButtonJustPressed(Input::BUTTON_RIGHT);
 
-	if (input.IsKeyDown(Input::KEY_D))
-	{
-		_camera.MoveStrafe(dt*0.3f);
-	}
+	_player.Update(movement, rotation, dt, !_preview, jump);
 
 	if (_preview)
 	{
-		if (input.IsButtonDown(Input::BUTTON_MID))
-		{
-			_camera.RotatePitch(input.GetMouseDistance().y*0.006f);
-			_camera.RotateYaw(input.GetMouseDistance().x*0.006f);
-		}
 
 		if (input.IsButtonJustPressed(Input::BUTTON_LEFT))
 		{
-			_ball.SetPosition(_camera.Position());
-			_ball.SetVelocity(_camera.UnprojectCoord(input.GetCursorPosition())._direction*3.0f);
+			_ball.SetPosition(_player.Position());
+			_ball.SetVelocity(_player.GetCamera().UnprojectCoord(input.GetCursorPosition())._direction*3.0f);
 		}
 		
 		_ball.Update(dt);
-		_particleSystem.Update(dt);
+		//_particleSystem.Update(dt);
 
 		if (input.IsKeyJustPressed(Input::KEY_ESC))
 		{
@@ -136,15 +134,9 @@ void Editor::Update(float dt, const Input& input)
 	}
 	else
 	{
-		if (input.IsButtonDown(Input::BUTTON_MID))
-		{
-			_camera.RotatePitch(input.GetMouseDistance().y*0.0025f);
-			_camera.RotateYaw(input.GetMouseDistance().x*0.0025f);
-		}
-
 		if (_positionWidget.IsInDrag())
 		{
-			_positionWidget.HandleDrag(_camera, input.GetCursorPosition());
+			_positionWidget.HandleDrag(_player.GetCamera(), input.GetCursorPosition());
 			_environment.SetLightPosition(_selectedLight, _positionWidget.GetPosition());
 			_editorUI.UpdateLightProperties(_selectedLight);
 		}
@@ -152,7 +144,7 @@ void Editor::Update(float dt, const Input& input)
 		_positionWidget.SetHover(PositionWidget::GRAB_NONE);
 
 		// Work out what is under the cursor
-		Ray r = _camera.UnprojectCoord(input.GetCursorPosition());
+		Ray r = _player.GetCamera().UnprojectCoord(input.GetCursorPosition());
 		float nearestPoint = -1;
 		int nearestLight = -1;
 
@@ -248,8 +240,7 @@ void Editor::DeselectShape()
 
 void Editor::ResetCamera()
 {
-	_camera.Position(Vector3f(0,0,0));
-	_camera.PitchYaw(0,0);
+	_player.Reset();
 }
 
 void Editor::Preview(bool enable)

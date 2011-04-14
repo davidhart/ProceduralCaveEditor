@@ -22,7 +22,7 @@ void ParticleSystem::SpawnParticle(unsigned int i)
 		-1.0f,
 		(Util::Rand.Next() % 1000) / 5000.0f - 0.1f);
 
-	v = v.Normalize();
+	v.Normalize();
 
 	_particles[i]._velocity = v*0.3f;
 

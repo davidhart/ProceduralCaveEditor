@@ -3,13 +3,13 @@
 #define _EDITOR_H_
 
 #include <D3D10.h>
-#include "Camera.h"
 #include "BillboardSpriteDrawer.h"
 #include "RenderWindow.h"
 #include "Environment.h"
 #include "EditorUI.h"
 #include "PositionWidget.h"
 #include "PhysicsBall.h"
+#include "Player.h"
 #include "ParticleSystem.h"
 
 class Environment;
@@ -41,7 +41,6 @@ public:
 
 private:
 	ID3D10ShaderResourceView* _lightIcon;
-	Camera _camera;
 	BillboardSpriteDrawer _billboardDrawer;
 	Environment _environment;
 	PositionWidget _positionWidget;
@@ -51,6 +50,7 @@ private:
 	bool _preview;
 	PhysicsBall _ball;
 	ParticleSystem _particleSystem;
+	Player _player;
 };
 
 #endif
