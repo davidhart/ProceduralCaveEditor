@@ -24,11 +24,11 @@ struct Light
 
 cbuffer cbLight
 {
-	Light lights[8];
+	Light Lights[8];
 };
 
-Texture2D tex;
-Texture2D texDisplacement;
+Texture2D Texture;
+Texture2D Displacement;
 
 sampler TextureSampler = sampler_state
 {
@@ -79,21 +79,21 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 	float3 textureCoord = input.WSPos * 5.0f + float3(0.3f, 0.546f, -0.1514f);
 
 	float3 nx = float3(1,
-					   texDisplacement.Sample(TextureSampler, textureCoord.zy+float2(0, stepSize)).r*heightMapScale-
-					   texDisplacement.Sample(TextureSampler, textureCoord.zy-float2(0, stepSize)).r*heightMapScale,
-					   texDisplacement.Sample(TextureSampler, textureCoord.zy+float2(stepSize, 0)).r*heightMapScale-
-					   texDisplacement.Sample(TextureSampler, textureCoord.zy-float2(stepSize, 0)).r*heightMapScale);
+					   Displacement.Sample(TextureSampler, textureCoord.zy+float2(0, stepSize)).r*heightMapScale-
+					   Displacement.Sample(TextureSampler, textureCoord.zy-float2(0, stepSize)).r*heightMapScale,
+					   Displacement.Sample(TextureSampler, textureCoord.zy+float2(stepSize, 0)).r*heightMapScale-
+					   Displacement.Sample(TextureSampler, textureCoord.zy-float2(stepSize, 0)).r*heightMapScale);
 
-	float3 ny = float3(texDisplacement.Sample(TextureSampler, textureCoord.xz+float2(0, stepSize)).r*heightMapScale-
-					   texDisplacement.Sample(TextureSampler, textureCoord.xz-float2(0, stepSize)).r*heightMapScale,
+	float3 ny = float3(Displacement.Sample(TextureSampler, textureCoord.xz+float2(0, stepSize)).r*heightMapScale-
+					   Displacement.Sample(TextureSampler, textureCoord.xz-float2(0, stepSize)).r*heightMapScale,
 					   1,
-					   texDisplacement.Sample(TextureSampler, textureCoord.xz+float2(stepSize, 0)).r*heightMapScale-
-					   texDisplacement.Sample(TextureSampler, textureCoord.xz-float2(stepSize, 0)).r*heightMapScale);
+					   Displacement.Sample(TextureSampler, textureCoord.xz+float2(stepSize, 0)).r*heightMapScale-
+					   Displacement.Sample(TextureSampler, textureCoord.xz-float2(stepSize, 0)).r*heightMapScale);
 
-	float3 nz = float3(texDisplacement.Sample(TextureSampler, textureCoord.xy+float2(0, stepSize)).r*heightMapScale-
-					   texDisplacement.Sample(TextureSampler, textureCoord.xy-float2(0, stepSize)).r*heightMapScale,
-					   texDisplacement.Sample(TextureSampler, textureCoord.xy+float2(stepSize, 0)).r*heightMapScale-
-					   texDisplacement.Sample(TextureSampler, textureCoord.xy-float2(stepSize, 0)).r*heightMapScale,
+	float3 nz = float3(Displacement.Sample(TextureSampler, textureCoord.xy+float2(0, stepSize)).r*heightMapScale-
+					   Displacement.Sample(TextureSampler, textureCoord.xy-float2(0, stepSize)).r*heightMapScale,
+					   Displacement.Sample(TextureSampler, textureCoord.xy+float2(stepSize, 0)).r*heightMapScale-
+					   Displacement.Sample(TextureSampler, textureCoord.xy-float2(stepSize, 0)).r*heightMapScale,
 					   1);
 
 	float3 N = normalize(nz * blendWeights.z + 
@@ -107,15 +107,15 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 
 	[unroll] for (int i = 0; i < 8; ++i)
 	{
-		float3 lightDirection = lights[i].Position - input.WSPos;
-		float attenuation = clamp(lights[i].Size/(length(lightDirection) + pow(length(lightDirection), 2.0f)*lights[i].Falloff), 0.0f, 1.0f);
-		diffuse += max(dot(N, normalize(lightDirection)),0) * attenuation * lights[i].Color.rgb;
-		spec += pow(clamp(dot(reflect(ViewDirection, N), normalize(lightDirection)), 0.0f, 1.0f),22.0f) * attenuation*2.0f * lights[i].Color.rgb * 0.2f;
+		float3 lightDirection = Lights[i].Position - input.WSPos;
+		float attenuation = clamp(Lights[i].Size/(length(lightDirection) + pow(length(lightDirection), 2.0f)*Lights[i].Falloff), 0.0f, 1.0f);
+		diffuse += max(dot(N, normalize(lightDirection)),0) * attenuation * Lights[i].Color.rgb;
+		spec += pow(clamp(dot(reflect(ViewDirection, N), normalize(lightDirection)), 0.0f, 1.0f),22.0f) * attenuation*2.0f * Lights[i].Color.rgb * 0.2f;
 	}
 
-	float4 s1 = tex.Sample(TextureSampler, textureCoord.xy) * absBlendWeights.z;
-	float4 s2 = tex.Sample(TextureSampler, textureCoord.xz) * absBlendWeights.y;
-	float4 s3 = tex.Sample(TextureSampler, textureCoord.zy) * absBlendWeights.x;
+	float4 s1 = Texture.Sample(TextureSampler, textureCoord.xy) * absBlendWeights.z;
+	float4 s2 = Texture.Sample(TextureSampler, textureCoord.xz) * absBlendWeights.y;
+	float4 s3 = Texture.Sample(TextureSampler, textureCoord.zy) * absBlendWeights.x;
 
 	float4 diffuseCol = s1+s2+s3;
 

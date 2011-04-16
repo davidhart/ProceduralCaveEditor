@@ -14,100 +14,50 @@
 #include <vector>
 
 Environment::Environment() :
-	_genModelEffect(NULL),
-	_renderSceneEffect(NULL),
-	_genModelTechnique(NULL),
-	_renderSceneTechnique(NULL),
-	_vertexLayoutGen(NULL),
-	_vertexLayoutScene(NULL),
-	_bufferPointGrid(NULL),
-	_view(NULL),
-	_viewDirection(NULL),
-	_numTriangles(0),
-	_resolution(0),
-	_texture(NULL),
-	_textureDisplacement(NULL),
 	_lightsChanged(false),
 	_noiseVolume(Vector3i(256, 256, 256))
 {
-}
-
-void Environment::GenModel(ID3D10Device* d3dDevice)
-{
-	// TODO: Store the variable locations at load and validate
-	ID3D10EffectVariable* blobs = _genModelEffect->GetVariableByName("blobs");
-	
-	unsigned int i = 0;
-	int validBlobs = 0;
-	for (; i < _shapes.size(); ++i)
-	{
-		if (_shapes[i].Scale.x != 0 && _shapes[i].Scale.y != 0 && _shapes[i].Scale.z != 0)
-		{
-			ID3D10EffectVariable* blobi = blobs->GetElement(validBlobs);		
-			blobi->GetMemberByName("Position")->AsVector()->SetFloatVector((float*)&_shapes[i].Position);
-			blobi->GetMemberByName("Scale")->AsVector()->SetFloatVector((float*)&_shapes[i].Scale);
-			++validBlobs;
-		}
-	}
-
-	_genModelEffect->GetVariableByName("NumBlobs")->AsScalar()->SetInt(validBlobs);
-
-	ID3D10EffectVariable* octaves = _genModelEffect->GetVariableByName("octaves");
-	for (i = 0; i < _octaves.size(); ++i)
-	{
-		ID3D10EffectVariable* octavei = octaves->GetElement(i);
-		octavei->GetMemberByName("Scale")->AsVector()->SetFloatVector((float*)&_octaves[i].Scale);
-		octavei->GetMemberByName("Amplitude")->AsScalar()->SetFloat(_octaves[i].Amplitude);
-	}
-
-	for (; i < MAX_OCTAVES; ++i)
-	{
-		ID3D10EffectVariable* octavei = octaves->GetElement(i);
-		D3DXVECTOR4 s(0, 0, 0, 0);
-		octavei->GetMemberByName("Scale")->AsVector()->SetFloatVector((float*)&s);
-		octavei->GetMemberByName("Amplitude")->AsScalar()->SetFloat(0);
-	}
-
-	d3dDevice->IASetInputLayout(_vertexLayoutGen);
-
-	UINT offset[1] = {0};
-	UINT stride = sizeof(D3DVECTOR);
-	d3dDevice->IASetVertexBuffers(0, 1, &_bufferPointGrid, &stride, offset);
-	d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);
-
-	Timer t;
-
-	float Budget = 0.001f; // limit the amount of time we can spend per frame generating surface chunks
-						   // when the limit is exceeded, stop generating and render the frame to keep
-						   // the application responsive
-
-	for (std::vector<EnvironmentChunk*>::iterator i = _environmentToGenerate.begin(); 
-		i != _environmentToGenerate.end();)
-	{
-		EnvironmentChunk* generated = *i;
-		t.Start();
-		generated->Generate(d3dDevice, _genModelEffect, _genModelTechnique);
-		t.Stop();
-		Budget -= t.GetTime();
-		
-		i = _environmentToGenerate.erase(i);
-
-		_environmentToDraw.push_back(generated);
-
-		if (Budget <= 0)
-			break;
-	}
 }
 
 void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 {	
 	_noiseVolume.Load(d3dDevice);
 
-	// Create Vertex Buffer
+	InitializeSurfaceGenEffect(d3dDevice);
+	InitializeSurfaceEffect(d3dDevice, camera);
+	InitializeObjectsEffect(d3dDevice, camera);
+
+	for (float x = -2; x < 2; x += 1)
+		for (float y = -2; y < 2; y += 1)
+			for (float z = -2; z < 2; z += 1)
+				_environmentToGenerate.push_back(new EnvironmentChunk(Vector3f(x, y, z), 1.5f, 32));
+
+	New();
+}
+
+// Initialise surface generation effect, effect input layout, shader variables and resources required 
+// by the effect
+void Environment::InitializeSurfaceGenEffect(ID3D10Device* d3dDevice)
+{
+	_genSurfaceEffect = ShaderBuilder::RequestEffect("marchingcubes", "fx_4_0", d3dDevice);
+	_genSurfaceTechnique = _genSurfaceEffect->GetTechniqueByName("Render");
+	_genSurfaceEffect->GetVariableByName("NoiseTexture")->AsShaderResource()->SetResource(_noiseVolume.GetResource());
+
+	D3D10_PASS_DESC PassDesc;
+	D3D10_INPUT_ELEMENT_DESC layoutGen[] =
+    {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D10_INPUT_PER_VERTEX_DATA, 0},
+    };
+    UINT numElementsGen = sizeof(layoutGen) / sizeof(layoutGen[0]);
+
+	_genSurfaceTechnique->GetPassByIndex(0)->GetDesc(&PassDesc);
+	d3dDevice->CreateInputLayout(layoutGen, numElementsGen, PassDesc.pIAInputSignature, PassDesc.IAInputSignatureSize, &_vertexLayoutGenSurface);
+
+	// This buffer is created to hack around the fact that I have been unable to find a way
+	// to call the surface gen effect without a buffer being bound (as it does not require any 
+	// input other than SV_InstanceID
 	std::vector<D3DVECTOR> inputData;
 	inputData.push_back(D3DXVECTOR3(0, 0, 0));
-
-	std::cout << "Created point array data" << std::endl;
 
     D3D10_BUFFER_DESC bd;
     bd.Usage = D3D10_USAGE_DEFAULT;
@@ -118,111 +68,170 @@ void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
     D3D10_SUBRESOURCE_DATA InitData;
     InitData.pSysMem = &inputData[0];
 
-	if (FAILED(d3dDevice->CreateBuffer( &bd, &InitData, &_bufferPointGrid )))
+	d3dDevice->CreateBuffer(&bd, &InitData, &_bufferPoint);
+
+	FetchSurfaceGenShaderVariables();
+	
+	_genSurfaceShaderVars.Edges->SetIntArray((int*)MarchingCubesData::Edges, 0, 256);
+	_genSurfaceShaderVars.TriTable->SetIntArray((int*)MarchingCubesData::TriTable, 0, 256*16);
+	_genSurfaceShaderVars.Threshold->SetFloat(3.6f);
+}
+
+void Environment::FetchSurfaceGenShaderVariables()
+{
+	ID3D10EffectVariable* blobs = _genSurfaceEffect->GetVariableByName("blobs");
+	for (int i = 0; i < MAX_BLOBS; ++i)
 	{
-		MessageBox(0, "Error creating vertex buffer", "Vertex Buffer Error", MB_OK);
+		ID3D10EffectVariable* blobi = blobs->GetElement(i);
+		_genSurfaceShaderVars.Blobs[i].Position = blobi->GetMemberByName("Position")->AsVector();
+		_genSurfaceShaderVars.Blobs[i].Scale = blobi->GetMemberByName("Scale")->AsVector();
 	}
 
-	std::cout << "Created point array" << std::endl;
+	_genSurfaceShaderVars.NumBlobs = _genSurfaceEffect->GetVariableByName("NumBlobs")->AsScalar();
+
+	ID3D10EffectVariable* octaves = _genSurfaceEffect->GetVariableByName("octaves");
+	for (int i = 0; i < MAX_OCTAVES; ++i)
+	{
+		ID3D10EffectVariable* octavei = octaves->GetElement(i);
+		_genSurfaceShaderVars.Octaves[i].Scale = octavei->GetMemberByName("Scale")->AsVector();
+		_genSurfaceShaderVars.Octaves[i].Amplitude = octavei->GetMemberByName("Amplitude")->AsScalar();
+	}
+
+	_genSurfaceShaderVars.Edges = _genSurfaceEffect->GetVariableByName("Edges")->AsScalar();
+	_genSurfaceShaderVars.TriTable = _genSurfaceEffect->GetVariableByName("TriTable")->AsScalar();
+	_genSurfaceShaderVars.Threshold = _genSurfaceEffect->GetVariableByName("Threshold")->AsScalar();
+}
+
+// Initialise surface render effect, effect input layout, shader variables and resources required 
+// by the effect
+void Environment::InitializeSurfaceEffect(ID3D10Device* d3dDevice, const Camera& camera)
+{
+	_surfaceEffect = ShaderBuilder::RequestEffect("cavesurface", "fx_4_0", d3dDevice);
+	_surfaceTechnique = _surfaceEffect->GetTechniqueByName("Render");
+	
+	D3D10_PASS_DESC PassDesc;
+	_surfaceTechnique->GetPassByIndex(0)->GetDesc(&PassDesc);
+
+	D3D10_INPUT_ELEMENT_DESC layoutSurface[] =
+    {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D10_INPUT_PER_VERTEX_DATA, 0},
+		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D10_INPUT_PER_VERTEX_DATA, 0},
+    };
+
+    UINT numElementsScene = sizeof(layoutSurface) / sizeof(layoutSurface[0]);
+	d3dDevice->CreateInputLayout(layoutSurface, numElementsScene, PassDesc.pIAInputSignature, PassDesc.IAInputSignatureSize, &_vertexLayoutSurface);
 
 	D3DX10_IMAGE_LOAD_INFO loadInfo;
-	ZeroMemory( &loadInfo, sizeof(D3DX10_IMAGE_LOAD_INFO) );
+	ZeroMemory( &loadInfo, sizeof(D3DX10_IMAGE_LOAD_INFO));
 	loadInfo.BindFlags = D3D10_BIND_SHADER_RESOURCE;
 	loadInfo.Format = DXGI_FORMAT_BC1_UNORM;
 
 	HRESULT hr;
-	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "rock.jpg", &loadInfo, NULL, &_texture, &hr)))
+	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "rock.jpg", &loadInfo, NULL, &_surfaceTexture, &hr)))
 	{
-		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
+		// TODO: log an error
 	}
 
-	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "rockdisplacement.jpg", &loadInfo, NULL, &_textureDisplacement, &hr)))
+	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "rockdisplacement.jpg", &loadInfo, NULL, &_surfaceDisplacement, &hr)))
 	{
-		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
+		// TODO: log an error
 	}
 
-	std::cout << "Created textures" << std::endl;
 
-	// Create shader and get render technique
-	_renderSceneEffect = ShaderBuilder::RequestEffect("cavesurface", "fx_4_0", d3dDevice);
+	FetchSurfaceShaderVariables();
 
-	_renderSceneTechnique = _renderSceneEffect->GetTechniqueByName("Render");
+	_surfaceShaderVars.Projection->SetMatrix((float*)&camera.GetProjectionMatrix());
+	_surfaceShaderVars.Texture->SetResource(_surfaceTexture);
+	_surfaceShaderVars.Displacement->SetResource(_surfaceDisplacement);
+	D3DXMATRIX identity;
+	D3DXMatrixIdentity(&identity);
+	_surfaceShaderVars.World->SetMatrix((float*)&identity);
+}
 
-	_genModelEffect = ShaderBuilder::RequestEffect("marchingcubes", "fx_4_0", d3dDevice);
+void Environment::FetchSurfaceShaderVariables()
+{
+	_surfaceShaderVars.World = _surfaceEffect->GetVariableByName("World")->AsMatrix();
+	_surfaceShaderVars.View = _surfaceEffect->GetVariableByName("View")->AsMatrix();
+	_surfaceShaderVars.ViewDirection = _surfaceEffect->GetVariableByName("ViewDirection")->AsVector();
+	_surfaceShaderVars.Projection = _surfaceEffect->GetVariableByName("Proj")->AsMatrix();
+	_surfaceShaderVars.Texture = _surfaceEffect->GetVariableByName("Texture")->AsShaderResource();
+	_surfaceShaderVars.Displacement = _surfaceEffect->GetVariableByName("Displacement")->AsShaderResource();
 
-	_genModelTechnique = _genModelEffect->GetTechniqueByName("Render");
-
-
-	_genModelEffect->GetVariableByName("NoiseTexture")->AsShaderResource()->SetResource(_noiseVolume.GetResource());
-
-	D3D10_PASS_DESC PassDesc;
-
-	D3D10_INPUT_ELEMENT_DESC layoutGen[] =
-    {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D10_INPUT_PER_VERTEX_DATA, 0 },
-    };
-    UINT numElementsGen = sizeof( layoutGen ) / sizeof( layoutGen[0] );
-
-	_genModelTechnique->GetPassByIndex( 0 )->GetDesc( &PassDesc );
-	d3dDevice->CreateInputLayout( layoutGen, numElementsGen, PassDesc.pIAInputSignature,
-                                          PassDesc.IAInputSignatureSize, &_vertexLayoutGen );
-
-	_renderSceneTechnique->GetPassByIndex( 0 )->GetDesc(&PassDesc);
-
-	D3D10_INPUT_ELEMENT_DESC layoutScene[] =
-    {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D10_INPUT_PER_VERTEX_DATA, 0 },
-		{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D10_INPUT_PER_VERTEX_DATA, 0 },
-    };
-    UINT numElementsScene = sizeof( layoutScene ) / sizeof( layoutScene[0] );
-	d3dDevice->CreateInputLayout( layoutScene, numElementsScene, PassDesc.pIAInputSignature,
-                                  PassDesc.IAInputSignatureSize, &_vertexLayoutScene );
-
-	// Initialise shader variables
-
-	ID3D10EffectScalarVariable* v = _genModelEffect->GetVariableByName("Edges")->AsScalar();
-	v->SetIntArray((int*)MarchingCubesData::Edges, 0, 256);
-
-	v = _genModelEffect->GetVariableByName("TriTable")->AsScalar();
-	v->SetIntArray((int*)MarchingCubesData::TriTable, 0, 256*16);
-
-	D3DXMATRIX worldm;
-	D3DXMatrixIdentity(&worldm);
-	ID3D10EffectMatrixVariable* world = _renderSceneEffect->GetVariableByName("World")->AsMatrix();
-	world->SetMatrix((float*)&worldm);
-
-	ID3D10EffectMatrixVariable* proj = _renderSceneEffect->GetVariableByName("Proj")->AsMatrix();
-	proj->SetMatrix((float*)&camera.GetProjectionMatrix());
-
-	_view = _renderSceneEffect->GetVariableByName("View")->AsMatrix();
-	_viewDirection = _renderSceneEffect->GetVariableByName("ViewDirection")->AsVector();
-
-	ID3D10EffectScalarVariable* threshold = _genModelEffect->GetVariableByName("Threshold")->AsScalar();
-	threshold->SetFloat(3.6f);
-
-	ID3D10EffectShaderResourceVariable* texturesampler = _renderSceneEffect->GetVariableByName("tex")->AsShaderResource();
-	texturesampler->SetResource(_texture);
-
-	texturesampler = _renderSceneEffect->GetVariableByName("texDisplacement")->AsShaderResource();
-	texturesampler->SetResource(_textureDisplacement);
-
-
-	ID3D10EffectVariable* lights = _renderSceneEffect->GetVariableByName("lights");
+	ID3D10EffectVariable* lights = _surfaceEffect->GetVariableByName("Lights");
 	int i;
 	for (i = 0; i < MAX_LIGHTS; ++i)
 	{
 		ID3D10EffectVariable* lighti = lights->GetElement(i);
-		_surfaceLightParam.Pos[i] = lighti->GetMemberByName("Position")->AsVector();
-		_surfaceLightParam.Color[i] = lighti->GetMemberByName("Color")->AsVector();
-		_surfaceLightParam.Size[i] = lighti->GetMemberByName("Size")->AsScalar();
-		_surfaceLightParam.Falloff[i] = lighti->GetMemberByName("Falloff")->AsScalar();
+		_surfaceShaderVars.Lights.Pos[i] = lighti->GetMemberByName("Position")->AsVector();
+		_surfaceShaderVars.Lights.Color[i] = lighti->GetMemberByName("Color")->AsVector();
+		_surfaceShaderVars.Lights.Size[i] = lighti->GetMemberByName("Size")->AsScalar();
+		_surfaceShaderVars.Lights.Falloff[i] = lighti->GetMemberByName("Falloff")->AsScalar();
 	}
-	for (float x = -2; x < 2; x += 1)
-		for (float y = -2; y < 2; y += 1)
-			for (float z = -2; z < 2; z += 1)
-				_environmentToGenerate.push_back(new EnvironmentChunk(Vector3f(x, y, z), 1, 32));
+}
 
-	New();
+void Environment::InitializeObjectsEffect(ID3D10Device* d3dDevice, const Camera& camera)
+{
+	_objectsEffect = ShaderBuilder::RequestEffect("generic_diffuse_textured", "fx_4_0", d3dDevice);
+	_objectsTechnique = _objectsEffect->GetTechniqueByName("Render");
+	
+	D3D10_PASS_DESC PassDesc;
+	_objectsTechnique->GetPassByIndex(0)->GetDesc(&PassDesc);
+
+	D3D10_INPUT_ELEMENT_DESC layoutObjects[] =
+    {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D10_INPUT_PER_VERTEX_DATA, 0},
+		{"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D10_INPUT_PER_VERTEX_DATA, 0},
+		{"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 20, D3D10_INPUT_PER_VERTEX_DATA, 0},
+    };
+
+    UINT numElementsScene = sizeof(layoutObjects) / sizeof(layoutObjects[0]);
+	d3dDevice->CreateInputLayout(layoutObjects, numElementsScene, PassDesc.pIAInputSignature, PassDesc.IAInputSignatureSize, &_vertexLayoutObjects);
+
+	D3DX10_IMAGE_LOAD_INFO loadInfo;
+	ZeroMemory( &loadInfo, sizeof(D3DX10_IMAGE_LOAD_INFO));
+	loadInfo.BindFlags = D3D10_BIND_SHADER_RESOURCE;
+	loadInfo.Format = DXGI_FORMAT_BC1_UNORM;
+
+	HRESULT hr;
+	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "chest.png", &loadInfo, NULL, &_chestTexture, &hr)))
+	{
+		// TODO: log an error
+	}
+
+	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "treasure.png", &loadInfo, NULL, &_treasureTexture, &hr)))
+	{
+		// TODO: log an error
+	}
+
+	_chestModel.Read("chest.obj");
+	_treasureModel.Read("chest-treasure.obj");
+
+	_chestModel.Load(d3dDevice);
+	_treasureModel.Load(d3dDevice);
+
+	FetchObjectsShaderVariables();
+
+	_objectsShaderVars.Projection->SetMatrix((float*)&camera.GetProjectionMatrix());
+}
+
+void Environment::FetchObjectsShaderVariables()
+{
+	_objectsShaderVars.World = _objectsEffect->GetVariableByName("World")->AsMatrix();
+	_objectsShaderVars.View = _objectsEffect->GetVariableByName("View")->AsMatrix();
+	_objectsShaderVars.ViewDirection = _objectsEffect->GetVariableByName("ViewDirection")->AsVector();
+	_objectsShaderVars.Projection = _objectsEffect->GetVariableByName("Proj")->AsMatrix();
+	_objectsShaderVars.Texture = _objectsEffect->GetVariableByName("Texture")->AsShaderResource();
+
+	ID3D10EffectVariable* lights = _objectsEffect->GetVariableByName("Lights");
+	int i;
+	for (i = 0; i < MAX_LIGHTS; ++i)
+	{
+		ID3D10EffectVariable* lighti = lights->GetElement(i);
+		_objectsShaderVars.Lights.Pos[i] = lighti->GetMemberByName("Position")->AsVector();
+		_objectsShaderVars.Lights.Color[i] = lighti->GetMemberByName("Color")->AsVector();
+		_objectsShaderVars.Lights.Size[i] = lighti->GetMemberByName("Size")->AsScalar();
+		_objectsShaderVars.Lights.Falloff[i] = lighti->GetMemberByName("Falloff")->AsScalar();
+	}
 }
 
 void Environment::New()
@@ -239,34 +248,90 @@ void Environment::Unload()
 {
 	_noiseVolume.Unload();
 
-	_genModelTechnique = NULL;
-	_renderSceneTechnique = NULL;
+	_bufferPoint->Release();
+	_genSurfaceEffect->Release();
+	_vertexLayoutGenSurface->Release();
 
-	_genModelEffect->Release();
-	_genModelEffect = NULL;
+	_surfaceEffect->Release();
+	_vertexLayoutSurface->Release();
 
-	_renderSceneEffect->Release();
-	_renderSceneEffect = NULL;
+	_surfaceTexture->Release();
+	_surfaceDisplacement->Release();
 
-	_vertexLayoutGen->Release();
-	_vertexLayoutGen = NULL;
+	_objectsEffect->Release();
+	_vertexLayoutObjects->Release();
 
-	_vertexLayoutScene->Release();
-	_vertexLayoutScene = NULL;
-
-	_texture->Release();
-	_texture = NULL;
-
-	_textureDisplacement->Release();
-	_textureDisplacement = NULL;
+	_chestTexture->Release();
+	_treasureTexture->Release();
 
 	for(unsigned int i = 0; i < _environmentToDraw.size(); ++i)
 		delete _environmentToDraw[i];
 
 	for(unsigned int i = 0; i < _environmentToGenerate.size(); ++i)
 		delete _environmentToGenerate[i];
+}
 
-	_view = NULL;
+
+// Perform a unit of work in generating the surface, the amount of time that may be spent generating the surface
+// is limited to allow the editor to continue rendering smoothly while the GPU generates the surface
+void Environment::GenSurface(ID3D10Device* d3dDevice)
+{
+	unsigned int i = 0;
+	int validBlobs = 0;
+	for (; i < _shapes.size(); ++i)
+	{
+		// Ignore any blobs in which any dimension of the scale is 0, to prevent divide by zero errors in effect
+		if (_shapes[i].Scale.x != 0 && _shapes[i].Scale.y != 0 && _shapes[i].Scale.z != 0) 
+		{	
+			_genSurfaceShaderVars.Blobs[validBlobs].Position->SetFloatVector((float*)&_shapes[i].Position);
+			_genSurfaceShaderVars.Blobs[validBlobs].Scale->SetFloatVector((float*)&_shapes[i].Scale);
+			++validBlobs;
+		}
+	}
+
+	_genSurfaceShaderVars.NumBlobs->SetInt(validBlobs);
+
+	for (i = 0; i < _octaves.size(); ++i)
+	{
+		_genSurfaceShaderVars.Octaves[i].Scale->SetFloatVector((float*)&_octaves[i].Scale);
+		_genSurfaceShaderVars.Octaves[i].Amplitude->SetFloat(_octaves[i].Amplitude);
+	}
+
+	D3DXVECTOR4 defaultScale(0, 0, 0, 0);
+
+	for (; i < MAX_OCTAVES; ++i)
+	{
+		_genSurfaceShaderVars.Octaves[i].Scale->SetFloatVector((float*)&defaultScale);
+		_genSurfaceShaderVars.Octaves[i].Amplitude->SetFloat(0);
+	}
+
+	d3dDevice->IASetInputLayout(_vertexLayoutGenSurface);
+
+	UINT offset[1] = {0};
+	UINT stride = sizeof(D3DVECTOR);
+	d3dDevice->IASetVertexBuffers(0, 1, &_bufferPoint, &stride, offset);
+	d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_POINTLIST);
+
+	Timer t;
+
+	float Budget = 0.001f;
+
+	for (std::vector<EnvironmentChunk*>::iterator i = _environmentToGenerate.begin(); 
+		i != _environmentToGenerate.end();)
+	{
+		EnvironmentChunk* generated = *i;
+		t.Start();
+		generated->Generate(d3dDevice, _genSurfaceEffect, _genSurfaceTechnique);
+		t.Stop();
+		Budget -= t.GetTime();
+		
+		i = _environmentToGenerate.erase(i);
+
+		_environmentToDraw.push_back(generated);
+
+		if (Budget <= 0)
+			break;
+	}
 }
 
 void Environment::Draw(ID3D10Device* d3dDevice, Camera& camera)
@@ -274,28 +339,45 @@ void Environment::Draw(ID3D10Device* d3dDevice, Camera& camera)
 	if (!_environmentToGenerate.empty())
 	{
 		SortListToGenerate(camera);
-		GenModel(d3dDevice);
+		GenSurface(d3dDevice);
 	}
 
 	if (_lightsChanged)
 	{
 		UpdateLights();
 	}
-	d3dDevice->IASetInputLayout(_vertexLayoutScene);
+	d3dDevice->IASetInputLayout(_vertexLayoutSurface);
 
 	d3dDevice->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 	D3DXMATRIX viewm = camera.GetViewMatrix();
-	_view->SetMatrix((float*)&viewm);
+	_surfaceShaderVars.View->SetMatrix((float*)&viewm);
 
 	D3DXVECTOR4 viewDirection = D3DXVECTOR4(*(D3DXVECTOR3*)&camera.Look(), 1.0f);
-	_viewDirection->SetFloatVector((float*)viewDirection);
-    _renderSceneTechnique->GetPassByIndex(0)->Apply(0);
+	_surfaceShaderVars.ViewDirection->SetFloatVector((float*)viewDirection);
+    _surfaceTechnique->GetPassByIndex(0)->Apply(0);
 
 	for (unsigned int i = 0; i < _environmentToDraw.size(); ++i)
 	{
-		_environmentToDraw[i]->Draw(d3dDevice, _renderSceneEffect);
+		_environmentToDraw[i]->Draw(d3dDevice, _surfaceEffect);
 	}
+
+
+	d3dDevice->IASetInputLayout(_vertexLayoutObjects);
+	
+	_testChest.Scale = Vector3f(0.02f, 0.02f, 0.02f);
+	_objectsShaderVars.View->SetMatrix((float*)&viewm);
+	_objectsShaderVars.ViewDirection->SetFloatVector((float*)viewDirection);
+	_objectsShaderVars.Texture->SetResource(_chestTexture);
+	_objectsShaderVars.World->SetMatrix((float*)&_testChest.GetMatrix());
+	_objectsTechnique->GetPassByIndex(0)->Apply(0);
+
+	_chestModel.Draw(d3dDevice);
+
+	_objectsShaderVars.Texture->SetResource(_treasureTexture);
+	_objectsTechnique->GetPassByIndex(0)->Apply(0);
+
+	_treasureModel.Draw(d3dDevice);
 }
 
 Environment::Light::Light() : 
@@ -413,8 +495,8 @@ void Environment::RemoveLight(int light)
 
 void Environment::UpdateLights()
 {
-	LoadLightParameters(_surfaceLightParam);
-
+	LoadLightParameters(_surfaceShaderVars.Lights);
+	LoadLightParameters(_objectsShaderVars.Lights);
 }
 
 void Environment::LoadLightParameters(const LightParam& lightParam)

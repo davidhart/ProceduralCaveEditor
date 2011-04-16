@@ -31,6 +31,7 @@ struct VS_INPUT
 {
     float3 Pos          : POSITION;
 	float3 Normal		: NORMAL;
+	float2 TexCoord	    : TEXCOORD;
 };
 
 struct PS_INPUT
@@ -38,6 +39,17 @@ struct PS_INPUT
 	float4 Pos : SV_Position;
 	float3 WSPos : POSITION;
 	float3 Normal : NORMAL;
+	float2 TexCoord : TEXCOORD;
+};
+
+Texture2D Texture;
+
+sampler TextureSampler = sampler_state
+{
+	Filter = MIN_MAG_MIP_LINEAR;
+	AddressU = Wrap;
+	AddressV = Wrap;
+	AddressW = Wrap;
 };
 
 PS_INPUT mainVS(VS_INPUT input)
@@ -47,6 +59,7 @@ PS_INPUT mainVS(VS_INPUT input)
 	output.Pos = mul(float4(input.Pos, 1), WorldViewProj);
 	output.WSPos = mul(float4(input.Pos, 1), World).xyz;
 	output.Normal = input.Normal;
+	output.TexCoord = input.TexCoord;
     return output;
 }
 
@@ -62,12 +75,12 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 	[unroll] for (int i = 0; i < 8; ++i)
 	{
 		float3 lightDirection = Lights[i].Position - input.WSPos;
-		float attenuation = clamp(Lights[i].Size * 2/(length(lightDirection) + pow(length(lightDirection), 2.0f)*Lights[i].Falloff), 0.0f, 1.0f);
+		float attenuation = clamp(Lights[i].Size * 1/(length(lightDirection) + pow(length(lightDirection), 2.0f)*Lights[i].Falloff), 0.0f, 1.0f);
 		diffuse += max(dot(N, normalize(lightDirection)),0) * attenuation * Lights[i].Color.rgb;
 		spec += pow(clamp(dot(reflect(ViewDirection, N), normalize(lightDirection)), 0.0f, 1.0f),15.0f) * attenuation*2.0f * Lights[i].Color.rgb * 0.2f;
 	}
 
-	return float4(spec + diffuse, 0) + ambient;
+	return float4(spec + diffuse, 0) + ambient * Texture.Sample(TextureSampler, input.TexCoord);
 }
 
 DepthStencilState EnableDepth
@@ -76,13 +89,6 @@ DepthStencilState EnableDepth
     DepthWriteMask = ALL;
     DepthFunc = LESS_EQUAL;
 };
-
-DepthStencilState DisableDepth
-{
-    //DepthEnable = FALSE;
-    //DepthWriteMask = 0;
-};
-
 
 RasterizerState RasterizerSettings
 {
@@ -97,7 +103,7 @@ technique10 Render
         SetGeometryShader(NULL);
         SetPixelShader(CompileShader(ps_4_0, mainPS()));
 		
-        SetDepthStencilState(DisableDepth, 0);
+        SetDepthStencilState(EnableDepth, 0);
         SetRasterizerState(RasterizerSettings); 
 	}
 }

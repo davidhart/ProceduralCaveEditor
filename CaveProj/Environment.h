@@ -5,6 +5,8 @@
 #include "Vector.h"
 #include "EnvironmentChunk.h"
 #include "NoiseVolume.h"
+#include "GameObject.h"
+#include "Model.h"
 
 #include <D3D10.h>
 #include <D3DX10.h>
@@ -75,7 +77,7 @@ public:
 private:
 
 	void SortListToGenerate(Camera& camera);
-	void GenModel(ID3D10Device* d3dDevice);
+	void GenSurface(ID3D10Device* d3dDevice);
 
 	static const int MAX_BLOBS = 5;
 	struct Blob
@@ -96,26 +98,87 @@ private:
 
 	std::vector<Octave> _octaves;
 
-	ID3D10Effect* _genModelEffect;
-	ID3D10Effect* _renderSceneEffect;
-	ID3D10EffectTechnique* _genModelTechnique;
-	ID3D10EffectTechnique* _renderSceneTechnique;
-	ID3D10InputLayout* _vertexLayoutGen;
-	ID3D10InputLayout* _vertexLayoutScene;
-	ID3D10Buffer* _bufferPointGrid;
-
 	std::vector<EnvironmentChunk*> _environmentToGenerate;
 	std::vector<EnvironmentChunk*> _environmentToDraw;
 
-	ID3D10EffectMatrixVariable* _view;
-	ID3D10EffectVectorVariable* _viewDirection;
-	ID3D10ShaderResourceView* _texture;
-	ID3D10ShaderResourceView* _textureDisplacement;
+	// Generate Effect Variables
+	ID3D10Effect* _genSurfaceEffect;
+	ID3D10EffectTechnique* _genSurfaceTechnique;
+	ID3D10InputLayout* _vertexLayoutGenSurface;
+	ID3D10Buffer* _bufferPoint;
 
-	LightParam _surfaceLightParam;
+	struct
+	{
+		struct
+		{
+			ID3D10EffectVectorVariable* Position;
+			ID3D10EffectVectorVariable* Scale;
 
-	UINT _numTriangles;
-	int _resolution;
+		} Blobs [MAX_BLOBS];
+
+		struct
+		{
+			ID3D10EffectVectorVariable* Scale;
+			ID3D10EffectScalarVariable* Amplitude;
+
+		} Octaves[MAX_OCTAVES];
+
+		ID3D10EffectScalarVariable* Edges;
+		ID3D10EffectScalarVariable* TriTable;
+		ID3D10EffectScalarVariable* Threshold;
+		ID3D10EffectScalarVariable* NumBlobs;
+
+	} _genSurfaceShaderVars;
+
+	void InitializeSurfaceGenEffect(ID3D10Device* d3dDevice);
+	void FetchSurfaceGenShaderVariables();
+
+	// Surface Effect Variables
+	ID3D10Effect* _surfaceEffect;
+	ID3D10EffectTechnique* _surfaceTechnique;
+	ID3D10InputLayout* _vertexLayoutSurface;
+
+	ID3D10ShaderResourceView* _surfaceTexture;
+	ID3D10ShaderResourceView* _surfaceDisplacement;
+
+	struct
+	{
+		ID3D10EffectMatrixVariable* World;
+		ID3D10EffectMatrixVariable* Projection;
+		ID3D10EffectMatrixVariable* View;
+		ID3D10EffectVectorVariable* ViewDirection;
+		ID3D10EffectShaderResourceVariable* Texture;
+		ID3D10EffectShaderResourceVariable* Displacement;
+		LightParam Lights;
+
+	} _surfaceShaderVars;
+
+	void InitializeSurfaceEffect(ID3D10Device* d3dDevice, const Camera& camera);
+	void FetchSurfaceShaderVariables();
+
+	// Object Effect Variables
+	ID3D10Effect* _objectsEffect;
+	ID3D10EffectTechnique* _objectsTechnique;
+	ID3D10InputLayout* _vertexLayoutObjects;
+
+	ID3D10ShaderResourceView* _chestTexture;
+	ID3D10ShaderResourceView* _treasureTexture;
+
+	Model _chestModel;
+	Model _treasureModel;
+
+	struct
+	{
+		ID3D10EffectMatrixVariable* Projection;
+		ID3D10EffectMatrixVariable* View;
+		ID3D10EffectMatrixVariable* World;
+		ID3D10EffectVectorVariable* ViewDirection;
+		ID3D10EffectShaderResourceVariable* Texture;
+		LightParam Lights;
+	} _objectsShaderVars;
+	
+	void InitializeObjectsEffect(ID3D10Device* d3dDevice, const Camera& camera);
+	void FetchObjectsShaderVariables();
 
 	void UpdateLights();
 
@@ -130,6 +193,7 @@ private:
 
 	std::vector<Light> _lights;
 	bool _lightsChanged;
+	GameObject _testChest;
 
 	NoiseVolume _noiseVolume;
 };

@@ -38,7 +38,7 @@ struct Light
 
 cbuffer cbLight
 {
-	Light lights[8];
+	Light Lights[8];
 };
 
 Texture2D Tex;
@@ -108,10 +108,10 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 	float TA = 0.5f;
 	[unroll] for (int i = 0; i < 8; ++i)
 	{
-		float3 lightDirection = lights[i].Position - input.WSPos;
-		float attenuation = clamp(lights[i].Size/(length(lightDirection) + pow(length(lightDirection), 2.0f)*lights[i].Falloff), 0.0f, 1.0f);
+		float3 lightDirection = Lights[i].Position - input.WSPos;
+		float attenuation = clamp(Lights[i].Size/(length(lightDirection) + pow(length(lightDirection), 2.0f)*Lights[i].Falloff), 0.0f, 1.0f);
 		TA += attenuation;
-		diffuse += attenuation * lights[i].Color.rgb;
+		diffuse += attenuation * Lights[i].Color.rgb;
 	}
 
 	return min(float4(diffuse + ambient, TA), 1) * color;

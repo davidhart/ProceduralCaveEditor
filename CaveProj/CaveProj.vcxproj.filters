@@ -95,6 +95,9 @@
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="Player.cpp" />
+    <ClCompile Include="GameObject.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Application.h">
@@ -187,6 +190,9 @@
     <ClInclude Include="Player.h">
       <Filter>Source</Filter>
     </ClInclude>
+    <ClInclude Include="GameObject.h">
+      <Filter>Source</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="billboard_sprite.fx">
@@ -208,6 +214,9 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="unlit.fx">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="generic_diffuse_textured.fx">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

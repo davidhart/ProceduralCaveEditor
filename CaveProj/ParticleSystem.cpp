@@ -67,7 +67,7 @@ void ParticleSystem::Load(RenderWindow& renderWindow)
 	_particleEffect->GetVariableByName("Tex")->AsShaderResource()->SetResource(_particleTexture);
 	_invview = _particleEffect->GetVariableByName("InvView")->AsMatrix();
 
-	ID3D10EffectVariable* lights = _particleEffect->GetVariableByName("lights");
+	ID3D10EffectVariable* lights = _particleEffect->GetVariableByName("Lights");
 	int i;
 	for (i = 0; i < Environment::MAX_LIGHTS; ++i)
 	{

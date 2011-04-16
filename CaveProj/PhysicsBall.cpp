@@ -60,7 +60,7 @@ void PhysicsBall::Load(RenderWindow& renderWindow)
 	d3dDevice->CreateInputLayout( layoutRender, numElementsRender, PassDesc.pIAInputSignature,
                                   PassDesc.IAInputSignatureSize, &_vertexLayout );
 	
-	ID3D10EffectVariable* lights = _genericEffect->GetVariableByName("lights");
+	ID3D10EffectVariable* lights = _genericEffect->GetVariableByName("Lights");
 	int i;
 	for (i = 0; i < Environment::MAX_LIGHTS; ++i)
 	{

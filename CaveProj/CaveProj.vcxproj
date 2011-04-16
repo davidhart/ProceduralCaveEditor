@@ -76,6 +76,7 @@
     <ClCompile Include="EditorUI.cpp" />
     <ClCompile Include="Environment.cpp" />
     <ClCompile Include="EnvironmentChunk.cpp" />
+    <ClCompile Include="GameObject.cpp" />
     <ClCompile Include="GwenDX10Renderer.cpp" />
     <ClCompile Include="Input.cpp" />
     <ClCompile Include="main.cpp" />
@@ -107,6 +108,7 @@
     <ClInclude Include="EditorUI.h" />
     <ClInclude Include="Environment.h" />
     <ClInclude Include="EnvironmentChunk.h" />
+    <ClInclude Include="GameObject.h" />
     <ClInclude Include="GwenDX10Renderer.h" />
     <ClInclude Include="Input.h" />
     <ClInclude Include="LeakDetector.h" />
@@ -132,6 +134,7 @@
     <None Include="billboard_sprite.fx" />
     <None Include="cavesurface.fx" />
     <None Include="generic_diffuse.fx" />
+    <None Include="generic_diffuse_textured.fx" />
     <None Include="marchingcubes.fx" />
     <None Include="particle_system.fx" />
     <None Include="render2D.fx" />
