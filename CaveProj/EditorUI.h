@@ -42,7 +42,6 @@ private:
 	void CreateShapePage();
 	void CreateNoisePage();
 	void CreateLightingPage();
-	void CreateWaterPage();
 	void CreateObjectsPage();
 
 	void onSaveMenuItem(Gwen::Controls::Base* from);
@@ -71,6 +70,12 @@ private:
 	void onNoisePropertiesChange(Gwen::Controls::Base* from);
 	void SelectOctave(int octave);
 	void UpdateNoiseProperties(int octave);
+
+	void PopulateObjectList();
+	void onAddObject(Gwen::Controls::Base* from);
+	void onRemoveObject(Gwen::Controls::Base* from);
+	void onObjectSelected(Gwen::Controls::Base* from);
+	void onObjectPropertiesChange(Gwen::Controls::Base* from);
 
 	bool _updatingProperties;
 	RenderWindow& _renderWindow;
@@ -112,6 +117,16 @@ private:
 	Gwen::Controls::TextBoxNumeric* _octaveYScale;
 	Gwen::Controls::TextBoxNumeric* _octaveZScale;
 	Gwen::Controls::TextBoxNumeric* _octaveAmplitude;
+
+	Gwen::Controls::ListBox* _objectsList;
+	std::vector<Gwen::Controls::Layout::TableRow*> _objectRows;
+
+	Gwen::Controls::TextBoxNumeric* _objectXPosition;
+	Gwen::Controls::TextBoxNumeric* _objectYPosition;
+	Gwen::Controls::TextBoxNumeric* _objectZPosition;
+	Gwen::Controls::TextBoxNumeric* _objectXRotation;
+	Gwen::Controls::TextBoxNumeric* _objectYRotation;
+	Gwen::Controls::TextBoxNumeric* _objectZRotation;
 };
 
 #endif

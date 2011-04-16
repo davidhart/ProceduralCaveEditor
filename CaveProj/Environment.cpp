@@ -27,10 +27,12 @@ void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 	InitializeSurfaceEffect(d3dDevice, camera);
 	InitializeObjectsEffect(d3dDevice, camera);
 
+	float size = 1.5f;
+
 	for (float x = -2; x < 2; x += 1)
 		for (float y = -2; y < 2; y += 1)
 			for (float z = -2; z < 2; z += 1)
-				_environmentToGenerate.push_back(new EnvironmentChunk(Vector3f(x, y, z), 1.5f, 32));
+				_environmentToGenerate.push_back(new EnvironmentChunk(Vector3f(x*size, y*size, z*size), size, 32));
 
 	New();
 }
@@ -137,20 +139,15 @@ void Environment::InitializeSurfaceEffect(ID3D10Device* d3dDevice, const Camera&
 		// TODO: log an error
 	}
 
-
 	FetchSurfaceShaderVariables();
 
 	_surfaceShaderVars.Projection->SetMatrix((float*)&camera.GetProjectionMatrix());
 	_surfaceShaderVars.Texture->SetResource(_surfaceTexture);
 	_surfaceShaderVars.Displacement->SetResource(_surfaceDisplacement);
-	D3DXMATRIX identity;
-	D3DXMatrixIdentity(&identity);
-	_surfaceShaderVars.World->SetMatrix((float*)&identity);
 }
 
 void Environment::FetchSurfaceShaderVariables()
 {
-	_surfaceShaderVars.World = _surfaceEffect->GetVariableByName("World")->AsMatrix();
 	_surfaceShaderVars.View = _surfaceEffect->GetVariableByName("View")->AsMatrix();
 	_surfaceShaderVars.ViewDirection = _surfaceEffect->GetVariableByName("ViewDirection")->AsVector();
 	_surfaceShaderVars.Projection = _surfaceEffect->GetVariableByName("Proj")->AsMatrix();
@@ -361,7 +358,6 @@ void Environment::Draw(ID3D10Device* d3dDevice, Camera& camera)
 	{
 		_environmentToDraw[i]->Draw(d3dDevice, _surfaceEffect);
 	}
-
 
 	d3dDevice->IASetInputLayout(_vertexLayoutObjects);
 	

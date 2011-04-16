@@ -24,6 +24,7 @@ private:
 	float _height;
 
 	Environment& _environment;
+	Vector3f _position;
 	Vector3f _velocity;
 	Camera _camera;
 	bool _onGround;

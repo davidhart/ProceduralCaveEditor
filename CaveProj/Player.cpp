@@ -6,7 +6,7 @@
 Player::Player(Environment& environment) : 
 	_environment(environment),
 	_radius(0.025f),
-	_height(0.1f),
+	_height(0.12f),
 	_camera(Vector3f(0, 0, 0), 0, 0),
 	_onGround(true)
 {
@@ -42,7 +42,7 @@ void Player::Update(const Vector2f& movement, const Vector2f& rotation, float dt
 {
 	_camera.RotatePitch(rotation.x);
 	_camera.RotateYaw(rotation.y);
-	Vector3f position = _camera.Position();
+	Vector3f position = _position + Vector3f(0, _height/2, 0);
 
 	if (fly)
 	{
@@ -119,7 +119,8 @@ void Player::Update(const Vector2f& movement, const Vector2f& rotation, float dt
 		}
 	}
 
-	_camera.Position(position);
+	_position = position - Vector3f(0, _height/2, 0);
+	_camera.Position(_position + Vector3f(0, _height * 0.8f, 0));
 }
 
 void Player::Reset()

@@ -1,8 +1,3 @@
-cbuffer cbWorldMatrix
-{
-	float4x4 World: World;
-};
-
 cbuffer cbViewMatrix
 {
 	float4x4 View : View;
@@ -53,7 +48,7 @@ struct PS_INPUT
 
 PS_INPUT mainVS(VS_INPUT input)
 {
-	float4x4 WorldViewProj = mul(World, mul(View, Proj));
+	float4x4 WorldViewProj = mul(View, Proj);
     PS_INPUT output;
 	output.Pos = mul(float4(input.Pos, 1), WorldViewProj);
 	output.WSPos = input.Pos;

@@ -66,7 +66,6 @@ void EditorUI::Load(RenderWindow& renderWindow)
 
 	CreateShapePage();
 	CreateNoisePage();
-	CreateWaterPage();
 	CreateLightingPage();
 	CreateObjectsPage();
 
@@ -391,23 +390,128 @@ void EditorUI::CreateLightingPage()
 	targetZLabel->SetBounds(0, 532, 54, 20);
 	targetZLabel->SetText("z:");
 	targetZLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
-}
 
-void EditorUI::CreateWaterPage()
-{
-	//Gwen::Controls::Button* b3 = new Gwen::Controls::Button(_canvas);
-	//_dockBase->GetRight()->GetTabControl()->AddPage(L"Water", b3);
+
 }
 
 void EditorUI::CreateObjectsPage()
 {
-	//Gwen::Controls::Button* b5 = new Gwen::Controls::Button(_canvas);
-	//_dockBase->GetRight()->GetTabControl()->AddPage(L"Objects", b5);
+	Gwen::Controls::ScrollControl* s = new Gwen::Controls::ScrollControl(_canvas);
+	_dockBase->GetRight()->GetTabControl()->AddPage(L"Objects", s);
+	s->SetAutoHideBars(true);
+
+	int yPos = 0;
+
+	_objectsList = new Gwen::Controls::ListBox(s);
+	_objectsList->SetBounds(0,yPos, 116, 106);
+	_objectsList->onRowSelected.Add(this, &EditorUI::onShapeSelected);
+
+	PopulateObjectList();
+
+	Gwen::Controls::Button* addButton = new Gwen::Controls::Button(s);
+	addButton->SetBounds(122,yPos,50, 50);
+	addButton->SetText("+");
+	addButton->onPress.Add(this, &EditorUI::onAddObject);
+
+	Gwen::Controls::Button* removeButton = new Gwen::Controls::Button(s);
+	removeButton->SetBounds(122, yPos+56, 50, 50);
+	removeButton->SetText("-");
+	removeButton->onPress.Add(this, &EditorUI::onRemoveObject);
+
+	yPos += 118;
+	Gwen::Controls::ComboBox* objectCombo = new Gwen::Controls::ComboBox(s);
+	objectCombo->SetBounds(60, yPos, 112, 20);
+	objectCombo->AddItem(L"Chest");
+
+	Gwen::Controls::Label* objectLabel = new Gwen::Controls::Label(s);
+	objectLabel->SetBounds(0, yPos, 54, 20);
+	objectLabel->SetText("Type:");
+	objectLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
+
+	// Position controls
+	yPos += 32;
+	Gwen::Controls::Label* positionLabel = new Gwen::Controls::Label(s);
+	positionLabel->SetBounds(16, yPos, 156, 20);
+	positionLabel->SetText("Position");
+	positionLabel->SetAlignment(Gwen::Pos::Left | Gwen::Pos::CenterV);
+
+	yPos += 20;
+	_objectXPosition = new Gwen::Controls::TextBoxNumeric(s);
+	_objectXPosition->SetBounds(60, yPos, 112, 20);
+	_objectXPosition->SetText("0");
+	_objectXPosition->onTextChanged.Add(this, &EditorUI::onObjectPropertiesChange);
+
+	Gwen::Controls::Label* positionXLabel = new Gwen::Controls::Label(s);
+	positionXLabel->SetBounds(0, yPos, 54, 20);
+	positionXLabel->SetText("x:");
+	positionXLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
+
+	yPos += 26;
+	_objectYPosition = new Gwen::Controls::TextBoxNumeric(s);
+	_objectYPosition->SetBounds(60, yPos, 112, 20);
+	_objectYPosition->SetText("0");
+	_objectYPosition->onTextChanged.Add(this, &EditorUI::onObjectPropertiesChange);
+
+	Gwen::Controls::Label* positionYLabel = new Gwen::Controls::Label(s);
+	positionYLabel->SetBounds(0, yPos, 54, 20);
+	positionYLabel->SetText("y:");
+	positionYLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
+
+	yPos += 26;
+	_objectZPosition = new Gwen::Controls::TextBoxNumeric(s);
+	_objectZPosition->SetBounds(60, yPos, 112, 20);
+	_objectZPosition->SetText("0");
+	_objectZPosition->onTextChanged.Add(this, &EditorUI::onObjectPropertiesChange);
+
+	Gwen::Controls::Label* positionZLabel = new Gwen::Controls::Label(s);
+	positionZLabel->SetBounds(0, yPos, 54, 20);
+	positionZLabel->SetText("z:");
+	positionZLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
+
+	// Scale controls
+	yPos += 32;
+	Gwen::Controls::Label* rotationLabel = new Gwen::Controls::Label(s);
+	rotationLabel->SetBounds(16, yPos, 156, 20);
+	rotationLabel->SetText("Rotation");
+	rotationLabel->SetAlignment(Gwen::Pos::Left | Gwen::Pos::CenterV);
+
+	yPos += 20;
+	_objectXRotation = new Gwen::Controls::TextBoxNumeric(s);
+	_objectXRotation->SetBounds(60, yPos, 112, 20);
+	_objectXRotation->SetText("0");
+	_objectXRotation->onTextChanged.Add(this, &EditorUI::onObjectPropertiesChange);
+
+	Gwen::Controls::Label* rotationXLabel = new Gwen::Controls::Label(s);
+	rotationXLabel->SetBounds(0, yPos, 54, 20);
+	rotationXLabel->SetText("x:");
+	rotationXLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
+
+	yPos += 26;
+	_objectYRotation = new Gwen::Controls::TextBoxNumeric(s);
+	_objectYRotation->SetBounds(60, yPos, 112, 20);
+	_objectYRotation->SetText("0");
+	_objectYRotation->onTextChanged.Add(this, &EditorUI::onObjectPropertiesChange);
+
+	Gwen::Controls::Label* rotationYLabel = new Gwen::Controls::Label(s);
+	rotationYLabel->SetBounds(0, yPos, 54, 20);
+	rotationYLabel->SetText("y:");
+	rotationYLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
+
+	yPos += 26;
+	_objectZRotation = new Gwen::Controls::TextBoxNumeric(s);
+	_objectZRotation->SetBounds(60, yPos, 112, 20);
+	_objectZRotation->SetText("0");
+	_objectZRotation->onTextChanged.Add(this, &EditorUI::onObjectPropertiesChange);
+
+	Gwen::Controls::Label* rotationZLabel = new Gwen::Controls::Label(s);
+	rotationZLabel->SetBounds(0, yPos, 54, 20);
+	rotationZLabel->SetText("z:");
+	rotationZLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
 }
 
 void EditorUI::PopulateLightList()
 {
-	_lightsList->GetTable()->RemoveAllChildren();
+	_lightsList->Clear();
 	_lightRows.clear();
 	for (int i = 0; i < _environment->NumLights(); ++i)
 	{
@@ -598,7 +702,7 @@ void EditorUI::UpdateNoiseProperties(int octave)
 
 void EditorUI::PopulateOctaveList()
 {
-	_octaveList->GetTable()->RemoveAllChildren();
+	_octaveList->Clear();
 	_octaveRows.clear();
 	for (int i = 0; i < _environment->NumOctaves(); ++i)
 	{
@@ -741,7 +845,7 @@ void EditorUI::onShapePropertiesChange(Gwen::Controls::Base* from)
 
 void EditorUI::PopulateShapeList()
 {
-	_shapeList->GetTable()->RemoveAllChildren();
+	_shapeList->Clear();
 	_shapeRows.clear();
 	for (int i = 0; i < _environment->NumShapes(); ++i)
 	{
@@ -749,6 +853,26 @@ void EditorUI::PopulateShapeList()
 		ss << "Metaball " << i + 1;
 		_shapeRows.push_back(_shapeList->AddItem(ss.str()));
 	}
+}
+
+void EditorUI::PopulateObjectList()
+{
+	// TODO: implement
+}
+
+void EditorUI::onRemoveObject(Gwen::Controls::Base* from)
+{
+	// TODO: implement
+}
+
+void EditorUI::onAddObject(Gwen::Controls::Base* from)
+{
+	// TODO: implement
+}
+
+void EditorUI::onObjectPropertiesChange(Gwen::Controls::Base* from)
+{
+	// TODO: implement
 }
 
 void EditorUI::onSaveMenuItem(Gwen::Controls::Base* from)

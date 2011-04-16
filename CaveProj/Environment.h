@@ -143,7 +143,6 @@ private:
 
 	struct
 	{
-		ID3D10EffectMatrixVariable* World;
 		ID3D10EffectMatrixVariable* Projection;
 		ID3D10EffectMatrixVariable* View;
 		ID3D10EffectVectorVariable* ViewDirection;
