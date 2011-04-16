@@ -37,6 +37,10 @@ public:
 	inline int SelectedShape() { return _selectedShape; }
 	void DeselectShape();
 
+	void SelectObject(int object);
+	inline int SelectedObject() { return _selectedObject; }
+	void DeselectObject();
+
 	void Preview(bool enable);
 
 private:
@@ -46,6 +50,7 @@ private:
 	PositionWidget _positionWidget;
 	int _selectedLight;
 	int _selectedShape;
+	int _selectedObject;
 	EditorUI _editorUI;
 	bool _preview;
 	PhysicsBall _ball;

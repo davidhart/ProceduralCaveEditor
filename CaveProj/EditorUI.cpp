@@ -57,6 +57,7 @@ void EditorUI::Load(RenderWindow& renderWindow)
 
 	Gwen::Controls::Menu* viewMenu = m->AddItem("View")->GetMenu();
 	viewMenu->AddItem("Preview")->onPress.Add(this, &EditorUI::onPreviewMenuItem);
+	viewMenu->AddItem("Reset View")->onPress.Add(this, &EditorUI::onResetViewMenuItem);
 
 	m->Dock(Gwen::Pos::Top);
 	m->SetSize(100, 20);
@@ -404,7 +405,7 @@ void EditorUI::CreateObjectsPage()
 
 	_objectsList = new Gwen::Controls::ListBox(s);
 	_objectsList->SetBounds(0,yPos, 116, 106);
-	_objectsList->onRowSelected.Add(this, &EditorUI::onShapeSelected);
+	_objectsList->onRowSelected.Add(this, &EditorUI::onObjectSelected);
 
 	PopulateObjectList();
 
@@ -467,46 +468,6 @@ void EditorUI::CreateObjectsPage()
 	positionZLabel->SetBounds(0, yPos, 54, 20);
 	positionZLabel->SetText("z:");
 	positionZLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
-
-	// Scale controls
-	yPos += 32;
-	Gwen::Controls::Label* rotationLabel = new Gwen::Controls::Label(s);
-	rotationLabel->SetBounds(16, yPos, 156, 20);
-	rotationLabel->SetText("Rotation");
-	rotationLabel->SetAlignment(Gwen::Pos::Left | Gwen::Pos::CenterV);
-
-	yPos += 20;
-	_objectXRotation = new Gwen::Controls::TextBoxNumeric(s);
-	_objectXRotation->SetBounds(60, yPos, 112, 20);
-	_objectXRotation->SetText("0");
-	_objectXRotation->onTextChanged.Add(this, &EditorUI::onObjectPropertiesChange);
-
-	Gwen::Controls::Label* rotationXLabel = new Gwen::Controls::Label(s);
-	rotationXLabel->SetBounds(0, yPos, 54, 20);
-	rotationXLabel->SetText("x:");
-	rotationXLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
-
-	yPos += 26;
-	_objectYRotation = new Gwen::Controls::TextBoxNumeric(s);
-	_objectYRotation->SetBounds(60, yPos, 112, 20);
-	_objectYRotation->SetText("0");
-	_objectYRotation->onTextChanged.Add(this, &EditorUI::onObjectPropertiesChange);
-
-	Gwen::Controls::Label* rotationYLabel = new Gwen::Controls::Label(s);
-	rotationYLabel->SetBounds(0, yPos, 54, 20);
-	rotationYLabel->SetText("y:");
-	rotationYLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
-
-	yPos += 26;
-	_objectZRotation = new Gwen::Controls::TextBoxNumeric(s);
-	_objectZRotation->SetBounds(60, yPos, 112, 20);
-	_objectZRotation->SetText("0");
-	_objectZRotation->onTextChanged.Add(this, &EditorUI::onObjectPropertiesChange);
-
-	Gwen::Controls::Label* rotationZLabel = new Gwen::Controls::Label(s);
-	rotationZLabel->SetBounds(0, yPos, 54, 20);
-	rotationZLabel->SetText("z:");
-	rotationZLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
 }
 
 void EditorUI::PopulateLightList()
@@ -532,11 +493,14 @@ void EditorUI::onAddLight(Gwen::Controls::Base* from)
 
 void EditorUI::onRemoveLight(Gwen::Controls::Base* from)
 {
-	_environment->RemoveLight(_editor->SelectedLight());
-	_editor->DeselectLight();
+	if (_editor->SelectedLight() >= 0)
+	{
+		_environment->RemoveLight(_editor->SelectedLight());
+		_editor->DeselectLight();
 
-	PopulateLightList();
-	UpdateLightProperties(_editor->SelectedLight());
+		PopulateLightList();
+		UpdateLightProperties(_editor->SelectedLight());
+	}
 }
 
 void EditorUI::onLightSelected(Gwen::Controls::Base* from)
@@ -857,22 +821,102 @@ void EditorUI::PopulateShapeList()
 
 void EditorUI::PopulateObjectList()
 {
-	// TODO: implement
+	_objectsList->Clear();
+	_objectRows.clear();
+	for (int i = 0; i < _environment->NumChests(); ++i)
+	{
+		std::stringstream ss;
+		ss << "Chest " << i + 1;
+		_objectRows.push_back(_objectsList->AddItem(ss.str()));
+	}
 }
 
 void EditorUI::onRemoveObject(Gwen::Controls::Base* from)
 {
-	// TODO: implement
+	if (_editor->SelectedObject() >= 0)
+	{
+		_environment->RemoveChest(_editor->SelectedObject());
+		_editor->DeselectObject();
+
+		PopulateObjectList();
+		UpdateObjectProperties(_editor->SelectedObject());
+	}
 }
 
 void EditorUI::onAddObject(Gwen::Controls::Base* from)
 {
-	// TODO: implement
+	int object = _environment->AddChest();
+
+	PopulateObjectList();
+
+	SelectObject(object);
+	_editor->SelectObject(object);
 }
 
 void EditorUI::onObjectPropertiesChange(Gwen::Controls::Base* from)
 {
-	// TODO: implement
+	if (!_updatingProperties)
+	{
+		if (_editor->SelectedObject() < 0)
+			return;
+
+		Vector3f p;
+
+		p.x = _objectXPosition->GetFloatFromText();
+		p.y = _objectYPosition->GetFloatFromText();
+		p.z = _objectZPosition->GetFloatFromText();
+
+		_environment->SetChestPosition(_editor->SelectedObject(), p);
+	}
+}
+
+void EditorUI::SelectObject(int object)
+{
+	_objectsList->UnselectAll();
+
+	if (object >= 0)
+		_objectRows[object]->SetSelected(true);
+
+	UpdateObjectProperties(object);
+}
+
+void EditorUI::onObjectSelected(Gwen::Controls::Base* from)
+{
+	Gwen::Controls::Layout::TableRow* selected = _objectsList->GetSelectedRow();
+
+	int i = 0;
+	for (; i < (int)_objectRows.size(); ++i)
+	{
+		if (_objectRows[i] == selected)
+			break;
+	}
+
+	if (i == _objectRows.size())
+		return;
+
+	_editor->SelectObject(i);
+	UpdateObjectProperties(i);
+}
+
+void EditorUI::UpdateObjectProperties(int object)
+{
+	if (object >= 0)
+	{
+		_updatingProperties = true;
+		std::stringstream pX;
+		pX << _environment->GetChestPosition(object).x;
+		_objectXPosition->SetText(pX.str());
+
+		std::stringstream pY;
+		pY << _environment->GetChestPosition(object).y;
+		_objectYPosition->SetText(pY.str());
+
+		std::stringstream pZ;
+		pZ << _environment->GetChestPosition(object).z;
+		_objectZPosition->SetText(pZ.str());
+
+		_updatingProperties = false;
+	}
 }
 
 void EditorUI::onSaveMenuItem(Gwen::Controls::Base* from)
@@ -921,6 +965,10 @@ void EditorUI::onSaveAsMenuItem(Gwen::Controls::Base* from)
 				{
 					_currentfilename = s;
 				}
+				else
+				{
+					MessageBox(_renderWindow.GetWnd(), "File could not be saved", "Error", MB_OK);
+				}
 			}
 		}
 		pfd->Release();
@@ -962,11 +1010,17 @@ void EditorUI::onOpenMenuItem(Gwen::Controls::Base* from)
 					_currentfilename = s;
 					_editor->DeselectLight();
 					_editor->DeselectShape();
+					_editor->DeselectObject();
 					_editor->ResetCamera();
 
 					PopulateLightList();
 					PopulateOctaveList();
 					PopulateShapeList();
+					PopulateObjectList();
+				}
+				else
+				{
+					MessageBox(_renderWindow.GetWnd(), "Invalid or incompatible file, the file is possibly intended for a different version of the application or corrupt", "Error", MB_OK);
 				}
 			}
 		}
@@ -984,18 +1038,26 @@ void EditorUI::onNewMenuItem(Gwen::Controls::Base* from)
 	_currentfilename.clear();
 	_editor->DeselectLight();
 	_editor->DeselectShape();
+	_editor->DeselectObject();
 	_editor->ResetCamera();
 	_selectedOctave = -1;
 	PopulateLightList();
 	PopulateOctaveList();
 	PopulateShapeList();
+	PopulateObjectList();
 
 	UpdateLightProperties(_editor->SelectedLight());
 	UpdateShapeProperties(_editor->SelectedShape());
 	UpdateNoiseProperties(_selectedOctave);
+	UpdateObjectProperties(_editor->SelectedObject());
 }
 
 void EditorUI::onPreviewMenuItem(Gwen::Controls::Base* from)
 {
 	_editor->Preview(true);
+}
+
+void EditorUI::onResetViewMenuItem(Gwen::Controls::Base* from)
+{
+	_editor->ResetCamera();
 }

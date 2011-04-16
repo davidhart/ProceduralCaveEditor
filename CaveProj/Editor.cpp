@@ -8,6 +8,7 @@ Editor::Editor(RenderWindow& renderWindow) :
 	_lightIcon(NULL),
 	_selectedLight(-1),
 	_selectedShape(-1),
+	_selectedObject(-1),
 	_positionWidget(Vector3f(0, 0, 0)),
 	_editorUI(renderWindow),
 	_preview(false),
@@ -86,13 +87,22 @@ void Editor::Draw(RenderWindow& renderWindow)
 			}
 		}
 
+		if (_selectedObject >= 0)
+		{
+			_positionWidget.SetPosition(_environment.GetChestPosition(_selectedObject));
+			_positionWidget.Draw(_player.GetCamera(), renderWindow);
+		}
+
 		_editorUI.Draw();
 	}
 }
 
 void Editor::Update(float dt, const Input& input)
 {
-
+	if (_preview)
+	{
+		_environment.Update(dt);
+	}
 	Vector2f movement(0, 0);
 	if (input.IsKeyDown(Input::KEY_W)) movement.y = 1;
 	if (input.IsKeyDown(Input::KEY_S)) movement.y = -1;
@@ -137,8 +147,17 @@ void Editor::Update(float dt, const Input& input)
 		if (_positionWidget.IsInDrag())
 		{
 			_positionWidget.HandleDrag(_player.GetCamera(), input.GetCursorPosition());
-			_environment.SetLightPosition(_selectedLight, _positionWidget.GetPosition());
-			_editorUI.UpdateLightProperties(_selectedLight);
+
+			if (_selectedLight >= 0)
+			{
+				_environment.SetLightPosition(_selectedLight, _positionWidget.GetPosition());
+				_editorUI.UpdateLightProperties(_selectedLight);
+			}
+			if (_selectedObject >= 0)
+			{
+				_environment.SetChestPosition(_selectedObject, _positionWidget.GetPosition());
+				_editorUI.UpdateObjectProperties(_selectedObject);
+			}
 		}
 
 		_positionWidget.SetHover(PositionWidget::GRAB_NONE);
@@ -147,6 +166,7 @@ void Editor::Update(float dt, const Input& input)
 		Ray r = _player.GetCamera().UnprojectCoord(input.GetCursorPosition());
 		float nearestPoint = -1;
 		int nearestLight = -1;
+		int nearestObject = -1;
 
 		for (int i = 0; i < _environment.NumLights(); ++i)
 		{
@@ -164,15 +184,34 @@ void Editor::Update(float dt, const Input& input)
 			}
 		}
 
+		for (int i = 0; i < _environment.NumChests(); ++i)
+		{
+			if (i == _selectedObject)
+				continue;
+
+			float t = r.Intersects(AABB(_environment.GetChestPosition(i) - Vector3f(0.03f, 0, 0.025f),
+				_environment.GetChestPosition(i) + Vector3f(0.03f, 0.06f, 0.025f)));
+
+			if (t >= 0.0f)
+			{
+				if (nearestPoint < 0 || t < nearestPoint)
+				{
+					nearestPoint = t;
+					nearestObject = i;
+					nearestLight = -1;
+				}
+			}
+		}
+
 		PositionWidget::eGrabState grab = PositionWidget::GRAB_NONE;
 		float positionintersect;
 
-		if (_selectedLight >= 0)
+		if (_selectedLight >= 0 || _selectedObject >= 0)
 		{
 			grab = _positionWidget.TestIntersection(r, positionintersect);
 		}
 
-		if (grab != PositionWidget::GRAB_NONE && (positionintersect < nearestPoint || nearestPoint < 0))
+		if (grab != PositionWidget::GRAB_NONE)
 		{
 			_positionWidget.SetHover(grab);
 			if (input.IsButtonJustPressed(Input::BUTTON_LEFT))
@@ -186,8 +225,11 @@ void Editor::Update(float dt, const Input& input)
 			{
 				if (nearestLight >= 0)
 				{
-					_selectedLight = nearestLight;
-					_editorUI.SelectLight(_selectedLight);
+					_editorUI.SelectLight(nearestLight);
+				}
+				if (nearestObject >= 0)
+				{
+					_editorUI.SelectObject(nearestObject);
 				}
 			}
 		}
@@ -212,12 +254,28 @@ void Editor::HandleMessage(MSG msg)
 	}
 }
 
+void Editor::SelectObject(int object)
+{
+	_selectedObject = object;
+	_selectedLight = -1;
+	_editorUI.SelectLight(-1);
+	_positionWidget.EndDrag();
+	_positionWidget.SetPosition(_environment.GetChestPosition(object));
+}
+
+void Editor::DeselectObject()
+{
+	_positionWidget.EndDrag();
+	_selectedObject = -1;
+}
+
 void Editor::SelectLight(int light)
 {
 	_selectedLight = light;
+	_selectedObject = -1;
+	_editorUI.SelectObject(-1);
 	_positionWidget.EndDrag();
 	_positionWidget.SetPosition(_environment.GetLightPosition(light));
-
 }
 
 void Editor::DeselectLight()
@@ -253,7 +311,7 @@ void Editor::Preview(bool enable)
 	}
 	else if (!enable && _preview)
 	{
-		// disable stuff
+		_environment.Reset();
 	}
 	_preview = enable;
 }

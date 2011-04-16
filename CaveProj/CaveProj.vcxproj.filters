@@ -94,8 +94,10 @@
     <ClCompile Include="Random.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="Player.cpp" />
     <ClCompile Include="GameObject.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
+    <ClCompile Include="Player.cpp">
       <Filter>Source</Filter>
     </ClCompile>
   </ItemGroup>

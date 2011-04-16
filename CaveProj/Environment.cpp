@@ -8,6 +8,7 @@
 #include "Util.h"
 #include "Random.h"
 
+#include <cmath>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -15,7 +16,8 @@
 
 Environment::Environment() :
 	_lightsChanged(false),
-	_noiseVolume(Vector3i(256, 256, 256))
+	_noiseVolume(Vector3i(256, 256, 256)),
+	_elapsed(0)
 {
 }
 
@@ -237,6 +239,7 @@ void Environment::New()
 	_lightsChanged = true;
 	_octaves.clear();
 	_shapes.clear();
+	_treasureChests.clear();
 
 	Rebuild();
 }
@@ -361,19 +364,26 @@ void Environment::Draw(ID3D10Device* d3dDevice, Camera& camera)
 
 	d3dDevice->IASetInputLayout(_vertexLayoutObjects);
 	
-	_testChest.Scale = Vector3f(0.02f, 0.02f, 0.02f);
 	_objectsShaderVars.View->SetMatrix((float*)&viewm);
 	_objectsShaderVars.ViewDirection->SetFloatVector((float*)viewDirection);
-	_objectsShaderVars.Texture->SetResource(_chestTexture);
-	_objectsShaderVars.World->SetMatrix((float*)&_testChest.GetMatrix());
-	_objectsTechnique->GetPassByIndex(0)->Apply(0);
 
-	_chestModel.Draw(d3dDevice);
+	for (unsigned int i = 0; i < _treasureChests.size(); ++i)
+	{
+		GameObject temp;
+		temp.Position = _treasureChests[i].Position + _powerupOffset.Position;
+		temp.Rotation = _powerupOffset.Rotation;
 
-	_objectsShaderVars.Texture->SetResource(_treasureTexture);
-	_objectsTechnique->GetPassByIndex(0)->Apply(0);
+		_objectsShaderVars.Texture->SetResource(_chestTexture);
+		_objectsShaderVars.World->SetMatrix((float*)&temp.GetMatrix());
+		_objectsTechnique->GetPassByIndex(0)->Apply(0);
 
-	_treasureModel.Draw(d3dDevice);
+		_chestModel.Draw(d3dDevice);
+
+		_objectsShaderVars.Texture->SetResource(_treasureTexture);
+		_objectsTechnique->GetPassByIndex(0)->Apply(0);
+
+		_treasureModel.Draw(d3dDevice);
+	}
 }
 
 Environment::Light::Light() : 
@@ -418,6 +428,9 @@ void Environment::Rebuild()
 
 void Environment::Update(float dt)
 {
+	_elapsed += dt;
+	_powerupOffset.Position.y = sin(_elapsed) * 0.008f;
+	_powerupOffset.Rotation.y += dt;
 }
 
 int Environment::NumLights() const
@@ -613,13 +626,40 @@ int Environment::NumShapes() const
 	return _shapes.size();
 }
 
+int Environment::NumChests() const
+{
+	return _treasureChests.size();
+}
+
+Vector3f Environment::GetChestPosition(int chest) const
+{
+	return _treasureChests[chest].Position;
+}
+
+void Environment::SetChestPosition(int chest, const Vector3f& position)
+{
+	_treasureChests[chest].Position = position;
+}
+
+int Environment::AddChest()
+{
+	int pos = _treasureChests.size();
+	_treasureChests.push_back(GameObject());
+	return pos;
+}
+
+void Environment::RemoveChest(int chest)
+{
+	_treasureChests.erase(_treasureChests.begin()+chest);
+}
+
 bool Environment::Save(const std::wstring& filename) const
 {
 	std::ofstream file(filename.c_str());
 
 	if (file.is_open())
 	{
-		file << "version 1\n";
+		file << "version 2\n";
 		file << "shapes " << _shapes.size() << "\n";
 		file << "{\n";
 		for (unsigned int i = 0; i < _shapes.size(); ++i)
@@ -655,7 +695,16 @@ bool Environment::Save(const std::wstring& filename) const
 			file << std::hex << std::left << std::setw(2) << std::setfill('0') << Util::GetG(_lights[i]._color);
 			file << std::hex << std::left << std::setw(2) << std::setfill('0') << Util::GetB(_lights[i]._color) << '\n';
 		}
-		file << "}";
+		file << "}\n";
+		file << "chests " << _treasureChests.size() << '\n';
+		file << "{\n";
+		for (unsigned int i = 0; i < _treasureChests.size(); ++i)
+		{
+			file << _treasureChests[i].Position.x << ' ';
+			file << _treasureChests[i].Position.y << ' ';
+			file << _treasureChests[i].Position.z << '\n';
+		}
+		file << "}\n";
 
 		file.close();
 
@@ -683,7 +732,7 @@ bool Environment::Open(const std::wstring& filename)
 
 		int version = 0;
 		file >> version;
-		if (version != 1) error = true;
+		if (version != 2) error = true;
 
 		file >> token;
 		if (token != "shapes") error = true;
@@ -740,7 +789,7 @@ bool Environment::Open(const std::wstring& filename)
 		if (token != "lights") error = true;
 
 		int numLights = -1;
-		file >>numLights;
+		file >> numLights;
 		if (numLights < 0) error = true;
 
 		std::vector<Light> tempLights(numLights);
@@ -761,10 +810,33 @@ bool Environment::Open(const std::wstring& filename)
 				error = true;
 		}
 
-		file >>token;
+		file >> token;
+		if (token != "}") error = true;
+
+		file >> token;
+		if (token != "chests") error = true;
+		
+		int numChests = -1;
+		file >> numChests;
+		if (numChests < 0) error = true;
+		std::vector<GameObject> tempChests(numChests);
+
+		file >> token;
+		if (token != "{") error = true;
+
+		for (int i = 0; i < numChests; ++i)
+		{
+			file >> tempChests[i].Position.x;
+			file >> tempChests[i].Position.y;
+			file >> tempChests[i].Position.z;
+		}
+
+		file>>token;
 		if (token != "}") error = true;
 
 		file.close();
+
+		if (file.fail()) error = true;
 
 		if (!error)
 		{
@@ -774,6 +846,7 @@ bool Environment::Open(const std::wstring& filename)
 
 			_shapes = tempShapes;
 			_octaves = tempOctaves;
+			_treasureChests = tempChests;
 
 			Rebuild();
 		}
@@ -815,4 +888,11 @@ Vector3f Environment::SampleNormal(const Vector3f& position)
 	d /= CubeSize*2;
 
 	return d;
+}
+
+void Environment::Reset()
+{
+	_elapsed = 0;
+	_powerupOffset.Position = Vector3f(0, 0, 0);
+	_powerupOffset.Rotation = Vector3f(0, 0, 0);
 }

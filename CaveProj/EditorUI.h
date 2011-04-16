@@ -38,18 +38,22 @@ public:
 	void SelectShape(int shape);
 	void UpdateShapeProperties(int shape);
 
+	void SelectObject(int object);
+	void UpdateObjectProperties(int object);
+
 private:
 	void CreateShapePage();
 	void CreateNoisePage();
 	void CreateLightingPage();
 	void CreateObjectsPage();
 
+	void onNewMenuItem(Gwen::Controls::Base* from);
 	void onSaveMenuItem(Gwen::Controls::Base* from);
 	void onSaveAsMenuItem(Gwen::Controls::Base* from);
 	void onOpenMenuItem(Gwen::Controls::Base* from);
 	void onQuitMenuItem(Gwen::Controls::Base* from);
 	void onPreviewMenuItem(Gwen::Controls::Base* from);
-	void onNewMenuItem(Gwen::Controls::Base* from);
+	void onResetViewMenuItem(Gwen::Controls::Base* from);
 
 	void PopulateShapeList();
 	void onAddShape(Gwen::Controls::Base* from);
@@ -124,9 +128,6 @@ private:
 	Gwen::Controls::TextBoxNumeric* _objectXPosition;
 	Gwen::Controls::TextBoxNumeric* _objectYPosition;
 	Gwen::Controls::TextBoxNumeric* _objectZPosition;
-	Gwen::Controls::TextBoxNumeric* _objectXRotation;
-	Gwen::Controls::TextBoxNumeric* _objectYRotation;
-	Gwen::Controls::TextBoxNumeric* _objectZRotation;
 };
 
 #endif

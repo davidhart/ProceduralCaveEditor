@@ -17,7 +17,7 @@ public:
 		y /= length; 
 	}
 
-	inline T Length()
+	inline T Length() const
 	{
 		return sqrt(x*x+y*y);
 	}

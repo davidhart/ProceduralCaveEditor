@@ -46,7 +46,7 @@ PS_INPUT mainVS(VS_INPUT input)
     PS_INPUT output;
 	output.Pos = mul(float4(input.Pos, 1), WorldViewProj);
 	output.WSPos = mul(float4(input.Pos, 1), World).xyz;
-	output.Normal = input.Normal;
+	output.Normal = mul(input.Normal, (float3x3)World);
     return output;
 }
 
@@ -67,7 +67,7 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 		spec += pow(clamp(dot(reflect(ViewDirection, N), normalize(lightDirection)), 0.0f, 1.0f),15.0f) * attenuation*2.0f * Lights[i].Color.rgb * 0.2f;
 	}
 
-	return float4(spec + diffuse, 0) + ambient;
+	return float4(spec + clamp(diffuse, 0, 1), 0) + ambient;
 }
 
 DepthStencilState EnableDepth

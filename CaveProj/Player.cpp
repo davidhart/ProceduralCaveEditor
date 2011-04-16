@@ -63,15 +63,15 @@ void Player::Update(const Vector2f& movement, const Vector2f& rotation, float dt
 		Vector3f strafeVec (lookVec.z, 0, -lookVec.x);
 
 		Vector3f force;
-		force += movement.y * lookVec*0.5f;
-		force += movement.x * strafeVec*0.5f;
+		force += movement.y * lookVec*0.8f;
+		force += movement.x * strafeVec*0.8f;
 
 		if (jump && _onGround)
 		{
-			_velocity += Vector3f(0, 0.5f, 0);
+			_velocity += Vector3f(0, 0.65f, 0);
 		}
 
-		_velocity += Vector3f(0, -0.8f, 0) * dt;
+		_velocity += Vector3f(0, -1.2f, 0) * dt;
 		_velocity -= _velocity * 0.001f;
 
 		Vector3f normal;
@@ -81,6 +81,7 @@ void Player::Update(const Vector2f& movement, const Vector2f& rotation, float dt
 		do
 		{
 			collision = false;
+
 			Vector3f newPosition = position + (_velocity + force) * dt + contactNormal * (it * it * 0.00005f);
 			contactNormal = Vector3f(0,0,0);
 			for (unsigned int i = 0; i < _samplePositions.size(); ++i)
@@ -99,6 +100,13 @@ void Player::Update(const Vector2f& movement, const Vector2f& rotation, float dt
 			{
 				contactNormal.Normalize();
 				_velocity.y = 0;
+
+				// Hacky method to stop the player sliding down slopes when the movement keys are not held
+				if (abs(contactNormal.y) > 0.4f && movement.Length() == 0.0f)
+				{
+					contactNormal.x = 0.0f;
+					contactNormal.z = 0.0f;
+				}
 			}
 			++it;
 
@@ -120,12 +128,13 @@ void Player::Update(const Vector2f& movement, const Vector2f& rotation, float dt
 	}
 
 	_position = position - Vector3f(0, _height/2, 0);
-	_camera.Position(_position + Vector3f(0, _height * 0.8f, 0));
+	_camera.Position(_position + Vector3f(0, _height * 0.85f, 0));
 }
 
 void Player::Reset()
 {
-	_camera.Position(Vector3f(0,0,0));
+	_position = Vector3f(0, 0, 0);
+	_camera.Position(_position + Vector3f(0, _height * 0.85f, 0));
 	_camera.PitchYaw(0,0);
 	_velocity = Vector3f(0, 0, 0);
 }

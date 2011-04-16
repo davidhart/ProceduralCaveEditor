@@ -114,7 +114,7 @@ float4 mainPS(PS_INPUT input) : SV_TARGET
 
 	float4 diffuseCol = s1+s2+s3;
 
-	return float4((ambient+diffuse+spec*0.3f)*diffuseCol.rgb, diffuseCol.a);
+	return float4((clamp(ambient+diffuse, 0, 1)+spec*0.3f)*diffuseCol.rgb, diffuseCol.a);
 }
 
 DepthStencilState EnableDepth

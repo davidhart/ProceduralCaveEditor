@@ -25,6 +25,7 @@ public:
 	void Unload();
 	void Draw(ID3D10Device* d3dDevice, Camera& camera);
 	void Update(float dt);
+	void Reset();
 
 	int NumLights() const;
 	Vector3f GetLightPosition(int light) const;
@@ -53,6 +54,12 @@ public:
 	void SetShapeScale(int shape, const Vector3f& scale);
 	int AddShape();
 	void RemoveShape(int shape);
+
+	int NumChests() const;
+	Vector3f GetChestPosition(int chest) const;
+	void SetChestPosition(int chest, const Vector3f& position);
+	int AddChest();
+	void RemoveChest(int chest);
 
 	bool Open(const std::wstring& filename);
 	bool Save(const std::wstring& filename) const;
@@ -97,6 +104,8 @@ private:
 	};
 
 	std::vector<Octave> _octaves;
+
+	std::vector<GameObject> _treasureChests;
 
 	std::vector<EnvironmentChunk*> _environmentToGenerate;
 	std::vector<EnvironmentChunk*> _environmentToDraw;
@@ -192,9 +201,10 @@ private:
 
 	std::vector<Light> _lights;
 	bool _lightsChanged;
-	GameObject _testChest;
 
 	NoiseVolume _noiseVolume;
+	GameObject _powerupOffset;
+	float _elapsed;
 };
 
 #endif
