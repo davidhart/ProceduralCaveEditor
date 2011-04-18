@@ -1,7 +1,5 @@
 #include "EditorApp.h"
 
-
-
 EditorApp::EditorApp() : 
 	_editor(_renderWindow)
 {

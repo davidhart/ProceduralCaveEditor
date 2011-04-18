@@ -5,54 +5,12 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Shaders">
-      <UniqueIdentifier>{809eccd3-6bc7-427e-ba55-75b94aef6fd7}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Application.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="RenderWindow.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Environment.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Camera.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Input.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Timer.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="ShaderBuilder.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="MarchingCubesData.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="PositionWidget.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Ray.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="DebugDrawer.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Plane.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="AABB.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Math.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="GwenDX10Renderer.cpp">
@@ -61,93 +19,15 @@
     <ClCompile Include="EditorApp.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="BillboardSpriteDrawer.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
     <ClCompile Include="Editor.cpp">
       <Filter>Source</Filter>
     </ClCompile>
     <ClCompile Include="EditorUI.cpp">
       <Filter>Source</Filter>
     </ClCompile>
-    <ClCompile Include="EnvironmentChunk.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Util.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="PhysicsBall.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="NoiseVolume.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="ParticleSystem.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Mesh.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Model.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Random.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="GameObject.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
-    <ClCompile Include="Player.cpp">
-      <Filter>Source</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Application.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="RenderWindow.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Vector.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Environment.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Camera.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Input.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Timer.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="ShaderBuilder.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="MarchingCubesData.h">
-      <Filter>Source</Filter>
-    </ClInclude>
     <ClInclude Include="PositionWidget.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Ray.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="DebugDrawer.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Plane.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="AABB.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Util.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Math.h">
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="GwenDX10Renderer.h">
@@ -156,70 +36,11 @@
     <ClInclude Include="EditorApp.h">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="BillboardSpriteDrawer.h">
-      <Filter>Source</Filter>
-    </ClInclude>
     <ClInclude Include="Editor.h">
       <Filter>Source</Filter>
     </ClInclude>
     <ClInclude Include="EditorUI.h">
       <Filter>Source</Filter>
     </ClInclude>
-    <ClInclude Include="EnvironmentChunk.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="LeakDetector.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="PhysicsBall.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="NoiseVolume.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="ParticleSystem.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Mesh.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Model.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Random.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="Player.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-    <ClInclude Include="GameObject.h">
-      <Filter>Source</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="billboard_sprite.fx">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="cavesurface.fx">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="generic_diffuse.fx">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="marchingcubes.fx">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="particle_system.fx">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="render2D.fx">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="unlit.fx">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="generic_diffuse_textured.fx">
-      <Filter>Shaders</Filter>
-    </None>
   </ItemGroup>
 </Project>

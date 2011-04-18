@@ -30,7 +30,7 @@ PhysicsBall::PhysicsBall(Environment& environment) :
 		_samplePositions.push_back(v * -_radius);
 	}
 
-	_ball.Read("Sphere.obj");
+	_ball.Read("Assets/Sphere.obj");
 }
 
 void PhysicsBall::Load(RenderWindow& renderWindow)
@@ -39,7 +39,7 @@ void PhysicsBall::Load(RenderWindow& renderWindow)
 
 	_ball.Load(d3dDevice);
 
-	_genericEffect = ShaderBuilder::RequestEffect("generic_diffuse", "fx_4_0", d3dDevice);
+	_genericEffect = ShaderBuilder::RequestEffect("Assets/generic_diffuse", "fx_4_0", d3dDevice);
 	_genericTechnique = _genericEffect->GetTechniqueByName("Render");
 
 	_view = _genericEffect->GetVariableByName("View")->AsMatrix();

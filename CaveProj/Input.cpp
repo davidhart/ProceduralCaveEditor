@@ -4,6 +4,9 @@
 
 Input::Input()
 {
+	_trapEnabled = false;
+	_cursorTrapped = false;
+	_hasFocus = false;
 	ZeroMemory(m_currentMouseState.Buttons, sizeof(m_currentMouseState.Buttons));
 	ZeroMemory(m_prevMouseState.Buttons, sizeof(m_prevMouseState.Buttons));
 
@@ -39,4 +42,65 @@ void Input::KeyDownEvent(eKey key)
 void Input::KeyUpEvent(eKey key)
 {
 	m_currentKeyState[key] = false;
+}
+
+void Input::TrapCursor(bool trap)
+{
+	_trapEnabled = trap;
+
+	if (_hasFocus)
+	{
+		if (_trapEnabled)
+			ActivateTrap();
+		else
+			DeactivateTrap();
+	}
+}
+
+void Input::SetFocusEvent()
+{
+	_hasFocus = true;
+	if (_trapEnabled)
+	{
+		ActivateTrap();
+	}
+}
+
+void Input::LostFocusEvent()
+{
+	_hasFocus = false;
+	if (_trapEnabled)
+	{
+		DeactivateTrap();
+	}
+}
+
+void Input::ActivateTrap()
+{
+	if (!_cursorTrapped)
+	{
+		_cursorTrapped = true;
+		ShowCursor(FALSE);
+	}
+}
+
+void Input::DeactivateTrap()
+{
+	if (_cursorTrapped)
+	{
+		_cursorTrapped = false;
+		ShowCursor(TRUE);
+	}
+}
+
+void Input::PostEvents()
+{
+	if (_cursorTrapped)
+	{
+		Vector2f size(_window->GetSize().x, _window->GetSize().y);
+		_distanceMouseMoved = m_currentMouseState.Position - size / 2;
+		RECT r;
+		_window->GetScreenRect(r);
+		SetCursorPos((r.right + r.left)/2, (r.bottom+r.top)/2);
+	}
 }

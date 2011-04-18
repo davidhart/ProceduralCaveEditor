@@ -12,7 +12,7 @@ RenderWindow::RenderWindow() :
 	_isOpen(false),
 	_windowTitle("RenderWindow")
 {
-
+	_input.SetWindow(this);
 }
 
 bool RenderWindow::IsOpen()
@@ -33,6 +33,8 @@ void RenderWindow::DoEvents(Application& application)
 			DispatchMessage(&msg);
 		}
 	}
+
+	_input.PostEvents();
 }
 
 bool RenderWindow::Create()
@@ -298,6 +300,12 @@ LRESULT CALLBACK RenderWindow::WindowProc(HWND hwnd, UINT msg, WPARAM wparam, LP
 		}
 		break;
 
+	case WM_SETFOCUS:
+		_input.SetFocusEvent();
+		break;
+	case WM_KILLFOCUS:
+		_input.LostFocusEvent();
+		break;
 	case WM_LBUTTONDOWN:
 		_input.MouseDownEvent(Input::BUTTON_LEFT);
 		break;
@@ -338,4 +346,9 @@ void RenderWindow::SetTitle(const std::string& title)
 	}
 }
 
-
+void RenderWindow::GetScreenRect(RECT &r) const
+{
+	GetClientRect(_hwnd, &r);
+	ClientToScreen(_hwnd, (LPPOINT)&r.left);
+	ClientToScreen(_hwnd, (LPPOINT)&r.right);
+}

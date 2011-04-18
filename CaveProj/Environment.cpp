@@ -43,7 +43,7 @@ void Environment::Load(ID3D10Device* d3dDevice, Camera& camera)
 // by the effect
 void Environment::InitializeSurfaceGenEffect(ID3D10Device* d3dDevice)
 {
-	_genSurfaceEffect = ShaderBuilder::RequestEffect("marchingcubes", "fx_4_0", d3dDevice);
+	_genSurfaceEffect = ShaderBuilder::RequestEffect("Assets/marchingcubes", "fx_4_0", d3dDevice);
 	_genSurfaceTechnique = _genSurfaceEffect->GetTechniqueByName("Render");
 	_genSurfaceEffect->GetVariableByName("NoiseTexture")->AsShaderResource()->SetResource(_noiseVolume.GetResource());
 
@@ -110,7 +110,7 @@ void Environment::FetchSurfaceGenShaderVariables()
 // by the effect
 void Environment::InitializeSurfaceEffect(ID3D10Device* d3dDevice, const Camera& camera)
 {
-	_surfaceEffect = ShaderBuilder::RequestEffect("cavesurface", "fx_4_0", d3dDevice);
+	_surfaceEffect = ShaderBuilder::RequestEffect("Assets/cavesurface", "fx_4_0", d3dDevice);
 	_surfaceTechnique = _surfaceEffect->GetTechniqueByName("Render");
 	
 	D3D10_PASS_DESC PassDesc;
@@ -131,12 +131,12 @@ void Environment::InitializeSurfaceEffect(ID3D10Device* d3dDevice, const Camera&
 	loadInfo.Format = DXGI_FORMAT_BC1_UNORM;
 
 	HRESULT hr;
-	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "rock.jpg", &loadInfo, NULL, &_surfaceTexture, &hr)))
+	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "Assets/rock.jpg", &loadInfo, NULL, &_surfaceTexture, &hr)))
 	{
 		// TODO: log an error
 	}
 
-	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "rockdisplacement.jpg", &loadInfo, NULL, &_surfaceDisplacement, &hr)))
+	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "Assets/rockdisplacement.jpg", &loadInfo, NULL, &_surfaceDisplacement, &hr)))
 	{
 		// TODO: log an error
 	}
@@ -170,7 +170,7 @@ void Environment::FetchSurfaceShaderVariables()
 
 void Environment::InitializeObjectsEffect(ID3D10Device* d3dDevice, const Camera& camera)
 {
-	_objectsEffect = ShaderBuilder::RequestEffect("generic_diffuse_textured", "fx_4_0", d3dDevice);
+	_objectsEffect = ShaderBuilder::RequestEffect("Assets/generic_diffuse_textured", "fx_4_0", d3dDevice);
 	_objectsTechnique = _objectsEffect->GetTechniqueByName("Render");
 	
 	D3D10_PASS_DESC PassDesc;
@@ -192,18 +192,18 @@ void Environment::InitializeObjectsEffect(ID3D10Device* d3dDevice, const Camera&
 	loadInfo.Format = DXGI_FORMAT_BC1_UNORM;
 
 	HRESULT hr;
-	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "chest.png", &loadInfo, NULL, &_chestTexture, &hr)))
+	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "Assets/chest.png", &loadInfo, NULL, &_chestTexture, &hr)))
 	{
 		// TODO: log an error
 	}
 
-	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "treasure.png", &loadInfo, NULL, &_treasureTexture, &hr)))
+	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "Assets/treasure.png", &loadInfo, NULL, &_treasureTexture, &hr)))
 	{
 		// TODO: log an error
 	}
 
-	_chestModel.Read("chest.obj");
-	_treasureModel.Read("chest-treasure.obj");
+	_chestModel.Read("Assets/chest.obj");
+	_treasureModel.Read("Assets/chest-treasure.obj");
 
 	_chestModel.Load(d3dDevice);
 	_treasureModel.Load(d3dDevice);

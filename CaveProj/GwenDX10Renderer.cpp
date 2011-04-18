@@ -3,7 +3,7 @@
 #include "Gwen/Font.h"
 
 #include "Util.h"
-
+#include "ShaderBuilder.h"
 #include "LeakDetector.h"
 
 namespace Gwen
@@ -27,10 +27,10 @@ namespace Gwen
 			bufferd.MiscFlags = 0;
 			m_pDevice->CreateBuffer(&bufferd, NULL, &m_pVertBuffer);
 
+			/*
 			ID3D10Blob* errorBlob;
 			HRESULT hr;
-
-			D3DX10CreateEffectFromFile("render2D.fx",
+			D3DX10CreateEffectFromFile("Assets/render2D.fx",
 				NULL,
 				NULL,
 				"fx_4_0",
@@ -46,7 +46,10 @@ namespace Gwen
 			if (FAILED(hr))
 			{
 				MessageBox(NULL, (char*)errorBlob->GetBufferPointer(), "Error", MB_OK);
-			}
+			}*/
+
+			m_pRender2DEffect = ShaderBuilder::RequestEffect("Assets/render2D", "fx_4_0", m_pDevice);
+
 
 			m_pRender2DTechnique = m_pRender2DEffect->GetTechniqueByName("Render");
 			m_pRender2DTexturedTechnique = m_pRender2DEffect->GetTechniqueByName("RenderTextured");

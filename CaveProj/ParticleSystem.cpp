@@ -40,12 +40,12 @@ void ParticleSystem::Load(RenderWindow& renderWindow)
 	loadInfo.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	HRESULT hr;
 
-	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "WaterParticle.png", &loadInfo, NULL, &_particleTexture, &hr)))
+	if (FAILED(D3DX10CreateShaderResourceViewFromFile(d3dDevice, "Assets/WaterParticle.png", &loadInfo, NULL, &_particleTexture, &hr)))
 	{
 		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
 	}
 
-	_particleEffect = ShaderBuilder::RequestEffect("particle_system", "fx_4_0", d3dDevice);
+	_particleEffect = ShaderBuilder::RequestEffect("Assets/particle_system", "fx_4_0", d3dDevice);
 	_particleRenderTechnique = _particleEffect->GetTechniqueByName("Render");
 
 	_worldviewprojection = _particleEffect->GetVariableByName("WorldViewProjection")->AsMatrix();

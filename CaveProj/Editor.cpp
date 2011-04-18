@@ -32,7 +32,7 @@ void Editor::Load(RenderWindow& renderWindow)
 	loadInfo.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 	HRESULT hr;
 
-	if (FAILED(D3DX10CreateShaderResourceViewFromFile(renderWindow.GetDevice(), "lightIcon.png", &loadInfo, NULL, &_lightIcon, &hr)))
+	if (FAILED(D3DX10CreateShaderResourceViewFromFile(renderWindow.GetDevice(), "Assets/lightIcon.png", &loadInfo, NULL, &_lightIcon, &hr)))
 	{
 		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
 	}

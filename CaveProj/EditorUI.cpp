@@ -41,7 +41,7 @@ void EditorUI::Load(RenderWindow& renderWindow)
 	_renderer = new Gwen::Renderer::DirectX10(renderWindow.GetDevice());
 	_skin = new Gwen::Skin::TexturedBase();
 	_skin->SetRender(_renderer);
-	_skin->Init("DefaultSkin.png");
+	_skin->Init("Assets/DefaultSkin.png");
 
 	_canvas = new Gwen::Controls::Canvas(_skin);
 	_canvas->SetSize(renderWindow.GetSize().x, renderWindow.GetSize().y);

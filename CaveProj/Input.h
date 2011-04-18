@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Vector.h"
+class RenderWindow;
 
 class Input
 {
@@ -32,7 +33,20 @@ public:
 	friend class RenderWindow;
 
 	inline const Vector2f& GetCursorPosition() const { return m_currentMouseState.Position; }
-	inline const Vector2f GetMouseDistance() const { return m_currentMouseState.Position - m_prevMouseState.Position; }
+	inline const Vector2f GetMouseDistance() const 
+	{ 
+		if(_trapEnabled) 
+		{ 
+			if (_cursorTrapped) 
+				return _distanceMouseMoved; 
+			else 
+				return Vector2f(0, 0);
+		}
+		else  
+		{ 
+			return m_currentMouseState.Position - m_prevMouseState.Position; 
+		}
+	}
 
 	inline bool IsButtonDown(eButton button) const { return m_currentMouseState.Buttons[button]; }
 	inline bool IsButtonJustPressed(eButton button) const { return m_currentMouseState.Buttons[button] && !m_prevMouseState.Buttons[button]; }
@@ -40,6 +54,8 @@ public:
 
 	inline bool IsKeyDown(eKey key) const { return m_currentKeyState[key]; }
 	inline bool IsKeyJustPressed(eKey key) const { return m_currentKeyState[key] && !m_prevKeyState[key]; }
+
+	void TrapCursor(bool trap);
 
 private:
 	Input();
@@ -50,6 +66,23 @@ private:
 	void MouseUpEvent(eButton button);
 	void KeyDownEvent(eKey key);
 	void KeyUpEvent(eKey key);
+	void PostEvents();
+
+	void LostFocusEvent();
+	void SetFocusEvent();
+
+	void ActivateTrap();
+	void DeactivateTrap();
+
+	inline void SetWindow(RenderWindow* window) { _window = window; }
+
+	bool _cursorTrapped;
+	bool _trapEnabled;
+	bool _hasFocus;
+
+	Vector2f _distanceMouseMoved;
+
+	RenderWindow* _window;
 
 	struct MouseState
 	{

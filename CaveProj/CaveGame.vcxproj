@@ -11,9 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{5595E294-A8F5-4481-8383-F4F9D727B13E}</ProjectGuid>
-    <RootNamespace>DXContext</RootNamespace>
-    <ProjectName>CaveEditor</ProjectName>
+    <ProjectGuid>{12B13C39-ADE2-4457-A9EA-EDB174F3385F}</ProjectGuid>
+    <RootNamespace>CaveGame</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -40,13 +39,13 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <TargetName>$(ProjectName)d</TargetName>
     <OutDir>$(SolutionDir)build\</OutDir>
+    <TargetName>$(ProjectName)d</TargetName>
     <IntDir>$(ProjectName)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IntDir>$(ProjectName)\$(Configuration)\</IntDir>
     <OutDir>$(SolutionDir)build\</OutDir>
+    <IntDir>$(ProjectName)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -55,8 +54,8 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <SubSystem>Console</SubSystem>
       <AdditionalDependencies>d3d10.lib;d3dx10d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -70,29 +69,21 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>d3d10.lib;d3dx10.lib;gwen_static.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>d3d10.lib;d3dx10d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="Editor.cpp" />
-    <ClCompile Include="EditorApp.cpp" />
-    <ClCompile Include="EditorUI.cpp" />
-    <ClCompile Include="GwenDX10Renderer.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="PositionWidget.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Editor.h" />
-    <ClInclude Include="EditorApp.h" />
-    <ClInclude Include="EditorUI.h" />
-    <ClInclude Include="GwenDX10Renderer.h" />
-    <ClInclude Include="PositionWidget.h" />
-  </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="CaveShared.vcxproj">
       <Project>{1bd9a5c5-69b8-4623-b02a-9a5e2c2840d8}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="GameApp.cpp" />
+    <ClCompile Include="gamemain.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="GameApp.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

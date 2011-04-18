@@ -18,7 +18,7 @@ BillboardSpriteDrawer::BillboardSpriteDrawer() :
 void BillboardSpriteDrawer::Load(RenderWindow& renderWindow)
 {
 	_device = renderWindow.GetDevice();
-	_renderEffect = ShaderBuilder::RequestEffect("billboard_sprite", "fx_4_0", _device);
+	_renderEffect = ShaderBuilder::RequestEffect("Assets/billboard_sprite", "fx_4_0", _device);
 	_renderTechnique = _renderEffect->GetTechniqueByName("Render");
 
 	D3D10_PASS_DESC PassDesc;

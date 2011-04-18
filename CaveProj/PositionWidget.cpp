@@ -118,7 +118,7 @@ void PositionWidget::Load(RenderWindow& renderWindow)
 {
 	ID3D10Device* d3dDevice = renderWindow.GetDevice();
 
-	_renderEffect = ShaderBuilder::RequestEffect("unlit", "fx_4_0", d3dDevice);
+	_renderEffect = ShaderBuilder::RequestEffect("Assets/unlit", "fx_4_0", d3dDevice);
 	_renderTechnique = _renderEffect->GetTechniqueByName("Render");
 
 	D3D10_PASS_DESC PassDesc;

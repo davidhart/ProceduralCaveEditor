@@ -30,6 +30,9 @@ public:
 	void SetTitle(const std::string& title);
 	inline const std::string& GetTitle() const { return _windowTitle; }
 	inline HWND GetWnd() { return _hwnd; }
+	void GetScreenRect(RECT& r) const;
+
+	inline void TrapCursor(bool trap) { _input.TrapCursor(trap); }
 
 private:
 	bool CreateWnd();
