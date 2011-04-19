@@ -5,6 +5,7 @@
 #include "Application.h"
 #include "Environment.h"
 #include "Player.h"
+#include "ChestCounter.h"
 
 class GameApp : public Application
 {
@@ -18,6 +19,7 @@ public:
 private:
 	Player _player;
 	Environment _environment;
+	ChestCounter _chestCount;
 };
 
 #endif

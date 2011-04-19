@@ -138,3 +138,11 @@ void Player::Reset()
 	_camera.PitchYaw(0,0);
 	_velocity = Vector3f(0, 0, 0);
 }
+
+bool Player::NearChest(const Vector3f& chestPos)
+{
+	Vector3f chestCenter = chestPos + Vector3f(0, 0.005f, 0);
+	Vector3f playerCenter = _position + Vector3f(0, _height/2, 0);
+
+	return (chestCenter - playerCenter).Length() < 0.08f;
+}

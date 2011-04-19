@@ -126,7 +126,7 @@ void Environment::InitializeSurfaceEffect(ID3D10Device* d3dDevice, const Camera&
 	d3dDevice->CreateInputLayout(layoutSurface, numElementsScene, PassDesc.pIAInputSignature, PassDesc.IAInputSignatureSize, &_vertexLayoutSurface);
 
 	D3DX10_IMAGE_LOAD_INFO loadInfo;
-	ZeroMemory( &loadInfo, sizeof(D3DX10_IMAGE_LOAD_INFO));
+	ZeroMemory(&loadInfo, sizeof(D3DX10_IMAGE_LOAD_INFO));
 	loadInfo.BindFlags = D3D10_BIND_SHADER_RESOURCE;
 	loadInfo.Format = DXGI_FORMAT_BC1_UNORM;
 
@@ -187,7 +187,7 @@ void Environment::InitializeObjectsEffect(ID3D10Device* d3dDevice, const Camera&
 	d3dDevice->CreateInputLayout(layoutObjects, numElementsScene, PassDesc.pIAInputSignature, PassDesc.IAInputSignatureSize, &_vertexLayoutObjects);
 
 	D3DX10_IMAGE_LOAD_INFO loadInfo;
-	ZeroMemory( &loadInfo, sizeof(D3DX10_IMAGE_LOAD_INFO));
+	ZeroMemory(&loadInfo, sizeof(D3DX10_IMAGE_LOAD_INFO));
 	loadInfo.BindFlags = D3D10_BIND_SHADER_RESOURCE;
 	loadInfo.Format = DXGI_FORMAT_BC1_UNORM;
 

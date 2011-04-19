@@ -13,9 +13,15 @@
     <ClCompile Include="GameApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ChestCounter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameApp.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ChestCounter.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

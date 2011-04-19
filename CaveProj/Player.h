@@ -18,6 +18,9 @@ public:
 	void Reset();
 	inline Camera& GetCamera() { return _camera; }
 	inline const Vector3f& Position() const { return _camera.Position(); }
+
+	bool NearChest(const Vector3f& chestPos);
+
 private:
 	std::vector<Vector3f> _samplePositions;
 	float _radius;

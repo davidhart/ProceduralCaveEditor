@@ -79,10 +79,12 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ChestCounter.cpp" />
     <ClCompile Include="GameApp.cpp" />
     <ClCompile Include="gamemain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ChestCounter.h" />
     <ClInclude Include="GameApp.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
