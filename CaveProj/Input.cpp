@@ -97,7 +97,7 @@ void Input::PostEvents()
 {
 	if (_cursorTrapped)
 	{
-		Vector2f size(_window->GetSize().x, _window->GetSize().y);
+		Vector2f size((float)_window->GetSize().x, (float)_window->GetSize().y);
 		_distanceMouseMoved = m_currentMouseState.Position - size / 2;
 		RECT r;
 		_window->GetScreenRect(r);

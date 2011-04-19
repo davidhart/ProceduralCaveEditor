@@ -82,10 +82,16 @@
     <ClCompile Include="ChestCounter.cpp" />
     <ClCompile Include="GameApp.cpp" />
     <ClCompile Include="gamemain.cpp" />
+    <ClCompile Include="GameScreen.cpp" />
+    <ClCompile Include="MenuScreen.cpp" />
+    <ClCompile Include="ScreenSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ChestCounter.h" />
     <ClInclude Include="GameApp.h" />
+    <ClInclude Include="GameScreen.h" />
+    <ClInclude Include="MenuScreen.h" />
+    <ClInclude Include="ScreenSystem.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

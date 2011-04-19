@@ -17,12 +17,12 @@ int Application::Run()
 
 		_renderWindow.DoEvents(*this);
 
-		if (!_renderWindow.IsOpen())
-			break;
-
 		t.Stop();
 		t.Start();
 		Update(t.GetTime());
+		
+		if (!_renderWindow.IsOpen())
+			break;
 
 		_renderWindow.Clear();
 

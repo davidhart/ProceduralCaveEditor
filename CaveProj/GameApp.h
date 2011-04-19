@@ -3,9 +3,7 @@
 #define _GAMEAPP_H_
 
 #include "Application.h"
-#include "Environment.h"
-#include "Player.h"
-#include "ChestCounter.h"
+#include "ScreenSystem.h"
 
 class GameApp : public Application
 {
@@ -17,9 +15,7 @@ public:
 	void Update(float dt);
 
 private:
-	Player _player;
-	Environment _environment;
-	ChestCounter _chestCount;
+	ScreenSystem _screenSystem;
 };
 
 #endif

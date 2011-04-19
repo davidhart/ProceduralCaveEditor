@@ -14,7 +14,8 @@ public:
 	};
 
 	enum eKey
-	{
+	{		
+		KEY_RETURN = 0x0D,
 		KEY_SPACE = 0x20,
 		KEY_ESC = 0x1B,
 
