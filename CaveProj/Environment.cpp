@@ -76,7 +76,6 @@ void Environment::InitializeSurfaceGenEffect(ID3D10Device* d3dDevice)
 
 	FetchSurfaceGenShaderVariables();
 	
-	_genSurfaceShaderVars.Edges->SetIntArray((int*)MarchingCubesData::Edges, 0, 256);
 	_genSurfaceShaderVars.TriTable->SetIntArray((int*)MarchingCubesData::TriTable, 0, 256*16);
 	_genSurfaceShaderVars.Threshold->SetFloat(3.6f);
 }
@@ -101,7 +100,6 @@ void Environment::FetchSurfaceGenShaderVariables()
 		_genSurfaceShaderVars.Octaves[i].Amplitude = octavei->GetMemberByName("Amplitude")->AsScalar();
 	}
 
-	_genSurfaceShaderVars.Edges = _genSurfaceEffect->GetVariableByName("Edges")->AsScalar();
 	_genSurfaceShaderVars.TriTable = _genSurfaceEffect->GetVariableByName("TriTable")->AsScalar();
 	_genSurfaceShaderVars.Threshold = _genSurfaceEffect->GetVariableByName("Threshold")->AsScalar();
 }

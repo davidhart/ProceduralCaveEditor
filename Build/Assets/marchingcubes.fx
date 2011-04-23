@@ -81,8 +81,6 @@ tbuffer EdgeTable
 		float3 (1.0f, 1.0f, -1.0f),
 		float3 (0.0f, 1.0f, -1.0f),
 	};
-
-	int Edges[256];
 	
 	int TriTable[256][16];
 }
@@ -133,11 +131,6 @@ float3 GetNormal(float3 pos)
 					  sampleField(0, pos+float3(0.0f, 0.0f, CubeSize)) - sampleField(0, pos - float3(0.0f, 0.0f, CubeSize)));
 
 	return normalize(d);
-}
-
-int edgeTableValue(int i)
-{
-	return Edges[i];
 }
 
 float3 vertexInterp(float isolevel, float3 v0, float l0, float3 v1, float l1)

@@ -6,7 +6,6 @@ class MarchingCubesData
 {
 public:
 
-	static const int Edges[256];
 	static const int TriTable[256][16];
 };
 

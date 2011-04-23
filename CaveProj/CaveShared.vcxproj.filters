@@ -10,32 +10,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="billboard_sprite.fx">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="cavesurface.fx">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="generic_diffuse.fx">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="generic_diffuse_textured.fx">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="marchingcubes.fx">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="particle_system.fx">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="render2D.fx">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="unlit.fx">
-      <Filter>Shaders</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="AABB.h">
       <Filter>Source Files</Filter>
     </ClInclude>
@@ -188,5 +162,31 @@
     <ClCompile Include="GameObject.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Build\Assets\billboard_sprite.fx">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Build\Assets\cavesurface.fx">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Build\Assets\generic_diffuse.fx">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Build\Assets\generic_diffuse_textured.fx">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Build\Assets\marchingcubes.fx">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Build\Assets\particle_system.fx">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Build\Assets\render2D.fx">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="..\Build\Assets\unlit.fx">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -132,7 +132,6 @@ private:
 
 		} Octaves[MAX_OCTAVES];
 
-		ID3D10EffectScalarVariable* Edges;
 		ID3D10EffectScalarVariable* TriTable;
 		ID3D10EffectScalarVariable* Threshold;
 		ID3D10EffectScalarVariable* NumBlobs;

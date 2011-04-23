@@ -70,32 +70,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="billboard_sprite.fx">
-      <FileType>Document</FileType>
-    </None>
-    <None Include="cavesurface.fx">
-      <FileType>Document</FileType>
-    </None>
-    <None Include="generic_diffuse.fx">
-      <FileType>Document</FileType>
-    </None>
-    <None Include="generic_diffuse_textured.fx">
-      <FileType>Document</FileType>
-    </None>
-    <None Include="marchingcubes.fx">
-      <FileType>Document</FileType>
-    </None>
-    <None Include="particle_system.fx">
-      <FileType>Document</FileType>
-    </None>
-    <None Include="render2D.fx">
-      <FileType>Document</FileType>
-    </None>
-    <None Include="unlit.fx">
-      <FileType>Document</FileType>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="AABB.h" />
     <ClInclude Include="Application.h" />
     <ClInclude Include="BillboardSpriteDrawer.h" />
@@ -148,6 +122,16 @@
     <ClCompile Include="ShaderBuilder.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="Util.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Build\Assets\billboard_sprite.fx" />
+    <None Include="..\Build\Assets\cavesurface.fx" />
+    <None Include="..\Build\Assets\generic_diffuse.fx" />
+    <None Include="..\Build\Assets\generic_diffuse_textured.fx" />
+    <None Include="..\Build\Assets\marchingcubes.fx" />
+    <None Include="..\Build\Assets\particle_system.fx" />
+    <None Include="..\Build\Assets\render2D.fx" />
+    <None Include="..\Build\Assets\unlit.fx" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
