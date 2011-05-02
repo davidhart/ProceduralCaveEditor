@@ -25,7 +25,6 @@ public:
 	void SelectLevel2();
 	void SelectLevel3();
 	void SelectLevel4();
-	void SelectLevel5();
 
 private:
 	class MenuItem

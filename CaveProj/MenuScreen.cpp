@@ -96,7 +96,6 @@ void MenuScreen::SetLevelMenuItems()
 	_menuItems.push_back(MenuItem("Level 2", &MenuScreen::SelectLevel2));
 	_menuItems.push_back(MenuItem("Level 3", &MenuScreen::SelectLevel3));
 	_menuItems.push_back(MenuItem("Level 4", &MenuScreen::SelectLevel4));
-	_menuItems.push_back(MenuItem("Level 5", &MenuScreen::SelectLevel5));
 	_menuItems.push_back(MenuItem("Back", &MenuScreen::SetMainMenuItems));
 }
 
@@ -112,22 +111,17 @@ void MenuScreen::SelectLevel1()
 
 void MenuScreen::SelectLevel2()
 {
-
+	_parent->NewScreen(new GameScreen(L"levels/b.cave"));
 }
 
 void MenuScreen::SelectLevel3()
 {
-
+	_parent->NewScreen(new GameScreen(L"levels/c.cave"));
 }
 
 void MenuScreen::SelectLevel4()
 {
-
-}
-
-void MenuScreen::SelectLevel5()
-{
-
+	_parent->NewScreen(new GameScreen(L"levels/d.cave"));
 }
 
 MenuScreen::MenuItem::MenuItem(const std::string& name, MenuScreen::MenuItem::Callback cb) :
