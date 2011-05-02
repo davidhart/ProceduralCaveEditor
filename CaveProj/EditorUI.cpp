@@ -358,41 +358,6 @@ void EditorUI::CreateLightingPage()
 	positionZLabel->SetBounds(0, 422, 54, 20);
 	positionZLabel->SetText("z:");
 	positionZLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
-
-	// Target position controls
-	Gwen::Controls::Label* targetLabel = new Gwen::Controls::Label(s);
-	targetLabel->SetBounds(16, 454, 156, 20);
-	targetLabel->SetText("Light Target");
-	positionLabel->SetAlignment(Gwen::Pos::Left | Gwen::Pos::CenterV);
-
-	Gwen::Controls::TextBoxNumeric* targetXBox = new Gwen::Controls::TextBoxNumeric(s);
-	targetXBox->SetBounds(60, 480, 112, 20);
-	targetXBox->SetText("0");
-
-	Gwen::Controls::Label* targetXLabel = new Gwen::Controls::Label(s);
-	targetXLabel->SetBounds(0, 480, 54, 20);
-	targetXLabel->SetText("x:");
-	targetXLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
-
-	Gwen::Controls::TextBoxNumeric* targetYBox = new Gwen::Controls::TextBoxNumeric(s);
-	targetYBox->SetBounds(60, 506, 112, 20);
-	targetYBox->SetText("0");
-
-	Gwen::Controls::Label* targetYLabel = new Gwen::Controls::Label(s);
-	targetYLabel->SetBounds(0, 506, 54, 20);
-	targetYLabel->SetText("y:");
-	targetYLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
-
-	Gwen::Controls::TextBoxNumeric* targetZBox = new Gwen::Controls::TextBoxNumeric(s);
-	targetZBox->SetBounds(60, 532, 112, 20);
-	targetZBox->SetText("0");
-
-	Gwen::Controls::Label* targetZLabel = new Gwen::Controls::Label(s);
-	targetZLabel->SetBounds(0, 532, 54, 20);
-	targetZLabel->SetText("z:");
-	targetZLabel->SetAlignment(Gwen::Pos::Right | Gwen::Pos::CenterV);
-
-
 }
 
 void EditorUI::CreateObjectsPage()

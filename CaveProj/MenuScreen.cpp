@@ -73,7 +73,10 @@ void MenuScreen::Update(float dt, RenderWindow& renderWindow)
 			input.GetCursorPosition().y > pos.top && input.GetCursorPosition().y < pos.bottom;
 
 		if (_menuItems[i].Hovered && input.IsButtonJustPressed(Input::BUTTON_LEFT))
+		{
 			(this->*_menuItems[i].Cb)();
+			break;
+		}
 
 		pos.top += lineheight + linespace;
 		pos.bottom += lineheight + linespace;

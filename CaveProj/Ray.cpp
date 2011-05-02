@@ -129,6 +129,7 @@ float Ray::Intersects(const AABB& aabb) const
 
 float Ray::Intersects(const Vector3f& spherePosition, float radius) const
 {
+	// http://paulbourke.net/geometry/sphereline/
 	float a = _direction.Dot(_direction);
 	float b = 2 * _direction.Dot(_origin - spherePosition);
 	float c = _origin.Dot(_origin) +
@@ -150,6 +151,7 @@ float Ray::Intersects(const Vector3f& spherePosition, float radius) const
 
 bool Ray::ClosestPoint(const Ray& ray, float& point) const
 {
+	// http://paulbourke.net/geometry/lineline3d/
 	// Find closest point on ray 1 to ray 2
 	// pa = p1 + t1 * d1
 	// pa: closest point
