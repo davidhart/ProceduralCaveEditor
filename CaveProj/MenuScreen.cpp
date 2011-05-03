@@ -75,7 +75,7 @@ void MenuScreen::Update(float dt, RenderWindow& renderWindow)
 		if (_menuItems[i].Hovered && input.IsButtonJustPressed(Input::BUTTON_LEFT))
 		{
 			(this->*_menuItems[i].Cb)();
-			break;
+			break; // MUST break, "this" MenuScreen most likely deleted after this
 		}
 
 		pos.top += lineheight + linespace;

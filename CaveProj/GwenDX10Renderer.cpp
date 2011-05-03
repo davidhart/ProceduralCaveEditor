@@ -27,7 +27,7 @@ namespace Gwen
 			bufferd.MiscFlags = 0;
 			m_pDevice->CreateBuffer(&bufferd, NULL, &m_pVertBuffer);
 
-			/*
+			/* Remove comments for build without shaderbuilder (standalone DX10 renderer release) 
 			ID3D10Blob* errorBlob;
 			HRESULT hr;
 			D3DX10CreateEffectFromFile("Assets/render2D.fx",

@@ -209,6 +209,7 @@ void PositionWidget::Draw(const Camera& camera, RenderWindow& renderWindow)
 	UINT stride = sizeof( Vertex );
     UINT offset = 0;
 
+	// Render selected/hovered arrow in grey
 	for (int i = 0; i < 3; ++i)
 	{
 		if (_grabState == i+1)
@@ -234,6 +235,7 @@ void PositionWidget::Draw(const Camera& camera, RenderWindow& renderWindow)
 
 PositionWidget::eGrabState PositionWidget::TestIntersection(const Ray& ray, float& intersection)
 {
+	// Test for intersection with an AABB for each arrowhead
 	float width = 0.006f;
 	float start = 0.075f;
 	float end = 0.105f;

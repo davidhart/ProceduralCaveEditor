@@ -74,7 +74,6 @@ void GameScreen::Update(float dt, RenderWindow& renderWindow)
 	Vector2f movement;
 	Vector2f rotation;
 
-
 	if (_environment.NumChests() > 0)
 	{
 		if (input.IsKeyDown(Input::KEY_A)) movement.x = -1;

@@ -34,7 +34,7 @@ void Editor::Load(RenderWindow& renderWindow)
 
 	if (FAILED(D3DX10CreateShaderResourceViewFromFile(renderWindow.GetDevice(), "Assets/lightIcon.png", &loadInfo, NULL, &_lightIcon, &hr)))
 	{
-		MessageBox(0, "Error creating texture", "Texture Error", MB_OK);
+		// TODO: log error
 	}
 
 	_positionWidget.Load(renderWindow);
@@ -61,6 +61,7 @@ void Editor::Draw(RenderWindow& renderWindow)
 {
 	_environment.Draw(renderWindow.GetDevice(), _player.GetCamera());
 
+	// in preview mode draw the ball, in editor mode draw light billboard sprites and selection widgets
 	if (_preview)
 	{
 		_ball.Draw(renderWindow, _player.GetCamera());
@@ -144,6 +145,7 @@ void Editor::Update(float dt, const Input& input)
 	}
 	else
 	{
+		// Update object to selection position in drag mode
 		if (_positionWidget.IsInDrag())
 		{
 			_positionWidget.HandleDrag(_player.GetCamera(), input.GetCursorPosition());
@@ -206,11 +208,13 @@ void Editor::Update(float dt, const Input& input)
 		PositionWidget::eGrabState grab = PositionWidget::GRAB_NONE;
 		float positionintersect;
 
+		// If something is selected
 		if (_selectedLight >= 0 || _selectedObject >= 0)
 		{
 			grab = _positionWidget.TestIntersection(r, positionintersect);
 		}
 
+		// If dragger was clicked
 		if (grab != PositionWidget::GRAB_NONE)
 		{
 			_positionWidget.SetHover(grab);
@@ -221,6 +225,7 @@ void Editor::Update(float dt, const Input& input)
 		}
 		else
 		{
+			// If new object selected
 			if (input.IsButtonJustPressed(Input::BUTTON_LEFT))
 			{
 				if (nearestLight >= 0)
@@ -287,8 +292,6 @@ void Editor::DeselectLight()
 void Editor::SelectShape(int shape)
 {
 	_selectedShape = shape;
-
-	// TODO: 3D controls for shape
 }
 
 void Editor::DeselectShape()
@@ -305,7 +308,6 @@ void Editor::Preview(bool enable)
 {
 	if (enable && !_preview)
 	{
-		// TODO: enable stuff
 		_particleSystem.Reset();
 		_ball.Reset();
 	}

@@ -12,16 +12,16 @@ int Application::Run()
 	Timer t;
 	t.Start();
 
+	// Event loop
 	while (true)
 	{
-
 		_renderWindow.DoEvents(*this);
 
 		t.Stop();
 		t.Start();
 		Update(t.GetTime());
 		
-		if (!_renderWindow.IsOpen())
+		if (!_renderWindow.IsOpen()) // Exit event loop on window close
 			break;
 
 		_renderWindow.Clear();

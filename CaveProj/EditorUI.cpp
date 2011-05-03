@@ -45,6 +45,8 @@ void EditorUI::Load(RenderWindow& renderWindow)
 
 	_canvas = new Gwen::Controls::Canvas(_skin);
 	_canvas->SetSize(renderWindow.GetSize().x, renderWindow.GetSize().y);
+
+	// Setup menu
 	Gwen::Controls::MenuStrip* m = new Gwen::Controls::MenuStrip(_canvas);
 	Gwen::Controls::Menu* fileMenu = m->AddItem("File")->GetMenu();
 	fileMenu->AddItem("New")->onPress.Add(this, &EditorUI::onNewMenuItem);
@@ -59,6 +61,7 @@ void EditorUI::Load(RenderWindow& renderWindow)
 	viewMenu->AddItem("Preview")->onPress.Add(this, &EditorUI::onPreviewMenuItem);
 	viewMenu->AddItem("Reset View")->onPress.Add(this, &EditorUI::onResetViewMenuItem);
 
+	// Setup dock sidebar
 	m->Dock(Gwen::Pos::Top);
 	m->SetSize(100, 20);
 
